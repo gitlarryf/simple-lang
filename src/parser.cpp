@@ -1681,9 +1681,6 @@ const Statement *Parser::parseForStatement(Scope *scope, int line)
         if (step->type != TYPE_NUMBER) {
             error(2116, tokens[i], "numeric expression expected");
         }
-        if (not step->is_constant) {
-            error(2117, tokens[i], "numeric expression must be constant");
-        }
         if (number_is_zero(step->eval_number())) {
             error(2161, tokens[i], "STEP value cannot be zero");
         }
