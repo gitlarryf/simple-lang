@@ -1,0 +1,84 @@
+IMPORT curses
+IMPORT serial
+
+TYPE Port IS serial.Port
+
+LET port: Port := serial.open("\\\\.\\COM1", 57600, serial.FlowControl.Disable, serial.FlowControl.Disable)
+
+VAR row, col: Number := 0
+
+FUNCTION term()
+    LOOP
+        LET k: Number := curses.getch()
+        IF k >= 0 THEN
+            IF k = curses.KEY_F0+12 THEN
+                EXIT LOOP
+            END IF
+            IF k = 3 THEN
+                curses.addstr("Ctrl-C pressed, exiting...")
+                EXIT LOOP
+            END IF
+            IF NOT serial.write(port, chr(k)) THEN
+                RAISE serial.WritePortException
+            END IF
+        END IF
+        LET data: Bytes := serial.read(port)
+        IF data.size() > 0 THEN
+            %render_output(data.toString())
+            render_output(data)
+        END IF
+        curses.refresh()
+    END LOOP
+    curses.endwin()
+END FUNCTION
+
+%FUNCTION render_output(s: String)
+FUNCTION render_output(d: Bytes)
+    FOREACH c OF d.toArray() DO
+        CASE c
+            %WHEN 0xD DO
+                %NEXT FOREACH
+                % Do NOTHING actually...
+            WHEN OTHERS DO
+                curses.addstr(chr(c))
+        END CASE
+    END FOREACH
+END FUNCTION
+
+FUNCTION init()
+    LET size: Array<Number> := curses.getmaxyx(curses.stdscr())
+    row := size[0]
+    col := size[1]
+    curses.mvaddstr(0, col / 2 - 20, @"          _   _                          ")
+    curses.mvaddstr(1, col / 2 - 20, @"         | \ | | ___  ___  _ __          ")
+    curses.mvaddstr(2, col / 2 - 20, @"         |  \| |/ _ \/ _ \| '_ \         ")
+    curses.mvaddstr(3, col / 2 - 20, @"         | |\  |  __/ (_) | | | |        ")
+    curses.mvaddstr(4, col / 2 - 20, @" _____   |_| \_|\___|\___/|_| |_|      _ ")
+    curses.mvaddstr(5, col / 2 - 20, @"|_   _|__ _ __ _ __ ___ (_)_ __   __ _| |")
+    curses.mvaddstr(6, col / 2 - 20, @"  | |/ _ \ '__| '_ ` _ \| | '_ \ / _` | |")
+    curses.mvaddstr(7, col / 2 - 20, @"  | |  __/ |  | | | | | | | | | | (_| | |")
+    curses.mvaddstr(8, col / 2 - 20, @"  |_|\___|_|  |_| |_| |_|_|_| |_|\__,_|_|")
+    curses.mvaddstr(10,col / 2 - 20, @"-----------------------------------------")
+    curses.mvaddstr(11, 0, "")
+    curses.mvaddstr(12, 0, "")
+    curses.refresh()
+END FUNCTION
+
+FUNCTION test()
+    curses.addstr("This is a test...\r")
+    curses.addstr("This is line 2...\r")
+    curses.addstr("This is line 3...\r")
+    curses.refresh()
+END FUNCTION
+
+curses.initscr()
+curses.noecho()
+curses.keypad(curses.stdscr(), TRUE)
+curses.curs_set(2)
+curses.nonl()
+curses.scrollok(curses.stdscr(), TRUE)
+curses.wtimeout(curses.stdscr(), 0)
+init()
+curses.setscrreg(0, row)
+term()
+test()

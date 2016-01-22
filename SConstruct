@@ -160,6 +160,7 @@ rtl_const = [
     "lib/curses_const.cpp",
     "lib/sdl_const.cpp",
     "lib/sodium_const.cpp",
+    "lib/serial_const.cpp",
 ]
 
 if os.name == "posix":
@@ -192,6 +193,7 @@ rtl_cpp = rtl_const + [
     "lib/runtime.cpp",
     "lib/regex.cpp",
     "lib/sdl.cpp",
+    "lib/serial.cpp",
     "lib/sodium.cpp",
     "lib/sqlite.cpp",
     "lib/string.cpp",
@@ -220,6 +222,7 @@ rtl_neon = [
     "lib/runtime.neon",
     "lib/regex.neon",
     "lib/sdl.neon",
+    "lib/serial.neon",
     "lib/sodium.neon",
     "lib/sqlite.neon",
     "lib/string.neon",
@@ -232,6 +235,7 @@ if os.name == "posix":
         "lib/file_posix.cpp",
         "lib/mmap_posix.cpp",
         "lib/os_posix.cpp",
+        "lib/serial_posix.cpp",
         "lib/time_posix.cpp",
     ])
     if sys.platform.startswith("darwin"):
@@ -251,6 +255,7 @@ elif os.name == "nt":
         "lib/file_win32.cpp",
         "lib/mmap_win32.cpp",
         "lib/os_win32.cpp",
+        "lib/serial_win32.cpp",
         "lib/time_win32.cpp",
     ])
     rtl_platform = "src/rtl_win32.cpp"

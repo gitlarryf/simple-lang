@@ -1,0 +1,151 @@
+%|
+ |  File: serial
+ |
+ |  Provides access to physical serial ports, and USB to Serial adapters, allowing Neon
+ |  the ability to interface with many devices.
+ |%
+EXPORT Port
+
+TYPE Port IS POINTER
+
+EXPORT InvalidPortException
+EXPORT ConnectionLostException
+EXPORT PortOpenException
+EXPORT PortInUseException
+EXPORT GetPortNamesException
+
+EXPORT WritePortException
+EXPORT ReadPortException
+EXPORT GetPortSettingsException
+EXPORT SetPortSettingsException
+EXPORT SetCommLineException
+
+%EXPORT PortError
+
+EXPORT Parity
+EXPORT StopBits
+EXPORT DataBits
+EXPORT FlowControl
+%EXPORT BaudRate
+
+%|
+ |  Exception: InvalidPortException
+ |
+ |  Indicates an invalid serial port was attempted to be opened.
+ |%
+DECLARE EXCEPTION InvalidPortException
+%|
+ |  Exception: ConnectionLostException
+ |
+ |  Indicates that a connection to a serial port has been disconnected
+ |  and any further calls to it will result in this exception.
+ |%
+DECLARE EXCEPTION ConnectionLostException
+%|
+ |  Exception: PortOpenException
+ |
+ |  Indicates that some kind of error occurred while attempting to 
+ |  open the desired serial port.
+ |%
+DECLARE EXCEPTION PortOpenException
+%|
+ |  Exception: PortInUseException
+ |
+ |  Indicates that some other program had the port open at the time
+ |  <open> was called on this serial device.
+ |%
+DECLARE EXCEPTION PortInUseException
+%|
+ |  Exception: GetPortNamesException
+ |
+ |  Indicates an error occurred while attempting to gather up the 
+ |  available port names.
+ |%
+
+DECLARE EXCEPTION PortNotOpenedException
+
+DECLARE EXCEPTION GetPortNamesException
+
+DECLARE EXCEPTION WritePortException
+
+DECLARE EXCEPTION ReadPortException
+
+DECLARE EXCEPTION GetPortSettingsException
+
+DECLARE EXCEPTION SetPortSettingsException
+
+DECLARE EXCEPTION SetPortTimeoutsException
+
+DECLARE EXCEPTION UnsupportedBaudRateException
+
+DECLARE EXCEPTION SetCommLineException
+
+
+
+TYPE Parity IS ENUM
+    None
+    Odd
+    Even
+    Mark
+    Space
+END ENUM
+
+TYPE StopBits IS ENUM
+    One
+    OnePointFive
+    Two
+END ENUM
+
+TYPE DataBits IS ENUM
+    Five
+    Six
+    Seven
+    Eight
+END ENUM
+
+TYPE FlowControl IS ENUM
+    Disable
+    Enable
+    Handshake
+    DSR_DTR
+    RTS_CTS
+    Toggle
+END ENUM
+
+%|TYPE BaudRate IS ENUM
+       110BPS
+       300BPS
+       600BPS
+      1200BPS
+      2400BPS
+      4800BPS
+      9600BPS
+     14400BPS
+     19200BPS
+     38400BPS
+     57600BPS
+    115200BPS
+    230400BPS
+    460800BPS
+    921600BPS
+END ENUM
+|%
+
+%DECLARE NATIVE FUNCTION getPortNames(): Array<String>
+
+%DECLARE NATIVE FUNCTION isCarrierDetect(p: Port): Boolean
+%DECLARE NATIVE FUNCTION isRingIndicator(p: Port): Boolean
+%DECLARE NATIVE FUNCTION isClearToSend(p: Port): Boolean
+%DECLARE NATIVE FUNCTION isDataTerminalReady(p: Port): Boolean
+%DECLARE NATIVE FUNCTION isReadyToSend(p: Port): Boolean
+
+%DECLARE NATIVE FUNCTION setDataTerminalReadyLine(p: Port, signal: Boolean)
+
+DECLARE NATIVE FUNCTION open(name: String, baud: Number, softwareFlowControl: FlowControl, hardwareFlowControl: FlowControl): Port
+%DECLARE NATIVE FUNCTION configurePort(baud: Number, parity: Parity, stopbits: StopBits, databits: DataBits, softwareFlowControl: FlowControl, xonChar, xoffChar: String, hardwareFlowControl: FlowControl)
+%DECLARE NATIVE FUNCTION settimeouts(readTimeout, writeTimeout: Number)
+DECLARE NATIVE FUNCTION read(p: Port): Bytes
+%DECLARE NATIVE FUNCTION readString(p: Port, count: Number): String
+DECLARE NATIVE FUNCTION write(p: Port, s: String): Boolean
+% DECLARE NATIVE FUNCTION writeString(p: Port, s: String): Boolean
+DECLARE NATIVE FUNCTION close(INOUT p: Port)
