@@ -1,0 +1,39 @@
+IMPORT string
+
+print(str(string.find("hello world", "world")))
+%= 6
+
+print(string.join(["hello", "world"], " "))
+%= hello world
+
+print(string.lower("Hello World"))
+%= hello world
+
+LET a: Array<String> := string.split("Hello World Everybody", " ")
+print("\(a.size())")
+%= 3
+print(a[0])
+%= Hello
+print(a[1])
+%= World
+print(a[2])
+%= Everybody
+
+print(string.trim("  Hello World  "))
+%= Hello World
+
+print(string.trim(" "))
+%= 
+
+print(string.upper("Hello World"))
+%= HELLO WORLD
+
+print(strb(string.hasPrefix("Hello World", "He")))
+print(strb(string.hasPrefix("Hello World", "he")))
+%= TRUE
+%= FALSE
+
+print(strb(string.hasSuffix("Hello World", "orld")))
+print(strb(string.hasSuffix("Hello World", "old")))
+%= TRUE
+%= FALSE

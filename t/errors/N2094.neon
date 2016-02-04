@@ -1,4 +1,2 @@
-VAR a: Number
-VAR b: String
-
-a := b
+LET b: Bytes := HEXBYTES 5
+                         %<

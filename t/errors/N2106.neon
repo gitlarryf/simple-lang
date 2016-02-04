@@ -1,9 +1,0 @@
-VAR a: Number
-a := 5
-
-CASE a
-   WHEN >= 10 DO
-     print("10+")
-   WHEN = 10 DO
-     print("5")
-END CASE

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "analyzer.h"
 #include "ast.h"
 #include "compiler.h"
 #include "debuginfo.h"
@@ -9,13 +10,21 @@
 #include "exec.h"
 #include "lexer.h"
 #include "parser.h"
+#include "pt_dump.h"
+#include "support.h"
 
-static std::vector<Token> dump(const std::vector<Token> &tokens)
+static TokenizedSource dump(const TokenizedSource &tokens)
 {
-    for (auto t: tokens) {
+    for (auto t: tokens.tokens) {
         std::cerr << t.tostring() << "\n";
     }
     return tokens;
+}
+
+static const pt::Program *dump(const pt::Program *parsetree)
+{
+    pt::dump(std::cerr, parsetree);
+    return parsetree;
 }
 
 static const Program *dump(const Program *program)
@@ -24,93 +33,97 @@ static const Program *dump(const Program *program)
     return program;
 }
 
-static void repl(int argc, char *argv[])
-{
-    std::cout << "Neon 0.1\n";
-    std::cout << "Type \"help\" for more information, or \"exit\" to leave.\n";
-    for (;;) {
-        std::cout << "> ";
-        std::string s;
-        if (not std::getline(std::cin, s)) {
-            std::cout << std::endl;
-            break;
-        }
-        if (s == "help") {
-            std::cout << "\n";
-            std::cout << "Welcome to Neon 0.1!\n";
-            std::cout << "\n";
-            std::cout << "See https://github.com/ghewgill/neon-lang for information.\n";
-        } else if (s == "exit" || s == "quit") {
-            exit(0);
-        } else {
-            try {
-                exec(compile(parse(tokenize(s)), nullptr), argc, argv);
-            } catch (SourceError &error) {
-                fprintf(stderr, "%s\n", error.token.source.c_str());
-                fprintf(stderr, "%*s\n", error.token.column, "^");
-                fprintf(stderr, "Error N%d: %d:%d %s %s (%s:%d)\n", error.number, error.token.line, error.token.column, error.token.tostring().c_str(), error.message.c_str(), error.file.c_str(), error.line);
-            } catch (InternalError &error) {
-                fprintf(stderr, "Compiler Internal Error: %s (%s:%d)\n", error.message.c_str(), error.file.c_str(), error.line);
-            }
-        }
-    }
-    exit(0);
-}
-
 int main(int argc, char *argv[])
 {
     bool dump_tokens = false;
+    bool dump_parse = false;
     bool dump_ast = false;
-    bool dump_bytecode = false;
+    bool dump_listing = false;
+    bool enable_assert = true;
+    unsigned short debug_port = 0;
 
-    if (argc < 1) {
+    if (argc < 2) {
         fprintf(stderr, "Usage: %s filename.neon\n", argv[0]);
         exit(1);
     }
 
-    if (argc < 2) {
-        repl(argc, argv);
+    int a = 1;
+    while (a < argc && argv[a][0] == '-' && argv[a][1] != '\0') {
+        std::string arg = argv[a];
+        if (arg == "-c") {
+            if (argv[a+1] == NULL) {
+                fprintf(stderr, "%s: -c requires argument\n", argv[0]);
+                exit(1);
+            }
+            break;
+        } else if (arg == "-d") {
+            a++;
+            debug_port = static_cast<unsigned short>(std::stoul(argv[a]));
+        } else if (arg == "-l") {
+            dump_listing = true;
+        } else if (arg == "-n") {
+            enable_assert = false;
+        } else {
+            fprintf(stderr, "Unknown option: %s\n", arg.c_str());
+            exit(1);
+        }
+        a++;
     }
 
-    const std::string name = argv[1];
+    const std::string name = argv[a];
+    std::string source_path;
 
     std::stringstream buf;
     if (name == "-") {
         buf << std::cin.rdbuf();
+    } else if (name == "-c") {
+        buf << argv[a+1];
     } else {
+        auto i = name.find_last_of("/:\\");
+        if (i != std::string::npos) {
+            source_path = name.substr(0, i+1);
+        }
         std::ifstream inf(name);
+        if (not inf) {
+            fprintf(stderr, "Source file not found: %s\n", name.c_str());
+            exit(1);
+        }
         buf << inf.rdbuf();
     }
 
+    CompilerSupport compiler_support(source_path);
+    RuntimeSupport runtime_support(source_path);
+
     std::vector<unsigned char> bytecode;
+    // TODO - Allow reading debug information from file.
+    DebugInfo debug(name, buf.str());
 
     // Pretty hacky way of checking whether the input file is compiled or not.
     if (name[name.length()-1] != 'x') {
 
         try {
-            auto tokens = tokenize(buf.str());
+            auto tokens = tokenize(name, buf.str());
             if (dump_tokens) {
                 dump(tokens);
             }
 
-            auto ast = parse(tokens);
+            auto parsetree = parse(tokens);
+            if (dump_parse) {
+                dump(parsetree);
+            }
+
+            auto ast = analyze(&compiler_support, parsetree);
             if (dump_ast) {
                 dump(ast);
             }
 
-            DebugInfo debug(buf.str());
             bytecode = compile(ast, &debug);
-            if (dump_bytecode) {
+            if (dump_listing) {
                 disassemble(bytecode, std::cerr, &debug);
             }
 
-        } catch (SourceError &error) {
-            fprintf(stderr, "%s\n", error.token.source.c_str());
-            fprintf(stderr, "%*s\n", error.token.column, "^");
-            fprintf(stderr, "Error N%d: %d:%d %s %s (%s:%d)\n", error.number, error.token.line, error.token.column, error.token.tostring().c_str(), error.message.c_str(), error.file.c_str(), error.line);
-            exit(1);
-        } catch (InternalError &error) {
-            fprintf(stderr, "Compiler Internal Error: %s (%s:%d)\n", error.message.c_str(), error.file.c_str(), error.line);
+        } catch (CompilerError *error) {
+            error->write(std::cerr);
             exit(1);
         }
 
@@ -119,5 +132,5 @@ int main(int argc, char *argv[])
         std::copy(s.begin(), s.end(), std::back_inserter(bytecode));
     }
 
-    exec(bytecode, argc-1, argv+1);
+    exec(name, bytecode, &debug, &runtime_support, enable_assert, debug_port, argc-a, argv+a);
 }

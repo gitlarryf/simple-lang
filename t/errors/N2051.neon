@@ -1,2 +1,11 @@
-IF TRUE AND 1 THEN
-END IF
+EXTERNAL FUNCTION Sleep(ms: Number)
+{
+     "library": {     
+          "name": "TestLib"
+     }
+     "types": {
+          "ms": "uint32"
+     }
+}
+END EXTERNAL
+    %<

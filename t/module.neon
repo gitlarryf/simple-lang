@@ -1,0 +1,57 @@
+EXPORT type
+EXPORT emptytype
+EXPORT enum
+EXPORT const
+EXPORT var
+EXPORT var2
+EXPORT function
+EXPORT modify
+EXPORT Exception
+EXPORT raise
+EXPORT functionpointer
+
+TYPE type IS RECORD
+    boolean: Boolean
+    number: Number
+    string: String
+END RECORD
+
+TYPE emptytype IS RECORD END RECORD
+
+TYPE enum IS ENUM
+    red
+    green
+    blue
+END ENUM
+
+FUNCTION type.method(IN self: type): String
+    RETURN self.string & self.string
+END FUNCTION
+
+CONSTANT const: Number := 5
+
+VAR var: String := "test"
+
+VAR var2: enum := enum.blue
+
+FUNCTION function(x: Number): Number
+    RETURN x * x
+END FUNCTION
+
+FUNCTION modify(INOUT x: Number)
+    x := x * 2
+END FUNCTION
+
+FUNCTION raise()
+    RAISE Exception
+END FUNCTION
+
+DECLARE EXCEPTION Exception
+
+VAR functionpointer: FUNCTION(x: Number): Number
+functionpointer := function
+
+BEGIN MAIN
+    print("module main")
+END MAIN
+%= module main

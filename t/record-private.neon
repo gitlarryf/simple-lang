@@ -1,0 +1,10 @@
+TYPE Record IS RECORD
+    PRIVATE value: Number
+END RECORD
+
+FUNCTION Record.setValue(INOUT self: Record, value: Number)
+    self.value := value
+END FUNCTION
+
+VAR r: Record := Record()
+r.setValue(0)

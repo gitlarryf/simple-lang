@@ -1,3 +1,2 @@
-VAR a: Number
-
-a := -"Hello, World!"
+1 := 2
+%<

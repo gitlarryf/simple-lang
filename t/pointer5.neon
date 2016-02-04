@@ -1,10 +1,10 @@
-TYPE Node := RECORD
+TYPE Node IS RECORD
     value: Number
 END RECORD
 
-VAR a: POINTER TO Node
+VAR a: POINTER TO Node := NIL
 
-IF VALID p := a THEN
+IF VALID a AS p THEN
 END IF
-IF VALID p := a THEN
+IF VALID a AS p THEN
 END IF

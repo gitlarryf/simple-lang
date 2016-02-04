@@ -1,3 +1,2 @@
-WHILE (1) DO
-    print("doing...")
-END WHILE
+FOREACH 1
+        %<

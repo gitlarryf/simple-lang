@@ -1,0 +1,2 @@
+CONSTANT x: String := 42
+                      %<

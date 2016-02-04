@@ -1,0 +1,108 @@
+%|
+ |  File: os
+ |
+ |  Functions for operating system interfaces.
+ |%
+
+EXPORT Platform
+EXPORT Process
+EXPORT SystemException
+EXPORT UnsupportedFunctionException
+
+%|
+ |  Exception: SystemException
+ |
+ |  Error from system.
+ |%
+DECLARE EXCEPTION SystemException
+
+%|
+ |  Exception: UnsupportedFunctionException
+ |
+ |  Operation is unsupported on this platform.
+ |%
+DECLARE EXCEPTION UnsupportedFunctionException
+
+%|
+ |  Enumeration: Platform
+ |
+ |  Platform type.
+ |
+ |  Values:
+ |      posix - posix
+ |      win32 - win32
+ |%
+TYPE Platform IS ENUM
+    posix
+    win32
+END ENUM
+
+%|
+ |  Type: Process
+ |
+ |  Opaque type representing a process.
+ |%
+TYPE Process IS POINTER
+
+%|
+ |  Function: chdir
+ |
+ |  Change the current process working directory to the given path.
+ |%
+DECLARE NATIVE FUNCTION chdir(path: String)
+
+%|
+ |  Function: getcwd
+ |
+ |  Return the working directory of the current process.
+ |%
+DECLARE NATIVE FUNCTION getcwd(): String
+
+%|
+ |  Function: getenv
+ |
+ |  Return the value of an environment variable in the current process.
+ |%
+DECLARE NATIVE FUNCTION getenv(name: String): String
+
+%|
+ |  Function: platform
+ |
+ |  Return the running platform type.
+ |%
+DECLARE NATIVE FUNCTION platform(): Platform
+
+%|
+ |  Function: system
+ |
+ |  Execute a system (shell) command.
+ |%
+DECLARE NATIVE FUNCTION system(command: String): Number
+
+%|
+ |  Function: fork
+ |
+ |  Fork the current process (POSIX only).
+ |%
+DECLARE NATIVE FUNCTION fork(OUT child: Process): Boolean
+
+%|
+ |  Function: kill
+ |
+ |  Kill a process.
+ |%
+DECLARE NATIVE FUNCTION kill(process: Process)
+
+%|
+ |  Function: spawn
+ |
+ |  Create a new process with the given command line.
+ |%
+DECLARE NATIVE FUNCTION spawn(command: String): Process
+
+%|
+ |  Function: wait
+ |
+ |  Wait for a process to terminate.
+ |%
+DECLARE NATIVE FUNCTION wait(INOUT process: Process): Number

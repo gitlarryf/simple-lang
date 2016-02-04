@@ -75,7 +75,7 @@ False
 
 This happens because `0.2` cannot be repesented exactly in binary floating point. 
 
-To resolve this problem, Neon uses the [decimal64](https://en.wikipedia.org/wiki/Decimal64_floating-point_format) floating point type, which matches the base 10 that humans use to read and write numbers.
+To resolve this problem, Neon uses the [decimal128](https://en.wikipedia.org/wiki/Decimal128_floating-point_format) floating point type, which matches the base 10 that humans use to read and write numbers.
 
 <a name="integer_division"></a>
 ### Writing division expressions such as `5 / 2` and not expecting integer division
@@ -92,7 +92,7 @@ Beginners rightly assume that `c` will be `2.5` as the result of the division.
 However, the C language definition states that `/` will be *integer* division if both operands are integers.
 So, the result in `c` is `2`.
 
-To resolve this problem, the only number type in Neon is decimal64 floating point (called `Number`).
+To resolve this problem, the only number type in Neon is decimal128 floating point (called `Number`).
 In contexts such as array indexing where integers are expected, values are checked for the presence of a fractional part before trying to use them.
 
 <a name="assignment_equals"></a>
@@ -111,11 +111,15 @@ In many common systems languages (eg. C, C++, Java, C#), a pointer may hold a "n
 
 To resolve this problem, Neon introduces the idea of a "valid" pointer. A valid pointer is one that has been checked against `NIL` (the null reference) using a special form of the `IF` statement. The resulting valid pointer can be dereferenced without causing a null pointer exception.
 
-    VAR node: POINTER TO Node
-    
-    IF VALID p := node THEN
-        print(p.value)
-    END IF
+    TYPE Node IS RECORD
+        value: String
+    END RECORD
+
+    FUNCTION output(node: POINTER TO Node)
+        IF VALID node AS p THEN
+            print(p->value)
+        END IF
+    END FUNCTION
 
 <a name="empty_loop"></a>
 ### Unintended empty loop with `while (condition);`
@@ -126,6 +130,7 @@ In C and derived languages, sometimes a loop or conditional is mistakenly writte
 while (x < 5);
 {
     printf("%d\n", x);
+    x++;
 }
 ```
 
@@ -133,9 +138,12 @@ The trailing `;` on the `while` statement is in fact an empty loop body and the 
 
 To resolve this problem, Neon requires an explicitly terminated block in every compound statement:
 
-    WHILE x < 5
-        print(x)
-    END
+    VAR x: Number := 0
+
+    WHILE x < 5 DO
+        print("\(x)")
+        INC x
+    END WHILE
 
 <a name="logical_alternative"></a>
 ### Writing `if a == b or c` (in Python) to test whether `a` is equal to either `b` or `c`

@@ -1,0 +1,9 @@
+IMPORT time
+
+TYPE Stopwatch IS time.Stopwatch
+
+VAR timer: Stopwatch := Stopwatch()
+timer.start()
+time.sleep(0.1)
+print(strb(0.09 <= timer.elapsed() < 0.15))
+%= TRUE

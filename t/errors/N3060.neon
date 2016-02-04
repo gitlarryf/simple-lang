@@ -1,0 +1,3 @@
+VAR a: Number := 0
+a = 2
+  %<

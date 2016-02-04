@@ -1,0 +1,555 @@
+%|
+ |  File: complex
+ |
+ |  Mathematical functions for complex numbers.
+ |%
+
+EXPORT Complex
+EXPORT make
+EXPORT acos
+EXPORT acosh
+EXPORT abs
+EXPORT add
+EXPORT arg
+EXPORT asin
+EXPORT asinh
+EXPORT atan
+EXPORT atanh
+EXPORT cos
+EXPORT cosh
+EXPORT div
+EXPORT exp
+EXPORT exp10
+EXPORT inv
+EXPORT log
+EXPORT log10
+EXPORT mul
+EXPORT pow
+EXPORT sin
+EXPORT sinh
+EXPORT sqrt
+EXPORT sub
+EXPORT square
+EXPORT tan
+EXPORT tanh
+EXPORT Zero
+EXPORT One
+EXPORT i
+
+IMPORT math
+
+CONSTANT Max: Number := 9.999999999999999e384
+
+%|
+ |  Type: Complex
+ |
+ |  Complex number type.
+ |
+ |  Fields:
+ |      re - real part
+ |      im - imaginary part
+ |%
+TYPE Complex IS RECORD
+    re: Number
+    im: Number
+END RECORD
+
+LET LN10: Number := math.log(10)
+CONSTANT Zero: Complex := Complex(0, 0)
+CONSTANT One: Complex := Complex(1, 0)
+CONSTANT i: Complex := Complex(0, 1)
+
+FUNCTION sign(x: Number): Number
+    IF x = 0 THEN
+        RETURN 0
+    END IF
+    RETURN IF x > 0 THEN 1 ELSE -1
+END FUNCTION
+
+FUNCTION rsinh(x: Number): Number
+    RETURN (math.exp(x) - math.exp(-x)) / 2
+END FUNCTION
+
+FUNCTION rcosh(x: Number): Number
+    RETURN (math.exp(x) + math.exp(-x)) / 2
+END FUNCTION
+
+FUNCTION rtanh(x: Number): Number
+    RETURN (math.exp(2*x) - 1) / (math.exp(2*x) + 1)
+END FUNCTION
+
+%|
+ |  Function: make
+ |
+ |  Make a complex number from real and imaginary parts.
+ |
+ |  Parameters:
+ |      re - real part
+ |      im - imaginary part
+ |%
+FUNCTION make(re: Number, im: Number): Complex
+    RETURN Complex(re, im)
+END FUNCTION
+
+%|
+ |  Function: acos
+ |
+ |  Inverse cosine (arc cos).
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/InverseCosine.html
+ |%
+FUNCTION acos(a: Complex): Complex
+    LET s1: Complex := Complex(1 - a.re, -a.im).sqrt()
+    LET s2: Complex := Complex(1 + a.re, a.im).sqrt()
+    LET r1: Number := 2 * math.atan2(s1.re, s2.re)
+    VAR i1: Number := (s2.re*s1.im) - (s2.im*s1.re)
+    i1 := sign(i1) * math.log(math.abs(i1) + math.sqrt(i1*i1 + 1))
+    RETURN Complex(r1, i1)
+END FUNCTION
+
+%|
+ |  Function: acosh
+ |
+ |  Inverse hyperbolic cosine (arc cosh).
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/InverseHyperbolicCosine.html
+ |%
+FUNCTION acosh(a: Complex): Complex
+    LET s1: Complex := Complex(a.re - 1, a.im).sqrt()
+    LET s2: Complex := Complex(a.re + 1, a.im).sqrt()
+    VAR r1: Number := (s1.re*s2.re) + (s1.im*s2.im)
+    r1 := sign(r1) * math.log(math.abs(r1) + math.sqrt(r1*r1 + 1))
+    LET i1: Number := 2 * math.atan2(s1.im, s2.re)
+    RETURN Complex(r1, i1)
+END FUNCTION
+
+%|
+ |  Function: abs
+ |
+ |  Absolute value.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/AbsoluteValue.html
+ |%
+FUNCTION abs(a: Complex): Number
+    RETURN math.sqrt(a.re^2 + a.im^2)
+END FUNCTION
+
+%|
+ |  Function: add
+ |
+ |  Complex addition.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/ComplexAddition.html
+ |%
+FUNCTION add(a, b: Complex): Complex
+    RETURN Complex(a.re + b.re, a.im + b.im)
+END FUNCTION
+
+%|
+ |  Function: arg
+ |
+ |  Complex argument.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/ComplexArgument.html
+ |%
+FUNCTION arg(a: Complex): Number
+    RETURN math.atan2(a.im, a.re)
+END FUNCTION
+
+%|
+ |  Function: asin
+ |
+ |  Inverse sine (arc sin).
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/InverseSine.html
+ |%
+FUNCTION asin(a: Complex): Complex
+    LET s1: Complex := Complex(1 + a.re, a.im).sqrt()
+    LET s2: Complex := Complex(1 - a.re, -a.im).sqrt()
+    VAR r1: Number := (s1.re*s2.im) - (s2.re*s1.im)
+    r1 := sign(r1) * math.log(math.abs(r1) + math.sqrt(r1*r1 + 1))
+    LET i1: Number := math.atan2(a.re, (s1.re*s2.re) - (s1.im*s2.im))
+    RETURN Complex(i1, -r1)
+END FUNCTION
+
+%|
+ |  Function: asinh
+ |
+ |  Inverse hyperbolic sine (arc sinh).
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/InverseHyperbolicSine.html
+ |%
+FUNCTION asinh(a: Complex): Complex
+    LET s1: Complex := Complex(1 + a.im, -a.re).sqrt()
+    LET s2: Complex := Complex(1 - a.im, a.re).sqrt()
+    VAR r1: Number := (s1.re * s2.im) - (s2.re * s1.im)
+    r1 := sign(r1) * math.log(math.abs(r1) + math.sqrt(r1 * r1 + 1))
+    LET i1: Number := math.atan2(a.im, (s1.re * s2.re) - (s1.im * s2.im))
+    RETURN Complex(r1, i1)
+END FUNCTION
+
+%|
+ |  Function: atan
+ |
+ |  Inverse tangent (arc tan).
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/InverseTangent.html
+ |%
+FUNCTION atan(a: Complex): Complex
+    IF a.re = 0 AND math.abs(a.im) = 1 THEN
+        RETURN Complex(0, sign(a.im) * Max)
+    END IF
+    VAR rsign: Number := 1
+    IF a.re = 0 AND math.abs(a.im) > 1 THEN
+        rsign := -1
+    END IF
+    LET u: Complex := i.add(a).div(i.sub(a))
+    LET w: Complex := u.log()
+    RETURN Complex(rsign * -w.im/2, w.re/2)
+END FUNCTION
+
+%|
+ |  Function: atanh
+ |
+ |  Inverse hyperbolic tangent (arc tanh).
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/InverseHyperbolicTangent.html
+ |%
+FUNCTION atanh(a: Complex): Complex
+    IF a.im = 0 AND math.abs(a.re) = 1 THEN
+        RETURN Complex(sign(a.re) * Max, 0)
+    END IF
+    LET u: Complex := One.add(a).div(One.sub(a)).log()
+    RETURN Complex(u.re/2, u.im/2)
+END FUNCTION
+
+%|
+ |  Function: cos
+ |
+ |  Cosine.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/Cosine.html
+ |%
+FUNCTION cos(a: Complex): Complex
+    RETURN Complex(math.cos(a.re)*rcosh(a.im), -math.sin(a.re)*rsinh(a.im))
+END FUNCTION
+
+%|
+ |  Function: cosh
+ |
+ |  Hyperbolic cosine.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/HyperbolicCosine.html
+ |%
+FUNCTION cosh(a: Complex): Complex
+    RETURN Complex(rcosh(a.re)*math.cos(a.im), rsinh(a.re)*math.sin(a.im))
+END FUNCTION
+
+%|
+ |  Function: div
+ |
+ |  Complex division.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/ComplexDivision.html
+ |%
+FUNCTION div(a, b: Complex): Complex
+    LET d: Number := b.re^2 + b.im^2
+    RETURN Complex((a.re*b.re + a.im*b.im) / d, (a.im*b.re - a.re*b.im) / d)
+END FUNCTION
+
+%|
+ |  Function: exp
+ |
+ |  Complex exponentiation.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/ComplexExponentiation.html
+ |%
+FUNCTION exp(a: Complex): Complex
+    LET r: Number := math.exp(a.re)
+    RETURN Complex(r * math.cos(a.im), r * math.sin(a.im))
+END FUNCTION
+
+%|
+ |  Function: exp
+ |
+ |  Complex exponentiation (base 10).
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/ComplexExponentiation.html
+ |%
+FUNCTION exp10(a: Complex): Complex
+    LET r: Number := 10^a.re
+    LET t: Number := a.im * LN10
+    RETURN Complex(r * math.cos(t), r * math.sin(t))
+END FUNCTION
+
+%|
+ |  Function: inv
+ |
+ |  Complex inverse.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/MultiplicativeInverse.html
+ |%
+FUNCTION inv(a: Complex): Complex
+    LET d: Number := a.re*a.re + a.im*a.im
+    RETURN Complex(a.re/d, -a.im/d)
+END FUNCTION
+
+%|
+ |  Function: log
+ |
+ |  Complex logarithm.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/Logarithm.html
+ |%
+FUNCTION log(a: Complex): Complex
+    RETURN Complex(math.log(a.re*a.re + a.im*a.im)/2, a.arg())
+END FUNCTION
+
+%|
+ |  Function: log10
+ |
+ |  Complex logarithm (base 10).
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/Logarithm.html
+ |%
+FUNCTION log10(a: Complex): Complex
+    LET u: Complex := a.log()
+    RETURN Complex(u.re / LN10, u.im / LN10)
+END FUNCTION
+
+%|
+ |  Function: mul
+ |
+ |  Complex multiplication.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/ComplexMultiplication.html
+ |%
+FUNCTION mul(a, b: Complex): Complex
+    RETURN Complex(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re)
+END FUNCTION
+
+%|
+ |  Function: pow
+ |
+ |  Complex power.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/Power.html
+ |%
+FUNCTION pow(a, b: Complex): Complex
+    LET p: Number := a.arg()
+    LET m: Number := a.abs()
+    LET r: Number := m^b.re * math.exp(-b.im * p)
+    LET t: Number := b.re * p + b.im * math.log(m)
+    RETURN Complex(r * math.cos(t), r * math.sin(t))
+END FUNCTION
+
+%|
+ |  Function: sin
+ |
+ |  Sine.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/Sine.html
+ |%
+FUNCTION sin(a: Complex): Complex
+    RETURN Complex(math.sin(a.re)*rcosh(a.im), math.cos(a.re)*rsinh(a.im))
+END FUNCTION
+
+%|
+ |  Function: sinh
+ |
+ |  Hyperbolic sine.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/HyperbolicSine.html
+ |%
+FUNCTION sinh(a: Complex): Complex
+    RETURN Complex(rsinh(a.re)*math.cos(a.im), rcosh(a.re)*math.sin(a.im))
+END FUNCTION
+
+%|
+ |  Function: sqrt
+ |
+ |  Square root.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/SquareRoot.html
+ |%
+FUNCTION sqrt(a: Complex): Complex
+    LET m: Number := a.abs()
+    RETURN Complex(math.sqrt((a.re + m) / 2), (IF a.im < 0 THEN -1 ELSE 1) * math.sqrt((-a.re + m) / 2))
+END FUNCTION
+
+%|
+ |  Function: sub
+ |
+ |  Complex subtraction.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/ComplexSubtraction.html
+ |%
+FUNCTION sub(a, b: Complex): Complex
+    RETURN Complex(a.re - b.re, a.im - b.im)
+END FUNCTION
+
+%|
+ |  Function: square
+ |
+ |  Complex square (a^2).
+ |%
+FUNCTION square(a: Complex): Complex
+    RETURN Complex(a.re*a.re - a.im*a.im, 2*a.re*a.im)
+END FUNCTION
+
+%|
+ |  Function: tan
+ |
+ |  Tangent.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/Tangent.html
+ |%
+FUNCTION tan(a: Complex): Complex
+    LET u: Complex := Complex(math.tan(a.re), rtanh(a.im))
+    RETURN u.div(Complex(1, -u.re*u.im))
+END FUNCTION
+
+%|
+ |  Function: tanh
+ |
+ |  Hyperbolic tangent.
+ |
+ |  Reference:
+ |      http://mathworld.wolfram.com/HyperbolicTangent.html
+ |%
+FUNCTION tanh(a: Complex): Complex
+    LET u: Complex := Complex(rtanh(a.re), math.tan(a.im))
+    RETURN u.div(Complex(1, u.re*u.im))
+END FUNCTION
+
+FUNCTION Complex.acos(self: Complex): Complex
+    RETURN acos(self)
+END FUNCTION
+
+FUNCTION Complex.acosh(self: Complex): Complex
+    RETURN acosh(self)
+END FUNCTION
+
+FUNCTION Complex.abs(self: Complex): Number
+    RETURN abs(self)
+END FUNCTION
+
+FUNCTION Complex.add(self: Complex, a: Complex): Complex
+    RETURN add(self, a)
+END FUNCTION
+
+FUNCTION Complex.arg(self: Complex): Number
+    RETURN arg(self)
+END FUNCTION
+
+FUNCTION Complex.asin(self: Complex): Complex
+    RETURN asin(self)
+END FUNCTION
+
+FUNCTION Complex.asinh(self: Complex): Complex
+    RETURN asinh(self)
+END FUNCTION
+
+FUNCTION Complex.atan(self: Complex): Complex
+    RETURN atan(self)
+END FUNCTION
+
+FUNCTION Complex.atanh(self: Complex): Complex
+    RETURN atanh(self)
+END FUNCTION
+
+FUNCTION Complex.cos(self: Complex): Complex
+    RETURN cos(self)
+END FUNCTION
+
+FUNCTION Complex.cosh(self: Complex): Complex
+    RETURN cosh(self)
+END FUNCTION
+
+FUNCTION Complex.div(self: Complex, a: Complex): Complex
+    RETURN div(self, a)
+END FUNCTION
+
+FUNCTION Complex.exp(self: Complex): Complex
+    RETURN exp(self)
+END FUNCTION
+
+FUNCTION Complex.exp10(self: Complex): Complex
+    RETURN exp10(self)
+END FUNCTION
+
+FUNCTION Complex.inv(self: Complex): Complex
+    RETURN inv(self)
+END FUNCTION
+
+FUNCTION Complex.log(self: Complex): Complex
+    RETURN log(self)
+END FUNCTION
+
+FUNCTION Complex.log10(self: Complex): Complex
+    RETURN log10(self)
+END FUNCTION
+
+FUNCTION Complex.mul(self: Complex, a: Complex): Complex
+    RETURN mul(self, a)
+END FUNCTION
+
+FUNCTION Complex.pow(self: Complex, a: Complex): Complex
+    RETURN pow(self, a)
+END FUNCTION
+
+FUNCTION Complex.sin(self: Complex): Complex
+    RETURN sin(self)
+END FUNCTION
+
+FUNCTION Complex.sinh(self: Complex): Complex
+    RETURN sinh(self)
+END FUNCTION
+
+FUNCTION Complex.sqrt(self: Complex): Complex
+    RETURN sqrt(self)
+END FUNCTION
+
+FUNCTION Complex.sub(self: Complex, a: Complex): Complex
+    RETURN sub(self, a)
+END FUNCTION
+
+FUNCTION Complex.square(self: Complex): Complex
+    RETURN square(self)
+END FUNCTION
+
+FUNCTION Complex.tan(self: Complex): Complex
+    RETURN tan(self)
+END FUNCTION
+
+FUNCTION Complex.tanh(self: Complex): Complex
+    RETURN tanh(self)
+END FUNCTION
+
+FUNCTION Complex.toString(self: Complex): String
+    RETURN "(\(self.re), \(self.im))"
+END FUNCTION

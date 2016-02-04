@@ -1,0 +1,5 @@
+VAR a: Number
+    %<2
+IF VALID p AS a THEN
+              %<1
+END IF

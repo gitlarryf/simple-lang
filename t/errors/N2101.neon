@@ -1,6 +1,2 @@
-TYPE Suit := ENUM
-    Heart
-    Club
-    Spade
-    Diamond
-END IF
+LET a: Array<Number> := [1 TO "a"]
+                              %<

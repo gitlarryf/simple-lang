@@ -1,3 +1,2 @@
-IF (TRUE) DO
-    print("TRUE")
-END IF
+IMPORT module.5
+              %<

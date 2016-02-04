@@ -1,0 +1,4 @@
+VAR b: Number := 0
+
+b->Id
+%<

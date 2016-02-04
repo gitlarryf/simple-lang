@@ -58,7 +58,7 @@ std::string reconstitute(const Token &t)
         case TYPE:        return "TYPE";
         case RECORD:      return "RECORD";
         case ENUM:        return "ENUM";
-        case CONST:       return "CONST";
+        case CONSTANT:    return "CONSTANT";
         case IMPORT:      return "IMPORT";
         case IN:          return "IN";
         case OUT:         return "OUT";
@@ -66,7 +66,6 @@ std::string reconstitute(const Token &t)
         case ELSIF:       return "ELSIF";
         case CASE:        return "CASE";
         case WHEN:        return "WHEN";
-        case DOTDOT:      return "..";
         case EXTERNAL:    return "EXTERNAL";
         case EXIT:        return "EXIT";
         case NEXT:        return "NEXT";
@@ -82,6 +81,32 @@ std::string reconstitute(const Token &t)
         case NIL:         return "NIL";
         case VALID:       return "VALID";
         case ARROW:       return "->";
+        case SUBBEGIN:    return "";
+        case SUBFMT:      return "";
+        case SUBEND:      return "";
+        case LET:         return "LET";
+        case FIRST:       return "FIRST";
+        case LAST:        return "LAST";
+        case AS:          return "AS";
+        case DEFAULT:     return "DEFAULT";
+        case EXPORT:      return "EXPORT";
+        case PRIVATE:     return "PRIVATE";
+        case NATIVE:      return "NATIVE";
+        case FOREACH:     return "FOREACH";
+        case OF:          return "OF";
+        case INDEX:       return "INDEX";
+        case ASSERT:      return "ASSERT";
+        case EMBED:       return "EMBED";
+        case ALIAS:       return "ALIAS";
+        case IS:          return "IS";
+        case BEGIN:       return "BEGIN";
+        case MAIN:        return "MAIN";
+        case HEXBYTES:    return "HEXBYTES";
+        case INC:         return "INC";
+        case DEC:         return "DEC";
+        case UNDERSCORE:  return "_";
+        case OTHERS:      return "OTHERS";
+        case WITH:        return "WITH";
         case MAX_TOKEN:   return "";
     }
     return "";
@@ -95,7 +120,7 @@ int main(int argc, char *argv[])
     std::ifstream inf(argv[1]);
     std::stringstream buf;
     buf << inf.rdbuf();
-    std::vector<Token> tokens;
+    TokenizedSource tokens;
     int i = 0;
     for (auto b: buf.str()) {
         if (b > END_OF_FILE && b < MAX_TOKEN) {
@@ -104,7 +129,7 @@ int main(int argc, char *argv[])
             if (t.type == IDENTIFIER) {
                 t.text = std::string(1, 'a'+(i%4));
             }
-            tokens.push_back(t);
+            tokens.tokens.push_back(t);
         } else {
             exit(1);
         }
@@ -112,8 +137,8 @@ int main(int argc, char *argv[])
     }
     Token t;
     t.type = END_OF_FILE;
-    tokens.push_back(t);
-    for (auto t: tokens) {
+    tokens.tokens.push_back(t);
+    for (auto t: tokens.tokens) {
         std::cout << reconstitute(t) << " ";
     }
     std::cout << std::endl;

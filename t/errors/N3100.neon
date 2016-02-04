@@ -1,0 +1,11 @@
+TYPE Rec IS RECORD
+  a: Number
+END RECORD
+
+VAR a: POINTER TO Rec := NIL
+VAR b: POINTER TO Rec := NIL
+
+IF a <= b THEN
+     %<
+    print("bad")
+END IF

@@ -1,0 +1,10 @@
+TYPE Recordset IS RECORD
+                  %<2
+    Id: Number
+    Name: String
+END RECORD
+
+VAR a: Recordset := Recordset()
+
+a.LastName
+  %<1

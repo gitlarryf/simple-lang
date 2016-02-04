@@ -1,3 +1,2 @@
-WHILE (TRUE) DO
-    print("doing...")
-
+FOREACH x OF a INDEX 5
+                     %<

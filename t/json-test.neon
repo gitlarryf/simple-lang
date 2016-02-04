@@ -1,0 +1,63 @@
+IMPORT json
+
+IMPORT variant
+
+VAR s: String
+VAR v: variant.Variant
+
+s := json.encode(variant.makeNull())
+print(s)
+%= null
+v := json.decode(s)
+print("\(v.isNull())")
+%= TRUE
+
+s := json.encode(variant.makeBoolean(TRUE))
+print(s)
+%= true
+v := json.decode(s)
+print("\(v.getBoolean())")
+%= TRUE
+
+s := json.encode(variant.makeNumber(5))
+print(s)
+%= 5
+v := json.decode(s)
+print("\(v.getNumber())")
+%= 5
+
+s := json.encode(variant.makeString("fork"))
+print(s)
+%= "fork"
+v := json.decode(s)
+print("\(v.getString())")
+%= fork
+
+s := json.encode(variant.makeArray([variant.makeNumber(5), variant.makeString("fork")]))
+print(s)
+%= [5,"fork"]
+v := json.decode(s)
+print("\(v.getArray()[0].getNumber()) \(v.getArray()[1].getString())")
+%= 5 fork
+
+s := json.encode(variant.makeDictionary({
+    "null": variant.makeNull()
+    "boolean": variant.makeBoolean(TRUE)
+    "number": variant.makeNumber(5)
+    "string": variant.makeString("fork")
+}))
+print(s)
+%= {"boolean":true,"null":null,"number":5,"string":"fork"}
+v := json.decode(s)
+print(v.getDictionary()["null"].isNull().toString())
+%= TRUE
+print(v.getDictionary()["boolean"].getBoolean().toString())
+%= TRUE
+print(v.getDictionary()["number"].getNumber().toString())
+%= 5
+print(v.getDictionary()["string"].getString())
+%= fork
+
+v := json.decode(@@"{"foo": "bar\"baz"}"@@)
+print(v.getDictionary()["foo"].getString())
+%= bar"baz

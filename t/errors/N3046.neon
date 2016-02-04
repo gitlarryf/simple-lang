@@ -1,0 +1,10 @@
+TYPE Recordset IS RECORD
+    Id: Number
+    Name: String
+END RECORD
+
+VAR a: Recordset
+VAR b: Number := 0
+
+b.Id
+%<

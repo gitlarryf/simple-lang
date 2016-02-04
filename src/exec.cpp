@@ -2,21 +2,29 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <fstream>
 #include <iso646.h>
 #include <iostream>
+#include <list>
 #include <map>
+#include <set>
 #include <sstream>
-#include <stack>
 #include <stdlib.h>
+#include <string.h>
 
 #include <ffi.h>
+#include <minijson_writer.hpp>
 
 #include "bytecode.h"
 #include "cell.h"
+#include "debuginfo.h"
+#include "httpserver.h"
 #include "number.h"
 #include "opcode.h"
+#include "opstack.h"
 #include "rtl_exec.h"
 #include "rtl_platform.h"
+#include "support.h"
 
 namespace {
 
@@ -95,14 +103,48 @@ template <typename T> static void marshal_number(Cell &cell, void *&p, size_t &s
 static void marshal_pointer(Cell &cell, void *&p, size_t &space)
 {
     void **a = reinterpret_cast<void **>(align(alignof(void *), sizeof(void *), p, space));
+    *a = cell.address();
+    p = a + 1;
+    space -= sizeof(void *);
+}
+
+static void marshal_pointer_a(Cell &cell, void *&p, size_t &space)
+{
+    void **a = reinterpret_cast<void **>(align(alignof(void *), sizeof(void *), p, space));
+    *a = cell.address()->address();
+    p = a + 1;
+    space -= sizeof(void *);
+}
+
+static void marshal_string(Cell &cell, void *&p, size_t &space)
+{
+    void **a = reinterpret_cast<void **>(align(alignof(void *), sizeof(void *), p, space));
     *a = const_cast<char *>(cell.string().data());
     p = a + 1;
     space -= sizeof(void *);
 }
 
+static void marshal_string_a(Cell &cell, void *&p, size_t &space)
+{
+    void **a = reinterpret_cast<void **>(align(alignof(void *), sizeof(void *), p, space));
+    *a = const_cast<char *>(cell.address()->string().data());
+    p = a + 1;
+    space -= sizeof(void *);
+}
+
+template <typename T> static Cell unmarshal_boolean(void *p)
+{
+    return Cell(*reinterpret_cast<T *>(p) != 0);
+}
+
 template <typename T> static Cell unmarshal_number(void *p)
 {
     return Cell(number_conversion<T>::convert_from_native(*reinterpret_cast<T *>(p)));
+}
+
+static Cell unmarshal_pointer(void *p)
+{
+    return Cell(*(reinterpret_cast<Cell **>(p)));
 }
 
 class ActivationFrame {
@@ -112,18 +154,81 @@ public:
     std::vector<Cell> locals;
 };
 
-class Executor {
+// The fields here must match the declaration of
+// ExceptionInfo in ast.cpp.
+class ExceptionInfo {
 public:
-    Executor(const Bytecode::bytecode &bytes);
+    ExceptionInfo(): info(""), code(number_from_uint32(0)) {}
+    explicit ExceptionInfo(const utf8string &info): info(info), code(number_from_uint32(0)) {}
+    ExceptionInfo(const utf8string &info, uint32_t code): info(info), code(number_from_uint32(code)) {}
+    utf8string info;
+    Number code;
+};
+
+class Executor;
+
+class Module {
+public:
+    Module(const std::string &name, const Bytecode &object, const DebugInfo *debuginfo, Executor *executor, ICompilerSupport *support);
+    const std::string name;
+    Bytecode object;
+    const DebugInfo *debug;
+    std::vector<Cell> globals;
+    std::vector<size_t> rtl_call_tokens;
+    std::vector<ExternalCallInfo *> external_functions;
+private:
+    Module(const Module &);
+    Module &operator=(const Module &);
+};
+
+class Executor: public IHttpServerHandler {
+public:
+    Executor(const std::string &source_path, const Bytecode::Bytes &bytes, const DebugInfo *debuginfo, ICompilerSupport *support, bool enable_assert, unsigned short debug_port);
+    virtual ~Executor();
+
+    // Module: debugger
+    void breakpoint();
+    void log(const std::string &message);
+
+    // Module: runtime
+    void garbage_collect();
+    size_t get_allocated_object_count();
+    bool module_is_main();
+    void set_garbage_collection_interval(size_t count);
+    void set_recursion_limit(size_t depth);
+
     void exec();
 private:
-    const Bytecode obj;
-    Bytecode::bytecode::size_type ip;
-    std::stack<Cell> stack;
-    std::stack<Bytecode::bytecode::size_type> callstack;
-    std::vector<Cell> globals;
-    std::vector<ActivationFrame> frames;
-    std::vector<ExternalCallInfo *> external_functions;
+    const std::string source_path;
+    const bool enable_assert;
+
+    size_t param_garbage_collection_interval;
+    size_t param_recursion_limit;
+
+    std::map<std::string, Module *> modules;
+    std::vector<std::string> init_order;
+    Module *module;
+    Bytecode::Bytes::size_type ip;
+    opstack<Cell> stack;
+    std::vector<std::pair<Module *, Bytecode::Bytes::size_type>> callstack;
+    std::list<ActivationFrame> frames;
+
+    std::list<Cell> allocs;
+    unsigned int allocations;
+
+    enum DebuggerState {
+        DEBUGGER_STOPPED,
+        DEBUGGER_RUN,
+        DEBUGGER_STEP_INSTRUCTION,
+        DEBUGGER_STEP_SOURCE,
+        DEBUGGER_QUIT,
+    };
+    static const char *DebuggerStateName[];
+    HttpServer *debug_server;
+    DebuggerState debugger_state;
+    size_t debugger_step_source_depth;
+    std::set<size_t> debugger_breakpoints;
+    std::vector<std::string> debugger_log;
 
     void exec_ENTER();
     void exec_LEAVE();
@@ -131,8 +236,11 @@ private:
     void exec_PUSHN();
     void exec_PUSHS();
     void exec_PUSHPG();
+    void exec_PUSHPPG();
+    void exec_PUSHPMG();
     void exec_PUSHPL();
     void exec_PUSHPOL();
+    void exec_PUSHI();
     void exec_LOADB();
     void exec_LOADN();
     void exec_LOADS();
@@ -178,6 +286,7 @@ private:
     void exec_INDEXAR();
     void exec_INDEXAW();
     void exec_INDEXAV();
+    void exec_INDEXAN();
     void exec_INDEXDR();
     void exec_INDEXDW();
     void exec_INDEXDV();
@@ -185,39 +294,108 @@ private:
     void exec_IND();
     void exec_CALLP();
     void exec_CALLF();
+    void exec_CALLMF();
+    void exec_CALLI();
     void exec_JUMP();
     void exec_JF();
     void exec_JT();
+    void exec_JFCHAIN();
     void exec_DUP();
+    void exec_DUPX1();
     void exec_DROP();
     void exec_RET();
     void exec_CALLE();
     void exec_CONSA();
     void exec_CONSD();
     void exec_EXCEPT();
+    void exec_CLREXC();
     void exec_ALLOC();
     void exec_PUSHNIL();
+    void exec_JNASSERT();
+    void exec_RESETC();
 
-    void raise(const std::string &exception);
+    void raise_literal(const utf8string &exception, const ExceptionInfo &info);
+    void raise(const ExceptionName &exception, const ExceptionInfo &info);
+    void raise(const RtlException &x);
+
+    virtual void handle_GET(const std::string &path, HttpResponse &response);
+    virtual void handle_POST(const std::string &path, const std::string &data, HttpResponse &response);
+
+    friend class Module;
 private:
     Executor(const Executor &);
     Executor &operator=(const Executor &);
 };
 
-Executor::Executor(const Bytecode::bytecode &bytes)
-  : obj(bytes),
+const char *Executor::DebuggerStateName[] = {
+    "stopped",
+    "run",
+    "single_step",
+    "source_step",
+    "quit",
+};
+
+static Executor *g_executor;
+
+Executor::Executor(const std::string &source_path, const Bytecode::Bytes &bytes, const DebugInfo *debuginfo, ICompilerSupport *support, bool enable_assert, unsigned short debug_port)
+  : source_path(source_path),
+    enable_assert(enable_assert),
+    param_garbage_collection_interval(1000),
+    param_recursion_limit(1000),
+    modules(),
+    init_order(),
+    module(nullptr),
     ip(0),
     stack(),
     callstack(),
-    globals(obj.global_size),
     frames(),
+    allocs(),
+    allocations(0),
+    debug_server(debug_port ? new HttpServer(debug_port, this) : nullptr),
+    debugger_state(DEBUGGER_STOPPED),
+    debugger_step_source_depth(0),
+    debugger_breakpoints(),
+    debugger_log()
+{
+    assert(g_executor == nullptr);
+    g_executor = this;
+    module = new Module(source_path, Bytecode(bytes), debuginfo, this, support);
+    modules[""] = module;
+}
+
+Executor::~Executor()
+{
+    delete debug_server;
+}
+
+Module::Module(const std::string &name, const Bytecode &object, const DebugInfo *debuginfo, Executor *executor, ICompilerSupport *support)
+  : name(name),
+    object(object),
+    debug(debuginfo),
+    globals(object.global_size),
+    rtl_call_tokens(object.strtable.size(), SIZE_MAX),
     external_functions()
 {
+    for (auto i: object.imports) {
+        std::string name = object.strtable[i.first];
+        if (executor->modules.find(name) != executor->modules.end()) {
+            continue;
+        }
+        Bytecode code;
+        if (not support->loadBytecode(name, code)) {
+            fprintf(stderr, "couldn't load module: %s\n", name.c_str());
+            exit(1);
+        }
+        // TODO: check hash of exports
+        executor->init_order.push_back(name);
+        executor->modules[name] = nullptr; // Prevent unwanted recursion.
+        executor->modules[name] = new Module(name, code, nullptr, executor, support);
+    }
 }
 
 void Executor::exec_ENTER()
 {
-    uint32_t val = (obj.code[ip+1] << 24) | (obj.code[ip+2] << 16) | (obj.code[ip+3] << 8) | obj.code[ip+4];
+    uint32_t val = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
     ip += 5;
     frames.push_back(ActivationFrame(val));
 }
@@ -230,7 +408,7 @@ void Executor::exec_LEAVE()
 
 void Executor::exec_PUSHB()
 {
-    bool val = obj.code[ip+1] != 0;
+    bool val = module->object.code[ip+1] != 0;
     ip += 2;
     stack.push(Cell(val));
 }
@@ -238,41 +416,77 @@ void Executor::exec_PUSHB()
 void Executor::exec_PUSHN()
 {
     // TODO: endian
-    Number val = *reinterpret_cast<const Number *>(&obj.code[ip+1]);
+    Number val;
+    memcpy(&val, &module->object.code[ip+1], sizeof(Number));
     ip += 1 + sizeof(val);
     stack.push(Cell(val));
 }
 
 void Executor::exec_PUSHS()
 {
-    uint32_t val = (obj.code[ip+1] << 24) | (obj.code[ip+2] << 16) | (obj.code[ip+3] << 8) | obj.code[ip+4];
+    uint32_t val = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
     ip += 5;
-    stack.push(Cell(obj.strtable[val]));
+    stack.push(Cell(module->object.strtable[val]));
 }
 
 void Executor::exec_PUSHPG()
 {
-    uint32_t addr = (obj.code[ip+1] << 24) | (obj.code[ip+2] << 16) | (obj.code[ip+3] << 8) | obj.code[ip+4];
+    uint32_t addr = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
     ip += 5;
-    assert(addr < globals.size());
-    stack.push(Cell(&globals.at(addr)));
+    assert(addr < module->globals.size());
+    stack.push(Cell(&module->globals.at(addr)));
+}
+
+void Executor::exec_PUSHPPG()
+{
+    uint32_t name = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
+    ip += 5;
+    stack.push(Cell(rtl_variable(module->object.strtable[name])));
+}
+
+void Executor::exec_PUSHPMG()
+{
+    ip++;
+    uint32_t mod = (module->object.code[ip] << 24) | (module->object.code[ip+1] << 16) | (module->object.code[ip+2] << 8) | module->object.code[ip+3];
+    ip += 4;
+    uint32_t addr = (module->object.code[ip] << 24) | (module->object.code[ip+1] << 16) | (module->object.code[ip+2] << 8) | module->object.code[ip+3];
+    ip += 4;
+    auto m = modules.find(module->object.strtable[mod]);
+    if (m == modules.end()) {
+        fprintf(stderr, "fatal: module not found: %s\n", module->object.strtable[mod].c_str());
+        exit(1);
+    }
+    assert(addr < m->second->globals.size());
+    stack.push(Cell(&m->second->globals.at(addr)));
 }
 
 void Executor::exec_PUSHPL()
 {
-    uint32_t addr = (obj.code[ip+1] << 24) | (obj.code[ip+2] << 16) | (obj.code[ip+3] << 8) | obj.code[ip+4];
+    uint32_t addr = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
     ip += 5;
     stack.push(Cell(&frames.back().locals.at(addr)));
 }
 
 void Executor::exec_PUSHPOL()
 {
+    fprintf(stderr, "unimplemented: PUSHPOL\n");
+    exit(1);
+    /*
     ip++;
-    uint32_t enclosing = (obj.code[ip] << 24) | (obj.code[ip+1] << 16) | (obj.code[ip+2] << 8) | obj.code[ip+3];
+    uint32_t enclosing = (module->object.code[ip] << 24) | (module->object.code[ip+1] << 16) | (module->object.code[ip+2] << 8) | module->object.code[ip+3];
     ip += 4;
-    uint32_t addr = (obj.code[ip] << 24) | (obj.code[ip+1] << 16) | (obj.code[ip+2] << 8) | obj.code[ip+3];
+    uint32_t addr = (module->object.code[ip] << 24) | (module->object.code[ip+1] << 16) | (module->object.code[ip+2] << 8) | module->object.code[ip+3];
     ip += 4;
     stack.push(Cell(&frames[frames.size()-1-enclosing].locals.at(addr)));
+    */
+}
+
+void Executor::exec_PUSHI()
+{
+    ip++;
+    uint32_t x = (module->object.code[ip] << 24) | (module->object.code[ip+1] << 16) | (module->object.code[ip+2] << 8) | module->object.code[ip+3];
+    ip += 4;
+    stack.push(Cell(number_from_uint32(x)));
 }
 
 void Executor::exec_LOADB()
@@ -293,21 +507,24 @@ void Executor::exec_LOADS()
 {
     ip++;
     Cell *addr = stack.top().address(); stack.pop();
-    stack.push(Cell(addr->string()));
+    addr->string();
+    stack.push(Cell(*addr));
 }
 
 void Executor::exec_LOADA()
 {
     ip++;
     Cell *addr = stack.top().address(); stack.pop();
-    stack.push(Cell(addr->array()));
+    addr->array();
+    stack.push(Cell(*addr));
 }
 
 void Executor::exec_LOADD()
 {
     ip++;
     Cell *addr = stack.top().address(); stack.pop();
-    stack.push(Cell(addr->dictionary()));
+    addr->dictionary();
+    stack.push(Cell(*addr));
 }
 
 void Executor::exec_LOADP()
@@ -337,24 +554,24 @@ void Executor::exec_STORES()
 {
     ip++;
     Cell *addr = stack.top().address(); stack.pop();
-    std::string val = stack.top().string(); stack.pop();
-    *addr = Cell(val);
+    *addr = stack.top(); stack.pop();
+    addr->string();
 }
 
 void Executor::exec_STOREA()
 {
     ip++;
     Cell *addr = stack.top().address(); stack.pop();
-    std::vector<Cell> val = stack.top().array(); stack.pop();
-    *addr = Cell(val);
+    *addr = stack.top(); stack.pop();
+    addr->array();
 }
 
 void Executor::exec_STORED()
 {
     ip++;
     Cell *addr = stack.top().address(); stack.pop();
-    std::map<std::string, Cell> val = stack.top().dictionary(); stack.pop();
-    *addr = Cell(val);
+    *addr = stack.top(); stack.pop();
+    addr->dictionary();
 }
 
 void Executor::exec_STOREP()
@@ -402,7 +619,7 @@ void Executor::exec_DIVN()
     Number b = stack.top().number(); stack.pop();
     Number a = stack.top().number(); stack.pop();
     if (number_is_zero(b)) {
-        raise("DivideByZero");
+        raise(Exception_global$DivideByZeroException, ExceptionInfo(""));
         return;
     }
     stack.push(Cell(number_divide(a, b)));
@@ -414,7 +631,7 @@ void Executor::exec_MODN()
     Number b = stack.top().number(); stack.pop();
     Number a = stack.top().number(); stack.pop();
     if (number_is_zero(b)) {
-        raise("DivideByZero");
+        raise(Exception_global$DivideByZeroException, ExceptionInfo(""));
         return;
     }
     stack.push(Cell(number_modulo(a, b)));
@@ -495,81 +712,93 @@ void Executor::exec_GEN()
 void Executor::exec_EQS()
 {
     ip++;
-    std::string b = stack.top().string(); stack.pop();
-    std::string a = stack.top().string(); stack.pop();
+    utf8string b = stack.top().string(); stack.pop();
+    utf8string a = stack.top().string(); stack.pop();
     stack.push(Cell(a == b));
 }
 
 void Executor::exec_NES()
 {
     ip++;
-    std::string b = stack.top().string(); stack.pop();
-    std::string a = stack.top().string(); stack.pop();
+    utf8string b = stack.top().string(); stack.pop();
+    utf8string a = stack.top().string(); stack.pop();
     stack.push(Cell(a != b));
 }
 
 void Executor::exec_LTS()
 {
     ip++;
-    std::string b = stack.top().string(); stack.pop();
-    std::string a = stack.top().string(); stack.pop();
+    utf8string b = stack.top().string(); stack.pop();
+    utf8string a = stack.top().string(); stack.pop();
     stack.push(Cell(a < b));
 }
 
 void Executor::exec_GTS()
 {
     ip++;
-    std::string b = stack.top().string(); stack.pop();
-    std::string a = stack.top().string(); stack.pop();
+    utf8string b = stack.top().string(); stack.pop();
+    utf8string a = stack.top().string(); stack.pop();
     stack.push(Cell(a > b));
 }
 
 void Executor::exec_LES()
 {
     ip++;
-    std::string b = stack.top().string(); stack.pop();
-    std::string a = stack.top().string(); stack.pop();
+    utf8string b = stack.top().string(); stack.pop();
+    utf8string a = stack.top().string(); stack.pop();
     stack.push(Cell(a <= b));
 }
 
 void Executor::exec_GES()
 {
     ip++;
-    std::string b = stack.top().string(); stack.pop();
-    std::string a = stack.top().string(); stack.pop();
+    utf8string b = stack.top().string(); stack.pop();
+    utf8string a = stack.top().string(); stack.pop();
     stack.push(Cell(a >= b));
 }
 
 void Executor::exec_EQA()
 {
     ip++;
-    std::vector<Cell> b = stack.top().array(); stack.pop();
-    std::vector<Cell> a = stack.top().array(); stack.pop();
-    stack.push(Cell(a == b));
+    const std::vector<Cell> &b = stack.top().array();
+    const std::vector<Cell> &a = stack.peek(1).array();
+    bool v = a == b;
+    stack.pop();
+    stack.pop();
+    stack.push(Cell(v));
 }
 
 void Executor::exec_NEA()
 {
     ip++;
-    std::vector<Cell> b = stack.top().array(); stack.pop();
-    std::vector<Cell> a = stack.top().array(); stack.pop();
-    stack.push(Cell(a != b));
+    const std::vector<Cell> &b = stack.top().array();
+    const std::vector<Cell> &a = stack.peek(1).array();
+    bool v = a != b;
+    stack.pop();
+    stack.pop();
+    stack.push(Cell(v));
 }
 
 void Executor::exec_EQD()
 {
     ip++;
-    std::map<std::string, Cell> b = stack.top().dictionary(); stack.pop();
-    std::map<std::string, Cell> a = stack.top().dictionary(); stack.pop();
-    stack.push(Cell(a == b));
+    const std::map<utf8string, Cell> &b = stack.top().dictionary();
+    const std::map<utf8string, Cell> &a = stack.peek(1).dictionary();
+    bool v = a == b;
+    stack.pop();
+    stack.pop();
+    stack.push(Cell(v));
 }
 
 void Executor::exec_NED()
 {
     ip++;
-    std::map<std::string, Cell> b = stack.top().dictionary(); stack.pop();
-    std::map<std::string, Cell> a = stack.top().dictionary(); stack.pop();
-    stack.push(Cell(a != b));
+    const std::map<utf8string, Cell> &b = stack.top().dictionary();
+    const std::map<utf8string, Cell> &a = stack.peek(1).dictionary();
+    bool v = a != b;
+    stack.pop();
+    stack.pop();
+    stack.push(Cell(v));
 }
 
 void Executor::exec_EQP()
@@ -616,15 +845,19 @@ void Executor::exec_INDEXAR()
     ip++;
     Number index = stack.top().number(); stack.pop();
     Cell *addr = stack.top().address(); stack.pop();
-    assert(number_is_integer(index));
-    uint32_t i = number_to_uint32(index); // TODO: to signed instead of unsigned for better errors
-    // TODO: check for i >= 0 and throw exception if not
-    if (i >= addr->array().size()) {
-        raise("ArrayIndex");
+    if (not number_is_integer(index)) {
+        raise(Exception_global$ArrayIndexException, ExceptionInfo(number_to_string(index)));
+    }
+    int64_t i = number_to_sint64(index);
+    if (i < 0) {
+        raise(Exception_global$ArrayIndexException, ExceptionInfo(std::to_string(i)));
+    }
+    uint64_t j = static_cast<uint64_t>(i);
+    if (j >= addr->array().size()) {
+        raise(Exception_global$ArrayIndexException, ExceptionInfo(std::to_string(j)));
         return;
     }
-    assert(i < addr->array().size());
-    stack.push(Cell(&addr->array().at(i)));
+    stack.push(Cell(&addr->array_index_for_read(j)));
 }
 
 void Executor::exec_INDEXAW()
@@ -632,30 +865,54 @@ void Executor::exec_INDEXAW()
     ip++;
     Number index = stack.top().number(); stack.pop();
     Cell *addr = stack.top().address(); stack.pop();
-    assert(number_is_integer(index));
-    uint32_t i = number_to_uint32(index); // TODO: to signed instead of unsigned for better errors
-    // TODO: check for i >= 0 and throw exception if not
-    if (i >= addr->array().size()) {
-        addr->array().resize(i+1);
+    if (not number_is_integer(index)) {
+        raise(Exception_global$ArrayIndexException, ExceptionInfo(number_to_string(index)));
     }
-    assert(i < addr->array().size());
-    stack.push(Cell(&addr->array().at(i)));
+    int64_t i = number_to_sint64(index);
+    if (i < 0) {
+        raise(Exception_global$ArrayIndexException, ExceptionInfo(std::to_string(i)));
+    }
+    uint64_t j = static_cast<uint64_t>(i);
+    stack.push(Cell(&addr->array_index_for_write(j)));
 }
 
 void Executor::exec_INDEXAV()
 {
     ip++;
     Number index = stack.top().number(); stack.pop();
-    std::vector<Cell> &array = stack.top().array();
-    assert(number_is_integer(index));
-    uint32_t i = number_to_uint32(index); // TODO: to signed instead of unsigned for better errors
-    // TODO: check for i >= 0 and throw exception if not
-    if (i >= array.size()) {
-        raise("ArrayIndex");
+    const std::vector<Cell> &array = stack.top().array();
+    if (not number_is_integer(index)) {
+        raise(Exception_global$ArrayIndexException, ExceptionInfo(number_to_string(index)));
+    }
+    int64_t i = number_to_sint64(index);
+    if (i < 0) {
+        raise(Exception_global$ArrayIndexException, ExceptionInfo(std::to_string(i)));
+    }
+    uint64_t j = static_cast<uint64_t>(i);
+    if (j >= array.size()) {
+        raise(Exception_global$ArrayIndexException, ExceptionInfo(std::to_string(j)));
         return;
     }
-    assert(i < array.size());
-    Cell val = array.at(i);
+    assert(j < array.size());
+    Cell val = array.at(j);
+    stack.pop();
+    stack.push(val);
+}
+
+void Executor::exec_INDEXAN()
+{
+    ip++;
+    Number index = stack.top().number(); stack.pop();
+    const std::vector<Cell> &array = stack.top().array();
+    if (not number_is_integer(index)) {
+        raise(Exception_global$ArrayIndexException, ExceptionInfo(number_to_string(index)));
+    }
+    int64_t i = number_to_sint64(index);
+    if (i < 0) {
+        raise(Exception_global$ArrayIndexException, ExceptionInfo(std::to_string(i)));
+    }
+    uint64_t j = static_cast<uint64_t>(i);
+    Cell val = j < array.size() ? array.at(j) : Cell();
     stack.pop();
     stack.push(val);
 }
@@ -663,32 +920,32 @@ void Executor::exec_INDEXAV()
 void Executor::exec_INDEXDR()
 {
     ip++;
-    std::string index = stack.top().string(); stack.pop();
+    utf8string index = stack.top().string(); stack.pop();
     Cell *addr = stack.top().address(); stack.pop();
     auto e = addr->dictionary().find(index);
     if (e == addr->dictionary().end()) {
-        raise("DictionaryIndex");
+        raise(Exception_global$DictionaryIndexException, ExceptionInfo(index));
         return;
     }
-    stack.push(Cell(&e->second));
+    stack.push(Cell(&addr->dictionary_index_for_read(index)));
 }
 
 void Executor::exec_INDEXDW()
 {
     ip++;
-    std::string index = stack.top().string(); stack.pop();
+    utf8string index = stack.top().string(); stack.pop();
     Cell *addr = stack.top().address(); stack.pop();
-    stack.push(Cell(&addr->dictionary()[index]));
+    stack.push(Cell(&addr->dictionary_index_for_write(index)));
 }
 
 void Executor::exec_INDEXDV()
 {
     ip++;
-    std::string index = stack.top().string(); stack.pop();
-    std::map<std::string, Cell> &dictionary = stack.top().dictionary();
+    utf8string index = stack.top().string(); stack.pop();
+    const std::map<utf8string, Cell> &dictionary = stack.top().dictionary();
     auto e = dictionary.find(index);
     if (e == dictionary.end()) {
-        raise("DictionaryIndex");
+        raise(Exception_global$DictionaryIndexException, ExceptionInfo(index));
         return;
     }
     Cell val = e->second;
@@ -699,45 +956,94 @@ void Executor::exec_INDEXDV()
 void Executor::exec_INA()
 {
     ip++;
-    auto array = stack.top().array(); stack.pop();
-    Cell val = stack.top(); stack.pop();
-    stack.push(Cell(std::find(array.begin(), array.end(), val) != array.end()));
+    auto &array = stack.top().array();
+    Cell val = stack.peek(1);
+    bool v = std::find(array.begin(), array.end(), val) != array.end();
+    stack.pop();
+    stack.pop();
+    stack.push(Cell(v));
 }
 
 void Executor::exec_IND()
 {
     ip++;
-    auto dictionary = stack.top().dictionary(); stack.pop();
-    std::string key = stack.top().string(); stack.pop();
-    stack.push(Cell(dictionary.find(key) != dictionary.end()));
+    auto &dictionary = stack.top().dictionary();
+    utf8string key = stack.peek(1).string();
+    bool v = dictionary.find(key) != dictionary.end();
+    stack.pop();
+    stack.pop();
+    stack.push(Cell(v));
 }
 
 void Executor::exec_CALLP()
 {
-    uint32_t val = (obj.code[ip+1] << 24) | (obj.code[ip+2] << 16) | (obj.code[ip+3] << 8) | obj.code[ip+4];
+    uint32_t val = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
     ip += 5;
-    std::string func = obj.strtable.at(val);
-    rtl_call(stack, func);
+    std::string func = module->object.strtable.at(val);
+    try {
+        rtl_call(stack, func, module->rtl_call_tokens[val]);
+    } catch (RtlException &x) {
+        ip -= 5;
+        raise(x);
+    }
 }
 
 void Executor::exec_CALLF()
 {
-    uint32_t val = (obj.code[ip+1] << 24) | (obj.code[ip+2] << 16) | (obj.code[ip+3] << 8) | obj.code[ip+4];
+    uint32_t val = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
     ip += 5;
-    callstack.push(ip);
+    if (callstack.size() >= param_recursion_limit) {
+        raise(Exception_global$StackOverflowException, ExceptionInfo(""));
+    }
+    callstack.push_back(std::make_pair(module, ip));
     ip = val;
+}
+
+void Executor::exec_CALLMF()
+{
+    ip++;
+    uint32_t mod = (module->object.code[ip] << 24) | (module->object.code[ip+1] << 16) | (module->object.code[ip+2] << 8) | module->object.code[ip+3];
+    ip += 4;
+    uint32_t val = (module->object.code[ip] << 24) | (module->object.code[ip+1] << 16) | (module->object.code[ip+2] << 8) | module->object.code[ip+3];
+    ip += 4;
+    if (callstack.size() >= param_recursion_limit) {
+        raise(Exception_global$StackOverflowException, ExceptionInfo(""));
+    }
+    callstack.push_back(std::make_pair(module, ip));
+    auto m = modules.find(module->object.strtable[mod]);
+    if (m == modules.end()) {
+        fprintf(stderr, "fatal: module not found: %s\n", module->object.strtable[mod].c_str());
+        exit(1);
+    }
+    module = m->second;
+    ip = val;
+}
+
+void Executor::exec_CALLI()
+{
+    ip++;
+    if (callstack.size() >= param_recursion_limit) {
+        raise(Exception_global$StackOverflowException, ExceptionInfo(""));
+    }
+    Number addr = stack.top().number(); stack.pop();
+    if (number_is_zero(addr) || not number_is_integer(addr)) {
+        raise(Exception_global$InvalidFunctionException, ExceptionInfo(""));
+    }
+    uint32_t addri = number_to_uint32(addr);
+    callstack.push_back(std::make_pair(module, ip));
+    ip = addri;
 }
 
 void Executor::exec_JUMP()
 {
-    uint32_t target = (obj.code[ip+1] << 24) | (obj.code[ip+2] << 16) | (obj.code[ip+3] << 8) | obj.code[ip+4];
+    uint32_t target = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
     ip += 5;
     ip = target;
 }
 
 void Executor::exec_JF()
 {
-    uint32_t target = (obj.code[ip+1] << 24) | (obj.code[ip+2] << 16) | (obj.code[ip+3] << 8) | obj.code[ip+4];
+    uint32_t target = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
     ip += 5;
     bool a = stack.top().boolean(); stack.pop();
     if (not a) {
@@ -747,7 +1053,7 @@ void Executor::exec_JF()
 
 void Executor::exec_JT()
 {
-    uint32_t target = (obj.code[ip+1] << 24) | (obj.code[ip+2] << 16) | (obj.code[ip+3] << 8) | obj.code[ip+4];
+    uint32_t target = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
     ip += 5;
     bool a = stack.top().boolean(); stack.pop();
     if (a) {
@@ -755,10 +1061,32 @@ void Executor::exec_JT()
     }
 }
 
+void Executor::exec_JFCHAIN()
+{
+    uint32_t target = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
+    ip += 5;
+    Cell a = stack.top(); stack.pop();
+    if (not a.boolean()) {
+        ip = target;
+        stack.pop();
+        stack.push(a);
+    }
+}
+
 void Executor::exec_DUP()
 {
     ip++;
     stack.push(stack.top());
+}
+
+void Executor::exec_DUPX1()
+{
+    ip++;
+    Cell a = stack.top(); stack.pop();
+    Cell b = stack.top(); stack.pop();
+    stack.push(a);
+    stack.push(b);
+    stack.push(a);
 }
 
 void Executor::exec_DROP()
@@ -769,48 +1097,55 @@ void Executor::exec_DROP()
 
 void Executor::exec_RET()
 {
-    ip = callstack.top();
-    callstack.pop();
+    module = callstack.back().first;
+    ip = callstack.back().second;
+    callstack.pop_back();
 }
 
 void Executor::exec_CALLE()
 {
-    uint32_t val = (obj.code[ip+1] << 24) | (obj.code[ip+2] << 16) | (obj.code[ip+3] << 8) | obj.code[ip+4];
+    uint32_t val = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
     ip += 5;
-    ExternalCallInfo *eci = val < external_functions.size() ? external_functions.at(val) : nullptr;
+    ExternalCallInfo *eci = val < module->external_functions.size() ? module->external_functions.at(val) : nullptr;
     if (eci == nullptr) {
         eci = new ExternalCallInfo;
-        std::string func = obj.strtable.at(val);
+        std::string func = module->object.strtable.at(val);
         auto info = split(func, ':');
         std::string library = info[0];
         std::string name = info[1];
         std::string rettype = info[2];
         auto params = split(info[3], ',');
-        std::string exception;
-        eci->fp = rtl_external_function(library, name, exception);
-        if (eci->fp == nullptr) {
-            raise(exception);
+        try {
+            eci->fp = rtl_external_function(library, name);
+        } catch (RtlException &x) {
+            raise(x);
             return;
         }
         for (auto p: params) {
-                 if (p == "uint8" ) { eci->types.push_back(&ffi_type_uint8 ); eci->marshal.push_back(marshal_number<uint8_t >); }
-            else if (p == "sint8" ) { eci->types.push_back(&ffi_type_sint8 ); eci->marshal.push_back(marshal_number< int8_t >); }
-            else if (p == "uint16") { eci->types.push_back(&ffi_type_uint16); eci->marshal.push_back(marshal_number<uint16_t>); }
-            else if (p == "sint16") { eci->types.push_back(&ffi_type_sint16); eci->marshal.push_back(marshal_number< int16_t>); }
-            else if (p == "uint32") { eci->types.push_back(&ffi_type_uint32); eci->marshal.push_back(marshal_number<uint32_t>); }
-            else if (p == "sint32") { eci->types.push_back(&ffi_type_sint32); eci->marshal.push_back(marshal_number< int32_t>); }
-            else if (p == "uint64") { eci->types.push_back(&ffi_type_uint64); eci->marshal.push_back(marshal_number<uint64_t>); }
-            else if (p == "sint64") { eci->types.push_back(&ffi_type_sint64); eci->marshal.push_back(marshal_number< int64_t>); }
-            else if (p == "float" ) { eci->types.push_back(&ffi_type_float ); eci->marshal.push_back(marshal_number<float   >); }
-            else if (p == "double") { eci->types.push_back(&ffi_type_double); eci->marshal.push_back(marshal_number<double  >); }
-            else if (p == "pointer"){ eci->types.push_back(&ffi_type_pointer);eci->marshal.push_back(marshal_pointer         ); }
+                 if (p == "uint8" )   { eci->types.push_back(&ffi_type_uint8 );  eci->marshal.push_back(marshal_number<uint8_t >); }
+            else if (p == "sint8" )   { eci->types.push_back(&ffi_type_sint8 );  eci->marshal.push_back(marshal_number< int8_t >); }
+            else if (p == "uint16")   { eci->types.push_back(&ffi_type_uint16);  eci->marshal.push_back(marshal_number<uint16_t>); }
+            else if (p == "sint16")   { eci->types.push_back(&ffi_type_sint16);  eci->marshal.push_back(marshal_number< int16_t>); }
+            else if (p == "uint32")   { eci->types.push_back(&ffi_type_uint32);  eci->marshal.push_back(marshal_number<uint32_t>); }
+            else if (p == "sint32")   { eci->types.push_back(&ffi_type_sint32);  eci->marshal.push_back(marshal_number< int32_t>); }
+            else if (p == "uint64")   { eci->types.push_back(&ffi_type_uint64);  eci->marshal.push_back(marshal_number<uint64_t>); }
+            else if (p == "sint64")   { eci->types.push_back(&ffi_type_sint64);  eci->marshal.push_back(marshal_number< int64_t>); }
+            else if (p == "float" )   { eci->types.push_back(&ffi_type_float );  eci->marshal.push_back(marshal_number<float   >); }
+            else if (p == "double")   { eci->types.push_back(&ffi_type_double);  eci->marshal.push_back(marshal_number<double  >); }
+            else if (p == "string")   { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_string          ); }
+            else if (p == "*string")  { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_string_a        ); }
+            else if (p == "bytes")    { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_string          ); }
+            else if (p == "*bytes")   { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_string_a        ); }
+            else if (p == "pointer")  { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_pointer         ); }
+            else if (p == "*pointer") { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_pointer_a       ); }
             else {
                 fprintf(stderr, "ffi type not supported: %s\n", p.c_str());
                 exit(1);
             }
         }
         ffi_type *rtype;
-             if (rettype == "uint8" ) { rtype = &ffi_type_uint8;  eci->unmarshal = unmarshal_number<uint8_t  >; }
+             if (rettype == "boolean"){ rtype = &ffi_type_uint32; eci->unmarshal = unmarshal_boolean<uint32_t>; }
+        else if (rettype == "uint8" ) { rtype = &ffi_type_uint8;  eci->unmarshal = unmarshal_number<uint8_t  >; }
         else if (rettype == "sint8" ) { rtype = &ffi_type_sint8;  eci->unmarshal = unmarshal_number< int8_t  >; }
         else if (rettype == "uint16") { rtype = &ffi_type_uint16; eci->unmarshal = unmarshal_number<uint16_t >; }
         else if (rettype == "sint16") { rtype = &ffi_type_sint16; eci->unmarshal = unmarshal_number< int16_t >; }
@@ -820,6 +1155,7 @@ void Executor::exec_CALLE()
         else if (rettype == "sint64") { rtype = &ffi_type_sint64; eci->unmarshal = unmarshal_number< int64_t >; }
         else if (rettype == "float" ) { rtype = &ffi_type_float;  eci->unmarshal = unmarshal_number<float    >; }
         else if (rettype == "double") { rtype = &ffi_type_double; eci->unmarshal = unmarshal_number<double   >; }
+        else if (rettype == "pointer"){ rtype = &ffi_type_pointer;eci->unmarshal = unmarshal_pointer; }
         else if (rettype == ""      ) { rtype = &ffi_type_void;   eci->unmarshal = nullptr;                     }
         else {
             fprintf(stderr, "ffi return type not supported: %s\n", rettype.c_str());
@@ -830,10 +1166,10 @@ void Executor::exec_CALLE()
             fprintf(stderr, "internal ffi error %d\n", status);
             exit(1);
         }
-        if (val >= external_functions.size()) {
-            external_functions.resize(val + 1);
+        if (val >= module->external_functions.size()) {
+            module->external_functions.resize(val + 1);
         }
-        external_functions[val] = eci;
+        module->external_functions[val] = eci;
     }
     std::vector<Cell> cells;
     char buf[1024];
@@ -857,26 +1193,26 @@ void Executor::exec_CALLE()
 
 void Executor::exec_CONSA()
 {
-    uint32_t val = (obj.code[ip+1] << 24) | (obj.code[ip+2] << 16) | (obj.code[ip+3] << 8) | obj.code[ip+4];
+    uint32_t val = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
     ip += 5;
-    Cell a;
+    std::vector<Cell> a;
     while (val > 0) {
-        a.array().push_back(stack.top());
+        a.push_back(stack.top());
         stack.pop();
         val--;
     }
-    stack.push(a);
+    stack.push(Cell(a));
 }
 
 void Executor::exec_CONSD()
 {
-    uint32_t val = (obj.code[ip+1] << 24) | (obj.code[ip+2] << 16) | (obj.code[ip+3] << 8) | obj.code[ip+4];
+    uint32_t val = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
     ip += 5;
     Cell d;
     while (val > 0) {
         Cell value = stack.top(); stack.pop();
-        std::string key = stack.top().string(); stack.pop();
-        d.dictionary()[key] = value;
+        utf8string key = stack.top().string(); stack.pop();
+        d.dictionary_index_for_write(key) = value;
         val--;
     }
     stack.push(d);
@@ -884,15 +1220,41 @@ void Executor::exec_CONSD()
 
 void Executor::exec_EXCEPT()
 {
-    uint32_t val = (obj.code[ip+1] << 24) | (obj.code[ip+2] << 16) | (obj.code[ip+3] << 8) | obj.code[ip+4];
-    raise(obj.strtable[val]);
+    uint32_t val = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
+    std::vector<Cell> info = stack.top().array(); stack.pop();
+    ExceptionInfo ei;
+    size_t size = info.size();
+    if (size >= 1) {
+        ei.info = info[0].string();
+    }
+    if (size >= 2) {
+        ei.code = info[1].number();
+    }
+    raise_literal(module->object.strtable[val], ei);
+}
+
+void Executor::exec_CLREXC()
+{
+    ip++;
+    // The fields here must match the declaration of
+    // ExceptionType in ast.cpp.
+    module->globals[0].array_index_for_write(0) = Cell("");
+    module->globals[0].array_index_for_write(1) = Cell("");
+    module->globals[0].array_index_for_write(2) = Cell(number_from_uint32(0));
+    module->globals[0].array_index_for_write(3) = Cell(number_from_uint32(0));
 }
 
 void Executor::exec_ALLOC()
 {
-    uint32_t val = (obj.code[ip+1] << 24) | (obj.code[ip+2] << 16) | (obj.code[ip+3] << 8) | obj.code[ip+4];
+    uint32_t val = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
     ip += 5;
-    stack.push(Cell(new Cell(std::vector<Cell>(val))));
+    allocs.emplace_front(std::vector<Cell>(val), true);
+    Cell *cell = &allocs.front();
+    stack.push(Cell(cell));
+    allocations++;
+    if (param_garbage_collection_interval > 0 && allocations >= param_garbage_collection_interval) {
+        garbage_collect();
+    }
 }
 
 void Executor::exec_PUSHNIL()
@@ -901,40 +1263,263 @@ void Executor::exec_PUSHNIL()
     stack.push(Cell(static_cast<Cell *>(nullptr)));
 }
 
-void Executor::raise(const std::string &exception)
+void Executor::exec_JNASSERT()
 {
+    uint32_t target = (module->object.code[ip+1] << 24) | (module->object.code[ip+2] << 16) | (module->object.code[ip+3] << 8) | module->object.code[ip+4];
+    ip += 5;
+    if (not enable_assert) {
+        ip = target;
+    }
+}
+
+void Executor::exec_RESETC()
+{
+    ip++;
+    Cell *addr = stack.top().address(); stack.pop();
+    *addr = Cell();
+}
+
+void Executor::raise_literal(const utf8string &exception, const ExceptionInfo &info)
+{
+    // The fields here must match the declaration of
+    // ExceptionType in ast.cpp.
+    module->globals[0].array_index_for_write(0) = Cell(exception);
+    module->globals[0].array_index_for_write(1) = Cell(info.info);
+    module->globals[0].array_index_for_write(2) = Cell(info.code);
+    module->globals[0].array_index_for_write(3) = Cell(number_from_uint32(static_cast<uint32_t>(ip)));
+
+    auto tmodule = module;
+    auto tip = ip;
+    size_t sp = callstack.size();
     for (;;) {
-        for (auto e = obj.exceptions.begin(); e != obj.exceptions.end(); ++e) {
-            if (ip >= e->start && ip < e->end && exception == obj.strtable[e->excid]) {
+        for (auto e = tmodule->object.exceptions.begin(); e != tmodule->object.exceptions.end(); ++e) {
+            if (tip >= e->start && tip < e->end && exception == tmodule->object.strtable[e->excid]) {
+                module = tmodule;
                 ip = e->handler;
+                callstack.resize(sp);
                 return;
             }
+        }
+        if (sp == 0) {
+            break;
+        }
+        sp -= 1;
+        tmodule = callstack[sp].first;
+        tip = callstack[sp].second;
+    }
+
+    fprintf(stderr, "Unhandled exception %s (%s)\n", exception.c_str(), info.info.c_str());
+    while (ip < module->object.code.size()) {
+        if (module->debug != nullptr) {
+            auto line = module->debug->line_numbers.end();
+            auto p = ip;
+            for (;;) {
+                line = module->debug->line_numbers.find(p);
+                if (line != module->debug->line_numbers.end()) {
+                    break;
+                }
+                if (p == 0) {
+                    fprintf(stderr, "No matching debug information found.\n");
+                    break;
+                }
+                p--;
+            }
+            if (line != module->debug->line_numbers.end()) {
+                fprintf(stderr, "  Stack frame #%lu: file %s line %d address %lu\n", static_cast<unsigned long>(callstack.size()), module->debug->source_path.c_str(), line->second, static_cast<unsigned long>(ip));
+                fprintf(stderr, "    %s\n", module->debug->source_lines.at(line->second).c_str());
+            } else {
+                fprintf(stderr, "  Stack frame #%lu: file %s address %lu (line number not found)\n", static_cast<unsigned long>(callstack.size()), module->debug->source_path.c_str(), static_cast<unsigned long>(ip));
+            }
+        } else {
+            fprintf(stderr, "  Stack frame #%lu: file %s address %lu (no debug info available)\n", static_cast<unsigned long>(callstack.size()), source_path.c_str(), static_cast<unsigned long>(ip));
         }
         if (callstack.empty()) {
             break;
         }
-        ip = callstack.top();
-        callstack.pop();
+        module = callstack.back().first;
+        ip = callstack.back().second;
+        callstack.pop_back();
     }
-    fprintf(stderr, "unhandled exception %s\n", exception.c_str());
     exit(1);
+}
+
+void Executor::raise(const ExceptionName &exception, const ExceptionInfo &info)
+{
+    raise_literal(exception.name, info);
+}
+
+void Executor::raise(const RtlException &x)
+{
+    raise_literal(x.name, ExceptionInfo(x.info, x.code));
+}
+
+void Executor::breakpoint()
+{
+    debugger_state = DEBUGGER_STOPPED;
+}
+
+void Executor::log(const std::string &message)
+{
+    debugger_log.push_back(message);
+}
+
+static void mark(Cell *c)
+{
+    std::vector<Cell *> todo;
+    todo.push_back(c);
+    while (not todo.empty()) {
+        c = todo.back();
+        todo.pop_back();
+        if (c == nullptr || (c->gc.alloced && c->gc.marked)) {
+            continue;
+        }
+        c->gc.marked = true;
+        switch (c->get_type()) {
+            case Cell::cNone:
+            case Cell::cBoolean:
+            case Cell::cNumber:
+            case Cell::cString:
+                // nothing
+                break;
+            case Cell::cAddress:
+                todo.push_back(c->address());
+                break;
+            case Cell::cArray:
+                for (auto &x: c->array()) {
+                    todo.push_back(const_cast<Cell *>(&x));
+                }
+                break;
+            case Cell::cDictionary:
+                for (auto &x: c->dictionary()) {
+                    todo.push_back(const_cast<Cell *>(&x.second));
+                }
+                break;
+        }
+    }
+}
+
+void Executor::garbage_collect()
+{
+    // Clear marked bits.
+    for (Cell &c: allocs) {
+        assert(c.gc.alloced);
+        c.gc.marked = false;
+    }
+
+    // Mark reachable objects.
+    for (auto m: modules) {
+        for (auto &g: m.second->globals) {
+            mark(&g);
+        }
+    }
+    for (auto &f: frames) {
+        for (auto &v: f.locals) {
+            mark(&v);
+        }
+    }
+    for (size_t i = 0; i < stack.depth(); i++) {
+        mark(&stack.peek(i));
+    }
+
+    // Sweep unreachable objects.
+    for (auto c = allocs.begin(); c != allocs.end(); ) {
+        if (not c->gc.marked) {
+            auto tmp = c;
+            ++c;
+            allocs.erase(tmp);
+        } else {
+            ++c;
+        }
+    }
+
+    allocations = 0;
+}
+
+size_t Executor::get_allocated_object_count()
+{
+    return allocs.size();
+}
+
+bool Executor::module_is_main()
+{
+    return module == modules[""];
+}
+
+void Executor::set_garbage_collection_interval(size_t count)
+{
+    param_garbage_collection_interval = count;
+}
+
+void Executor::set_recursion_limit(size_t depth)
+{
+    param_recursion_limit = depth;
 }
 
 void Executor::exec()
 {
-    callstack.push(obj.code.size());
-    while (not callstack.empty() && ip < obj.code.size()) {
-        //std::cerr << "ip " << ip << " op " << (int)obj.code[ip] << "\n";
+    // The number of fields here must match the declaration of
+    // ExceptionType in ast.cpp.
+    // TODO: Should be only one instance of the current exception object.
+    for (auto m: modules) {
+        m.second->globals[0].array_index_for_write(3);
+    }
+
+    callstack.push_back(std::make_pair(module, module->object.code.size()));
+
+    // This sets up the call stack in such a way as to initialize
+    // each module in the order determined in init_order, followed
+    // by running the code in the main module.
+    callstack.push_back(std::make_pair(module, 0));
+    for (auto x = init_order.rbegin(); x != init_order.rend(); ++x) {
+        callstack.push_back(std::make_pair(modules[*x], 0));
+    }
+    // Set up ip for first module (or main module if no imports).
+    exec_RET();
+
+    while (not callstack.empty() && ip < module->object.code.size()) {
+        //std::cerr << "mod " << module->name << " ip " << ip << " op " << (int)module->object.code[ip] << " st " << stack.depth() << "\n";
+        if (debug_server != nullptr) {
+            switch (debugger_state) {
+                case DEBUGGER_STOPPED:
+                    break;
+                case DEBUGGER_RUN:
+                    if (debugger_breakpoints.find(ip) != debugger_breakpoints.end()) {
+                        debugger_state = DEBUGGER_STOPPED;
+                    }
+                    break;
+                case DEBUGGER_STEP_INSTRUCTION:
+                    debugger_state = DEBUGGER_STOPPED;
+                    break;
+                case DEBUGGER_STEP_SOURCE:
+                    if (callstack.size() <= debugger_step_source_depth && module->debug != nullptr && module->debug->line_numbers.find(ip) != module->debug->line_numbers.end()) {
+                        debugger_state = DEBUGGER_STOPPED;
+                    }
+                    break;
+                case DEBUGGER_QUIT:
+                    break;
+            }
+            debug_server->service(false);
+            while (debugger_state == DEBUGGER_STOPPED) {
+                debug_server->service(true);
+            }
+            if (debugger_state == DEBUGGER_QUIT) {
+                return;
+            }
+        }
+        auto last_module = module;
         auto last_ip = ip;
-        switch (static_cast<Opcode>(obj.code[ip])) {
+        switch (static_cast<Opcode>(module->object.code[ip])) {
             case ENTER:   exec_ENTER(); break;
             case LEAVE:   exec_LEAVE(); break;
             case PUSHB:   exec_PUSHB(); break;
             case PUSHN:   exec_PUSHN(); break;
             case PUSHS:   exec_PUSHS(); break;
             case PUSHPG:  exec_PUSHPG(); break;
+            case PUSHPPG: exec_PUSHPPG(); break;
+            case PUSHPMG: exec_PUSHPMG(); break;
             case PUSHPL:  exec_PUSHPL(); break;
             case PUSHPOL: exec_PUSHPOL(); break;
+            case PUSHI:   exec_PUSHI(); break;
             case LOADB:   exec_LOADB(); break;
             case LOADN:   exec_LOADN(); break;
             case LOADS:   exec_LOADS(); break;
@@ -980,6 +1565,7 @@ void Executor::exec()
             case INDEXAR: exec_INDEXAR(); break;
             case INDEXAW: exec_INDEXAW(); break;
             case INDEXAV: exec_INDEXAV(); break;
+            case INDEXAN: exec_INDEXAN(); break;
             case INDEXDR: exec_INDEXDR(); break;
             case INDEXDW: exec_INDEXDW(); break;
             case INDEXDV: exec_INDEXDV(); break;
@@ -987,29 +1573,248 @@ void Executor::exec()
             case IND:     exec_IND(); break;
             case CALLP:   exec_CALLP(); break;
             case CALLF:   exec_CALLF(); break;
+            case CALLMF:  exec_CALLMF(); break;
+            case CALLI:   exec_CALLI(); break;
             case JUMP:    exec_JUMP(); break;
             case JF:      exec_JF(); break;
             case JT:      exec_JT(); break;
+            case JFCHAIN: exec_JFCHAIN(); break;
             case DUP:     exec_DUP(); break;
+            case DUPX1:   exec_DUPX1(); break;
             case DROP:    exec_DROP(); break;
             case RET:     exec_RET(); break;
             case CALLE:   exec_CALLE(); break;
             case CONSA:   exec_CONSA(); break;
             case CONSD:   exec_CONSD(); break;
             case EXCEPT:  exec_EXCEPT(); break;
+            case CLREXC:  exec_CLREXC(); break;
             case ALLOC:   exec_ALLOC(); break;
             case PUSHNIL: exec_PUSHNIL(); break;
+            case JNASSERT:exec_JNASSERT(); break;
+            case RESETC:  exec_RESETC(); break;
         }
-        if (ip == last_ip) {
-            fprintf(stderr, "exec: Unexpected opcode: %d\n", obj.code[ip]);
+        if (module == last_module && ip == last_ip) {
+            fprintf(stderr, "exec: Unexpected opcode: %d\n", module->object.code[ip]);
             abort();
         }
     }
     assert(stack.empty());
 }
 
-void exec(const Bytecode::bytecode &obj, int argc, char *argv[])
+namespace minijson {
+
+template <> struct default_value_writer<Number> {
+    void operator()(std::ostream &stream, const Number &n) {
+        detail::write_quoted_string(stream, number_to_string(n).c_str());
+    }
+};
+
+template <> struct default_value_writer<Cell> {
+    void operator()(std::ostream &stream, const Cell &ccell, writer_configuration configuration) {
+        object_writer writer(stream, configuration);
+        // Parameter needs to be `const`, but we need to call (benign) non-const methods.
+        Cell &cell = const_cast<Cell &>(ccell);
+        switch (cell.get_type()) {
+            case Cell::cNone:
+                writer.write("type", "none");
+                writer.write("value", nullptr);
+                break;
+            case Cell::cAddress:
+                writer.write("type", "address");
+                writer.write("value", std::to_string(reinterpret_cast<intptr_t>(cell.address())));
+                break;
+            case Cell::cBoolean:
+                writer.write("type", "boolean");
+                writer.write("value", cell.boolean());
+                break;
+            case Cell::cNumber:
+                writer.write("type", "number");
+                writer.write("value", cell.number());
+                break;
+            case Cell::cString:
+                writer.write("type", "string");
+                writer.write("value", cell.string().str());
+                break;
+            case Cell::cArray: {
+                writer.write("type", "array");
+                writer.write_array("value", cell.array_for_write().begin(), cell.array_for_write().end());
+                break;
+            }
+            case Cell::cDictionary: {
+                writer.write("type", "dictionary");
+                auto d = writer.nested_object("value");
+                for (auto &x: cell.dictionary_for_write()) {
+                    d.write(x.first.str().c_str(), x.second);
+                }
+                d.close();
+                break;
+            }
+        }
+        writer.close();
+    }
+};
+
+} // namespace minijson
+
+void Executor::handle_GET(const std::string &path, HttpResponse &response)
+{
+    std::stringstream r;
+    minijson::writer_configuration config = minijson::writer_configuration().pretty_printing(true);
+    std::vector<std::string> parts = split(path, '/');
+    if (path == "/break") {
+        response.code = 200;
+        minijson::array_writer writer(r, config);
+        for (auto b: debugger_breakpoints) {
+            writer.write(b);
+        }
+        writer.close();
+    } else if (path == "/callstack") {
+        response.code = 200;
+        minijson::array_writer writer(r, config);
+        for (auto i = callstack.rbegin(); i != callstack.rend(); ++i) {
+            auto w = writer.nested_object();
+            w.write("module", i->first->name);
+            w.write("ip", i->second);
+            w.close();
+        }
+        writer.close();
+    } else if (path == "/frames") {
+        response.code = 200;
+        minijson::array_writer writer(r, config);
+        for (auto i = frames.rbegin(); i != frames.rend(); ++i) {
+            auto wf = writer.nested_object();
+            auto wl = wf.nested_array("locals");
+            for (auto &local: i->locals) {
+                wl.write(local);
+            }
+            wl.close();
+            wf.close();
+        }
+        writer.close();
+    } else if (parts.size() >= 3 && parts[1] == "module") {
+        std::string module = parts[2];
+        if (module == "-") {
+            module = "";
+        }
+        Module *m = modules[module];
+        if (parts.size() == 4 && parts[3] == "bytecode") {
+            response.code = 200;
+            minijson::write_array(r, m->object.obj.begin(), m->object.obj.end());
+        } else if (parts.size() == 4 && parts[3] == "debuginfo") {
+            response.code = 200;
+            std::ifstream di(m->debug->source_path + "d");
+            r << di.rdbuf();
+        } else if (parts.size() == 5 && parts[3] == "global") {
+            response.code = 200;
+            minijson::default_value_writer<Cell>()(r, m->globals[std::stoi(parts[4])], config);
+        } else if (parts.size() == 4 && parts[3] == "source") {
+            response.code = 200;
+            minijson::write_array(r, m->debug->source_lines.begin(), m->debug->source_lines.end());
+        }
+    } else if (path == "/modules") {
+        response.code = 200;
+        std::vector<std::string> names;
+        for (auto m: modules) {
+            names.push_back(m.first);
+        }
+        minijson::write_array(r, names.begin(), names.end());
+    } else if (path == "/opstack") {
+        response.code = 200;
+        minijson::write_array(r, stack.begin(), stack.end(), config);
+    } else if (path == "/status") {
+        response.code = 200;
+        minijson::object_writer writer(r, config);
+        writer.write("state", DebuggerStateName[debugger_state]);
+        writer.write("module", module->name);
+        writer.write("ip", ip);
+        writer.write("log_messages", debugger_log.size());
+        writer.close();
+    }
+    if (response.code == 0) {
+        response.code = 404;
+        r << "[debug server] path not found: " << path;
+    }
+    response.content = r.str();
+}
+
+void Executor::handle_POST(const std::string &path, const std::string &data, HttpResponse &response)
+{
+    std::stringstream r;
+    minijson::writer_configuration config = minijson::writer_configuration().pretty_printing(true);
+    std::vector<std::string> parts = split(path, '/');
+    if (parts.size() == 3 && parts[1] == "break") {
+        response.code = 200;
+        auto addr = std::stoi(parts[2]);
+        if (data == "true") {
+            debugger_breakpoints.insert(addr);
+        } else {
+            debugger_breakpoints.erase(addr);
+        }
+    } else if (path == "/continue") {
+        response.code = 200;
+        debugger_state = DEBUGGER_RUN;
+    } else if (path == "/log") {
+        response.code = 200;
+        minijson::write_array(r, debugger_log.begin(), debugger_log.end(), config);
+        debugger_log.clear();
+    } else if (path == "/quit") {
+        response.code = 200;
+        debugger_state = DEBUGGER_QUIT;
+    } else if (path == "/step/instruction") {
+        response.code = 200;
+        debugger_state = DEBUGGER_STEP_INSTRUCTION;
+    } else if (parts.size() == 4 && parts[1] == "step" && parts[2] == "source") {
+        response.code = 200;
+        debugger_state = DEBUGGER_STEP_SOURCE;
+        debugger_step_source_depth = callstack.size() + std::stoi(parts[3]);
+    } else if (path == "/stop") {
+        response.code = 200;
+        debugger_state = DEBUGGER_STOPPED;
+    }
+    if (response.code == 0) {
+        response.code = 404;
+        r << "[debug server] path not found: " << path;
+    }
+    response.content = r.str();
+}
+
+void executor_breakpoint()
+{
+    g_executor->breakpoint();
+}
+
+void executor_log(const std::string &message)
+{
+    g_executor->log(message);
+}
+
+void executor_garbage_collect()
+{
+    g_executor->garbage_collect();
+}
+
+size_t executor_get_allocated_object_count()
+{
+    return g_executor->get_allocated_object_count();
+}
+
+bool executor_module_is_main()
+{
+    return g_executor->module_is_main();
+}
+
+void executor_set_garbage_collection_interval(size_t count)
+{
+    g_executor->set_garbage_collection_interval(count);
+}
+
+void executor_set_recursion_limit(size_t depth)
+{
+    g_executor->set_recursion_limit(depth);
+}
+
+void exec(const std::string &source_path, const Bytecode::Bytes &obj, const DebugInfo *debuginfo, ICompilerSupport *support, bool enable_assert, unsigned short debug_port, int argc, char *argv[])
 {
     rtl_exec_init(argc, argv);
-    Executor(obj).exec();
+    Executor(source_path, obj, debuginfo, support, enable_assert, debug_port).exec();
 }

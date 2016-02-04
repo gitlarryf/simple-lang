@@ -1,0 +1,4 @@
+TRY
+EXCEPTION Foo DO
+          %<
+END TRY

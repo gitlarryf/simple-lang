@@ -1,0 +1,5 @@
+VAR module: Number
+TRY
+EXCEPTION module.exception DO
+          %<
+END TRY

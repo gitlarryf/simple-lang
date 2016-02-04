@@ -1,0 +1,5 @@
+LET d: Dictionary<String> := {"foo": "bar"}
+FOREACH x OF d.keys() DO
+    print(x)
+END FOREACH
+%= foo

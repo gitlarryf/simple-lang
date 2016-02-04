@@ -1,0 +1,7 @@
+VAR a: Array<Number> := []
+VAR b: Array<Number> := []
+
+IF a <= b THEN
+     %<
+  print("Woah...")
+END IF

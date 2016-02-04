@@ -1,20 +1,31 @@
-VAR b1, b2: Boolean
-VAR n1, n2: Number
-VAR s1, s2: String
-VAR a1, a2: Array<String>
-VAR d1, d2: Dictionary<String>
-VAR r1, r2: RECORD x: Number END RECORD
-VAR e1, e2: ENUM one two END ENUM
-VAR p1, p2: POINTER TO RECORD x: Number END RECORD
+TYPE Rec IS RECORD x: Number END RECORD
+TYPE Enum IS ENUM one two END ENUM
+
+FUNCTION f(x: Number) END FUNCTION
+
+VAR b1, b2: Boolean := FALSE
+VAR n1, n2: Number := 0
+VAR s1, s2: String := ""
+VAR x1, x2: Bytes := HEXBYTES ""
+VAR a1, a2: Array<String> := []
+VAR d1, d2: Dictionary<String> := {}
+VAR r1, r2: Rec := Rec()
+VAR e1, e2: Enum := Enum.one
+VAR p1, p2: POINTER TO Rec := NIL
+VAR f1, f2: FUNCTION(x: Number) := f
 
 print(strb(b2 = b1))
 print(strb(n2 = n1))
 print(strb(s2 = s1))
+print(strb(x2 = x1))
 print(strb(a2 = a1))
 print(strb(d2 = d1))
 print(strb(r2 = r1))
 print(strb(e2 = e1))
 print(strb(p2 = p1))
+print(strb(f2 = f1))
+%= TRUE
+%= TRUE
 %= TRUE
 %= TRUE
 %= TRUE

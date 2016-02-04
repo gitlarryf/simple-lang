@@ -1,4 +1,2 @@
-TYPE Point := RECORD
-    x Number
-END RECORD
-
+CONSTANT 1
+         %<

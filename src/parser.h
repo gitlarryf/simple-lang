@@ -1,10 +1,12 @@
 #ifndef PARSE_H
 #define PARSE_H
 
+#include <vector>
+
 #include "lexer.h"
 
-class Program;
+namespace pt { class Program; }
 
-const Program *parse(const std::vector<Token> &tokens);
+const pt::Program *parse(const TokenizedSource &tokens);
 
 #endif

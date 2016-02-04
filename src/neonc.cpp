@@ -2,13 +2,15 @@
 #include <iostream>
 #include <sstream>
 
+#include "analyzer.h"
 #include "ast.h"
 #include "compiler.h"
 #include "debuginfo.h"
 #include "disassembler.h"
-#include "exec.h"
 #include "lexer.h"
 #include "parser.h"
+#include "pt_dump.h"
+#include "support.h"
 
 int main(int argc, char *argv[])
 {
@@ -27,33 +29,48 @@ int main(int argc, char *argv[])
             a++;
             continue;
         }
+        if (std::string(argv[a]) == "-d") {
+            listing = true;
+            a++;
+            continue;
+        }
 
-        std::cout << "Compiling " << argv[a] << "...\n";
-        std::ifstream inf(argv[a]);
+        std::string name = argv[a];
+        std::string source_path;
+
         std::stringstream buf;
-        buf << inf.rdbuf();
+        if (name == "-") {
+            std::cout << "Compiling stdin (no output file)...\n";
+            buf << std::cin.rdbuf();
+        } else {
+            auto i = name.find_last_of("/:\\");
+            if (i != std::string::npos) {
+                source_path = name.substr(0, i+1);
+            }
+            std::cout << "Compiling " << name << "...\n";
+            std::ifstream inf(name);
+            buf << inf.rdbuf();
+        }
+
+        CompilerSupport compiler_support(source_path);
 
         try {
-            auto tokens = tokenize(buf.str());
-            auto ast = parse(tokens);
-            DebugInfo debug(buf.str());
+            auto tokens = tokenize(name, buf.str());
+            auto parsetree = parse(tokens);
+            auto ast = analyze(&compiler_support, parsetree);
+            DebugInfo debug(name, buf.str());
             auto bytecode = compile(ast, &debug);
             if (listing) {
                 disassemble(bytecode, std::cerr, &debug);
             }
 
-            std::ofstream outf(std::string(argv[a]) + "x", std::ios::binary);
-            outf.write(reinterpret_cast<const std::ofstream::char_type *>(bytecode.data()), bytecode.size());
-
-        } catch (SourceError &error) {
-            fprintf(stderr, "%s\n", error.token.source.c_str());
-            fprintf(stderr, "%*s\n", error.token.column, "^");
-            fprintf(stderr, "Error N%d: %d:%d %s %s (%s:%d)\n", error.number, error.token.line, error.token.column, error.token.tostring().c_str(), error.message.c_str(), error.file.c_str(), error.line);
-            if (not ignore_errors) {
-                exit(1);
+            if (name != "-") {
+                std::ofstream outf(std::string(argv[a]) + "x", std::ios::binary);
+                outf.write(reinterpret_cast<const std::ofstream::char_type *>(bytecode.data()), bytecode.size());
             }
-        } catch (InternalError &error) {
-            fprintf(stderr, "Compiler Internal Error: %s (%s:%d)\n", error.message.c_str(), error.file.c_str(), error.line);
+
+        } catch (CompilerError *error) {
+            error->write(std::cerr);
             if (not ignore_errors) {
                 exit(1);
             }

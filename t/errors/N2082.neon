@@ -1,3 +1,2 @@
-WHILE (TRUE)
-    print("doing...")
-END WHILE
+FOREACH x IN
+          %<

@@ -1,1 +1,4 @@
-print(2 + "Hello, world!")
+VAR a: Number
+FOR a := 1 TO 2 DO
+END LOOP
+    %<

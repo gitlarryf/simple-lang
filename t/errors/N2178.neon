@@ -1,2 +1,0 @@
-VAR p: POINTER TO Node
-p->value := 5

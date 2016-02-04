@@ -1,7 +1,6 @@
-TYPE Suit := ENUM
-    Heart
-    Heart
-    Club
-    Spade
-    Diamond
-END ENUM
+FUNCTION a(y: Number,z: Number) : Number
+    RETURN 1
+END FUNCTION
+
+a(1 a())
+    %<

@@ -1,0 +1,13 @@
+TYPE Cards IS ENUM
+              %<2
+  Hearts
+  Diamonds
+  Spades
+  Clubs
+END ENUM
+
+
+VAR a: Cards
+
+a := Cards.King
+           %<1

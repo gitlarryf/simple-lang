@@ -1,3 +1,11 @@
-VAR Record: String
+TYPE Recordset IS RECORD
+    Id: Number
+    Name: String
+END RECORD
 
-Record["char(34)"]
+VAR a: POINTER TO Recordset
+
+IF VALID a AS p THEN
+    p->1
+       %<
+END IF

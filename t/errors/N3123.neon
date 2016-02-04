@@ -1,0 +1,4 @@
+VAR a: Number := 0
+VAR s: String := ""
+valueCopy(a, s)
+             %<
