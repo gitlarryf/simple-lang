@@ -1,6 +1,0 @@
-LET s: String := @@"foo
-bar"@@
-print("\(s.length())")
-%= 7
-print("\(ord(s[3]))")
-%= 10

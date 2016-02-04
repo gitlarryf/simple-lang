@@ -1,7 +1,0 @@
-VAR s: String
-LOOP
-    s := "hello"
-    EXIT LOOP
-END LOOP
-print(s)
-%= hello

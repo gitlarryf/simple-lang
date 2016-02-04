@@ -1,9 +1,0 @@
-DECLARE EXCEPTION PrinterOnFireException
-
-TRY
-    RAISE PrinterOnFireException("error", 404)
-EXCEPTION PrinterOnFireException DO
-    print("conflagration \(CURRENT_EXCEPTION.info) \(CURRENT_EXCEPTION.code)")
-END TRY
-
-%= conflagration error 404

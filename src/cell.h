@@ -2,11 +2,9 @@
 #define CELL_H
 
 #include <map>
-#include <memory>
 #include <vector>
 
 #include "number.h"
-#include "utf8string.h"
 
 class Cell {
 public:
@@ -15,14 +13,22 @@ public:
     explicit Cell(Cell *value);
     explicit Cell(bool value);
     explicit Cell(Number value);
-    explicit Cell(const utf8string &value);
+    explicit Cell(const std::string &value);
     explicit Cell(const char *value);
-    explicit Cell(const std::vector<Cell> &value, bool alloced = false);
-    explicit Cell(const std::map<utf8string, Cell> &value);
+    explicit Cell(const std::vector<Cell> &value);
+    explicit Cell(const std::map<std::string, Cell> &value);
     Cell &operator=(const Cell &rhs);
     bool operator==(const Cell &rhs) const;
 
-    enum Type {
+    Cell *address();
+    bool &boolean();
+    Number &number();
+    std::string &string();
+    std::vector<Cell> &array();
+    std::map<std::string, Cell> &dictionary();
+
+private:
+    enum {
         cNone,
         cAddress,
         cBoolean,
@@ -30,40 +36,14 @@ public:
         cString,
         cArray,
         cDictionary
-    };
-    Type get_type() const { return type; }
+    } type;
 
-    Cell *&address();
-    bool &boolean();
-    Number &number();
-    const utf8string &string();
-    utf8string &string_for_write();
-    const std::vector<Cell> &array();
-    std::vector<Cell> &array_for_write();
-    Cell &array_index_for_read(size_t i);
-    Cell &array_index_for_write(size_t i);
-    const std::map<utf8string, Cell> &dictionary();
-    std::map<utf8string, Cell> &dictionary_for_write();
-    Cell &dictionary_index_for_read(const utf8string &index);
-    Cell &dictionary_index_for_write(const utf8string &index);
-
-    struct GC {
-        GC(bool alloced = false): alloced(alloced), marked(false) {}
-        const bool alloced;
-        bool marked;
-    private:
-        GC(const GC &);
-        GC &operator=(const GC &);
-    } gc;
-
-private:
-    Type type;
     Cell *address_value;
     bool boolean_value;
     Number number_value;
-    std::shared_ptr<utf8string> string_ptr;
-    std::shared_ptr<std::vector<Cell>> array_ptr;
-    std::shared_ptr<std::map<utf8string, Cell>> dictionary_ptr;
+    std::string string_value;
+    std::vector<Cell> array_value;
+    std::map<std::string, Cell> dictionary_value;
 };
 
 #endif

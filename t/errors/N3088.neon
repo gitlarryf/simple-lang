@@ -1,6 +1,0 @@
-VAR foo: String
-    %<2
-TRY
-EXCEPTION foo DO
-          %<1
-END TRY

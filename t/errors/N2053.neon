@@ -1,6 +1,3 @@
-VAR a: Array<Number>
+VAR a: Number
+a := IF 1 = 2
 
-a := [1,
-     %<2
-      2}
-       %<

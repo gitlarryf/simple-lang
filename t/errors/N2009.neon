@@ -1,2 +1,5 @@
-TYPE outer:
-          %<
+TYPE Point := RECORD
+    x: Number
+    x: String
+END RECORD
+

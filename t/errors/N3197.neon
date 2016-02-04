@@ -1,2 +1,0 @@
-CONSTANT s: String := chr(ord("AA"))
-                      %<

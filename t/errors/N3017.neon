@@ -1,4 +1,0 @@
-VAR a: String := ""
-
-print(a(1, 2))
-      %<

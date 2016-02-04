@@ -4,23 +4,21 @@
 #include <ostream>
 #include <stdlib.h>
 #include <string>
-#include <string.h>
 
 #include "bytecode.h"
 #include "debuginfo.h"
 #include "number.h"
 #include "opcode.h"
-#include "util.h"
 
 class Disassembler {
 public:
-    Disassembler(std::ostream &out, const Bytecode::Bytes &obj, const DebugInfo *debug);
+    Disassembler(std::ostream &out, const Bytecode::bytecode &obj, const DebugInfo *debug);
     void disassemble();
 private:
     std::ostream &out;
     const Bytecode obj;
     const DebugInfo *debug;
-    Bytecode::Bytes::size_type index;
+    Bytecode::bytecode::size_type index;
 
     void disasm_ENTER();
     void disasm_LEAVE();
@@ -28,11 +26,8 @@ private:
     void disasm_PUSHN();
     void disasm_PUSHS();
     void disasm_PUSHPG();
-    void disasm_PUSHPPG();
-    void disasm_PUSHPMG();
     void disasm_PUSHPL();
     void disasm_PUSHPOL();
-    void disasm_PUSHI();
     void disasm_LOADB();
     void disasm_LOADN();
     void disasm_LOADS();
@@ -78,7 +73,6 @@ private:
     void disasm_INDEXAR();
     void disasm_INDEXAW();
     void disasm_INDEXAV();
-    void disasm_INDEXAN();
     void disasm_INDEXDR();
     void disasm_INDEXDW();
     void disasm_INDEXDV();
@@ -86,33 +80,24 @@ private:
     void disasm_IND();
     void disasm_CALLP();
     void disasm_CALLF();
-    void disasm_CALLMF();
-    void disasm_CALLI();
     void disasm_JUMP();
     void disasm_JF();
     void disasm_JT();
-    void disasm_JFCHAIN();
     void disasm_DUP();
-    void disasm_DUPX1();
     void disasm_DROP();
     void disasm_RET();
     void disasm_CALLE();
     void disasm_CONSA();
     void disasm_CONSD();
     void disasm_EXCEPT();
-    void disasm_CLREXC();
     void disasm_ALLOC();
     void disasm_PUSHNIL();
-    void disasm_JNASSERT();
-    void disasm_RESETC();
-
-    std::string decode_value(const std::string &type, const Bytecode::Bytes &value);
 private:
     Disassembler(const Disassembler &);
     Disassembler &operator=(const Disassembler &);
 };
 
-Disassembler::Disassembler(std::ostream &out, const Bytecode::Bytes &obj, const DebugInfo *debug)
+Disassembler::Disassembler(std::ostream &out, const Bytecode::bytecode &obj, const DebugInfo *debug)
   : out(out), obj(obj), debug(debug), index(0)
 {
 }
@@ -140,8 +125,7 @@ void Disassembler::disasm_PUSHB()
 void Disassembler::disasm_PUSHN()
 {
     // TODO: endian
-    Number val;
-    memcpy(&val, &obj.code[index+1], sizeof(Number));
+    Number val = *reinterpret_cast<const Number *>(&obj.code[index+1]);
     index += 1 + sizeof(val);
     out << "PUSHN " << number_to_string(val) << "\n";
 }
@@ -160,23 +144,6 @@ void Disassembler::disasm_PUSHPG()
     out << "PUSHPG " << addr << "\n";
 }
 
-void Disassembler::disasm_PUSHPPG()
-{
-    uint32_t name = (obj.code[index+1] << 24) | (obj.code[index+2] << 16) | (obj.code[index+3] << 8) | obj.code[index+4];
-    index += 5;
-    out << "PUSHPPG " << obj.strtable[name] << "\n";
-}
-
-void Disassembler::disasm_PUSHPMG()
-{
-    index++;
-    uint32_t module = (obj.code[index] << 24) | (obj.code[index+1] << 16) | (obj.code[index+2] << 8) | obj.code[index+3];
-    index += 4;
-    uint32_t addr = (obj.code[index] << 24) | (obj.code[index+1] << 16) | (obj.code[index+2] << 8) | obj.code[index+3];
-    index += 4;
-    out << "PUSHPMG " << module << "," << addr << "\n";
-}
-
 void Disassembler::disasm_PUSHPL()
 {
     uint32_t addr = (obj.code[index+1] << 24) | (obj.code[index+2] << 16) | (obj.code[index+3] << 8) | obj.code[index+4];
@@ -192,14 +159,6 @@ void Disassembler::disasm_PUSHPOL()
     uint32_t addr = (obj.code[index] << 24) | (obj.code[index+1] << 16) | (obj.code[index+2] << 8) | obj.code[index+3];
     index += 4;
     out << "PUSHPL " << enclosing << "," << addr << "\n";
-}
-
-void Disassembler::disasm_PUSHI()
-{
-    index++;
-    uint32_t x = (obj.code[index] << 24) | (obj.code[index+1] << 16) | (obj.code[index+2] << 8) | obj.code[index+3];
-    index += 4;
-    out << "PUSHI " << x << "\n";
 }
 
 void Disassembler::disasm_LOADB()
@@ -472,12 +431,6 @@ void Disassembler::disasm_INDEXAV()
     index++;
 }
 
-void Disassembler::disasm_INDEXAN()
-{
-    out << "INDEXAN\n";
-    index++;
-}
-
 void Disassembler::disasm_INDEXDR()
 {
     out << "INDEXDR\n";
@@ -512,7 +465,7 @@ void Disassembler::disasm_CALLP()
 {
     uint32_t val = (obj.code[index+1] << 24) | (obj.code[index+2] << 16) | (obj.code[index+3] << 8) | obj.code[index+4];
     index += 5;
-    out << "CALLP " << val << " " << (val < obj.strtable.size() ? obj.strtable[val] : "(invalid)") << "\n";
+    out << "CALLP " << obj.strtable[val] << "\n";
 }
 
 void Disassembler::disasm_CALLF()
@@ -520,22 +473,6 @@ void Disassembler::disasm_CALLF()
     uint32_t addr = (obj.code[index+1] << 24) | (obj.code[index+2] << 16) | (obj.code[index+3] << 8) | obj.code[index+4];
     index += 5;
     out << "CALLF " << addr << "\n";
-}
-
-void Disassembler::disasm_CALLMF()
-{
-    index++;
-    uint32_t mod = (obj.code[index] << 24) | (obj.code[index+1] << 16) | (obj.code[index+2] << 8) | obj.code[index+3];
-    index += 4;
-    uint32_t addr = (obj.code[index] << 24) | (obj.code[index+1] << 16) | (obj.code[index+2] << 8) | obj.code[index+3];
-    index += 4;
-    out << "CALLMF " << mod << "," << addr << "\n";
-}
-
-void Disassembler::disasm_CALLI()
-{
-    out << "CALLI\n";
-    index++;
 }
 
 void Disassembler::disasm_JUMP()
@@ -559,22 +496,9 @@ void Disassembler::disasm_JT()
     out << "JT " << addr << "\n";
 }
 
-void Disassembler::disasm_JFCHAIN()
-{
-    uint32_t addr = (obj.code[index+1] << 24) | (obj.code[index+2] << 16) | (obj.code[index+3] << 8) | obj.code[index+4];
-    index += 5;
-    out << "JFCHAIN " << addr << "\n";
-}
-
 void Disassembler::disasm_DUP()
 {
     out << "DUP\n";
-    index++;
-}
-
-void Disassembler::disasm_DUPX1()
-{
-    out << "DUPX1\n";
     index++;
 }
 
@@ -618,12 +542,6 @@ void Disassembler::disasm_EXCEPT()
     out << "EXCEPT \"" << obj.strtable[val] << "\"\n";
 }
 
-void Disassembler::disasm_CLREXC()
-{
-    out << "CLREXC\n";
-    index++;
-}
-
 void Disassembler::disasm_ALLOC()
 {
     uint32_t val = (obj.code[index+1] << 24) | (obj.code[index+2] << 16) | (obj.code[index+3] << 8) | obj.code[index+4];
@@ -637,41 +555,6 @@ void Disassembler::disasm_PUSHNIL()
     index++;
 }
 
-void Disassembler::disasm_JNASSERT()
-{
-    uint32_t addr = (obj.code[index+1] << 24) | (obj.code[index+2] << 16) | (obj.code[index+3] << 8) | obj.code[index+4];
-    index += 5;
-    out << "JNASSERT " << addr << "\n";
-}
-
-void Disassembler::disasm_RESETC()
-{
-    out << "RESETC\n";
-    index++;
-}
-
-std::string Disassembler::decode_value(const std::string &type, const Bytecode::Bytes &value)
-{
-    switch (type.at(0)) {
-        case 'B': {
-            return value.at(0) != 0 ? "TRUE" : "FALSE";
-        }
-        case 'N': {
-            // TODO: endian
-            Number x;
-            memcpy(&x, &value.at(0), sizeof(Number));
-            return number_to_string(x);
-        }
-        case 'S': {
-            uint32_t len = (value.at(0) << 24) | (value.at(1) << 16) | (value.at(1) << 8) | value.at(0);
-            return std::string(&value.at(4), &value.at(4)+len);
-        }
-        default:
-            // TODO internal_error("TODO unimplemented type in decode_value");
-            return "<unknown>";
-    }
-}
-
 void Disassembler::disassemble()
 {
     out << "String table: [\n";
@@ -681,30 +564,6 @@ void Disassembler::disassemble()
         i++;
     }
     out << "]\n";
-
-    out << "Exports:\n";
-    out << "  Types:\n";
-    for (auto t: obj.types) {
-        out << "    " << obj.strtable[t.name] << " " << obj.strtable[t.descriptor] << "\n";
-    }
-    out << "  Constants:\n";
-    for (auto c: obj.constants) {
-        out << "    " << obj.strtable[c.name] << " " << obj.strtable[c.type] << " " << decode_value(obj.strtable[c.type], c.value) << "\n";
-    }
-    out << "  Variables:\n";
-    for (auto v: obj.variables) {
-        out << "    " << obj.strtable[v.name] << " " << obj.strtable[v.type] << " " << v.index << "\n";
-    }
-    out << "  Functions:\n";
-    for (auto f: obj.functions) {
-        out << "    " << obj.strtable[f.name] << " " << obj.strtable[f.descriptor] << " " << f.entry << "\n";
-    }
-
-    out << "Imports " << obj.imports.size() << ":\n";
-    for (auto i: obj.imports) {
-        out << "  " << obj.strtable[i.first] << "\n";
-    }
-
     while (index < obj.code.size()) {
         if (debug != nullptr) {
             auto line = debug->line_numbers.find(index);
@@ -721,11 +580,8 @@ void Disassembler::disassemble()
             case PUSHN:   disasm_PUSHN(); break;
             case PUSHS:   disasm_PUSHS(); break;
             case PUSHPG:  disasm_PUSHPG(); break;
-            case PUSHPPG: disasm_PUSHPPG(); break;
-            case PUSHPMG: disasm_PUSHPMG(); break;
             case PUSHPL:  disasm_PUSHPL(); break;
             case PUSHPOL: disasm_PUSHPOL(); break;
-            case PUSHI:   disasm_PUSHI(); break;
             case LOADB:   disasm_LOADB(); break;
             case LOADN:   disasm_LOADN(); break;
             case LOADS:   disasm_LOADS(); break;
@@ -771,7 +627,6 @@ void Disassembler::disassemble()
             case INDEXAR: disasm_INDEXAR(); break;
             case INDEXAW: disasm_INDEXAW(); break;
             case INDEXAV: disasm_INDEXAV(); break;
-            case INDEXAN: disasm_INDEXAN(); break;
             case INDEXDR: disasm_INDEXDR(); break;
             case INDEXDW: disasm_INDEXDW(); break;
             case INDEXDV: disasm_INDEXDV(); break;
@@ -779,25 +634,18 @@ void Disassembler::disassemble()
             case IND:     disasm_IND(); break;
             case CALLP:   disasm_CALLP(); break;
             case CALLF:   disasm_CALLF(); break;
-            case CALLMF:  disasm_CALLMF(); break;
-            case CALLI:   disasm_CALLI(); break;
             case JUMP:    disasm_JUMP(); break;
             case JF:      disasm_JF(); break;
             case JT:      disasm_JT(); break;
-            case JFCHAIN: disasm_JFCHAIN(); break;
             case DUP:     disasm_DUP(); break;
-            case DUPX1:   disasm_DUPX1(); break;
             case DROP:    disasm_DROP(); break;
             case RET:     disasm_RET(); break;
             case CALLE:   disasm_CALLE(); break;
             case CONSA:   disasm_CONSA(); break;
             case CONSD:   disasm_CONSD(); break;
             case EXCEPT:  disasm_EXCEPT(); break;
-            case CLREXC:  disasm_CLREXC(); break;
             case ALLOC:   disasm_ALLOC(); break;
             case PUSHNIL: disasm_PUSHNIL(); break;
-            case JNASSERT:disasm_JNASSERT(); break;
-            case RESETC:  disasm_RESETC(); break;
         }
         if (index == last_index) {
             out << "disassembler: Unexpected opcode: " << static_cast<int>(obj.code[index]) << "\n";
@@ -812,7 +660,7 @@ void Disassembler::disassemble()
     }
 }
 
-void disassemble(const Bytecode::Bytes &obj, std::ostream &out, const DebugInfo *debug)
+void disassemble(const Bytecode::bytecode &obj, std::ostream &out, const DebugInfo *debug)
 {
     Disassembler(out, obj, debug).disassemble();
 }

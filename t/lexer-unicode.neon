@@ -1,7 +1,7 @@
-CONSTANT a: Number := 5
-CONSTANT b: Number := 8
-CONSTANT p: Boolean := TRUE
-CONSTANT q: Boolean := FALSE
+CONST a: Number := 5
+CONST b: Number := 8
+CONST p: Boolean := TRUE
+CONST q: Boolean := FALSE
 
 IF a ≠ b THEN
     print("1")
@@ -32,21 +32,3 @@ IF p ∨ q THEN
     print("6")
 END IF
 %= 6
-
-print("\(a − b)")
-%= -3
-
-print("\(a × b)")
-%= 40
-
-print("\(a ∕ b)")
-%= 0.625
-
-print("\(a ÷ b)")
-%= 0.625
-
-print("\(a ∈ [4, 5])")
-%= TRUE
-
-%print("\(a ∉ [4, 5])")
-%%= FALSE

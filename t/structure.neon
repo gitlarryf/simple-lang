@@ -1,8 +1,8 @@
-TYPE Point IS RECORD
+TYPE Point := RECORD
     x: Number
     y: Number
 END RECORD
-VAR a: Point := Point()
+VAR a: Point
 VAR b: Point
 a.x := 4
 a.y := 5

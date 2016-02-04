@@ -1,22 +1,15 @@
-FUNCTION in(IN x: Number)
-    print(str(x))
+FUNCTION in(IN a: Number)
+    print(str(a))
 END FUNCTION
 
-FUNCTION inout(INOUT x: Number)
-    print(str(x))
-    x := x + 1
+FUNCTION inout(INOUT a: Number)
+    print(str(a))
+    a := a + 1
 END FUNCTION
 
-FUNCTION out(OUT x: Number)
-    x := 0
-    print(str(x))
-    x := x + 1
-END FUNCTION
-
-FUNCTION outf(OUT x: Number): String
-    x := 0
-    print(str(x))
-    RETURN "foo"
+FUNCTION out(OUT a: Number)
+    print(str(a))
+    a := a + 1
 END FUNCTION
 
 VAR a: Number
@@ -28,18 +21,13 @@ print(str(a))
 %= 5
 
 a := 5
-inout(INOUT a)
+inout(a)
 print(str(a))
 %= 5
 %= 6
 
 a := 5
-out(OUT a)
+out(a)
 print(str(a))
 %= 0
 %= 1
-
-a := 5
-print(outf(OUT a))
-%= 0
-%= foo

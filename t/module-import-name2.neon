@@ -1,4 +1,0 @@
-IMPORT module.var
-
-print(var)
-%= test

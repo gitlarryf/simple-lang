@@ -1,9 +1,0 @@
-% SKIP (segfault)
-EXPORT f
-
-TYPE Rec IS RECORD
-    next: POINTER TO Rec
-END RECORD
-
-FUNCTION f(a: POINTER TO Rec)
-END FUNCTION

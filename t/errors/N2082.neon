@@ -1,2 +1,3 @@
-FOREACH x IN
-          %<
+WHILE (TRUE)
+    print("doing...")
+END WHILE

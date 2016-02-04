@@ -1,3 +1,0 @@
-TYPE Ty IS RECORD END RECORD
-print("\(Ty())")
-         %<

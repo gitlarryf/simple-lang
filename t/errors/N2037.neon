@@ -1,4 +1,11 @@
-IF TRUE THEN
-  print("true!")
-END FUNCTION
-    %<
+TYPE Cards := ENUM
+  Hearts
+  Diamonds
+  Spades
+  Clubs
+END ENUM
+
+
+VAR a: Number
+
+a := Cards.King

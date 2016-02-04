@@ -1,9 +1,5 @@
-VAR a: Number
-a := 10
+FUNCTION a(y: Number, z: Number) : Number
+    RETURN 1
+END FUNCTION
 
-CASE a
-    WHEN < 2, > 5 DO
-        print("Less than 2, or greater than 5")
-    WHEN 5 DO
-        print("BOOM!")
-%$
+print(a(1))

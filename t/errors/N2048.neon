@@ -1,11 +1,6 @@
-EXTERNAL FUNCTION Sleep(ms: Number)
-{
-     "library" {
-               %<
-          "name": "TestLib"
-     }
-     "types": {
-          "dwMilliseconds": "uint32"
-     }
-}
-END FUNCTION
+VAR a: Dictionary<Number>
+VAR b: Dictionary<Number>
+
+IF a <= b THEN
+  print("Woah...")
+END IF

@@ -1,5 +1,0 @@
-VAR x: Number
-    %<2
-FOREACH x OF [] DO
-        %<1
-END FOREACH

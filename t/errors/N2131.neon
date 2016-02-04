@@ -1,0 +1,4 @@
+EXTERNAL FUNCTION Sleep(ms: Number)
+{
+    "foo": "bar"
+}

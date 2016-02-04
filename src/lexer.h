@@ -1,17 +1,102 @@
 #ifndef LEXER_H
 #define LEXER_H
 
+#include <string>
 #include <vector>
 
-#include "token.h"
+#include "number.h"
 
-struct TokenizedSource {
-    TokenizedSource(): source_path(), source_hash(), tokens() {}
-    std::string source_path;
-    std::string source_hash;
-    std::vector<Token> tokens;
+enum TokenType {
+    NONE,
+    END_OF_FILE,
+    NUMBER,
+    STRING,
+    IDENTIFIER,
+    LPAREN,
+    RPAREN,
+    LBRACKET,
+    RBRACKET,
+    LBRACE,
+    RBRACE,
+    COLON,
+    ASSIGN,
+    PLUS,
+    MINUS,
+    TIMES,
+    DIVIDE,
+    MOD,
+    EXP,
+    CONCAT,
+    EQUAL,
+    NOTEQUAL,
+    LESS,
+    GREATER,
+    LESSEQ,
+    GREATEREQ,
+    COMMA,
+    IF,
+    THEN,
+    ELSE,
+    END,
+    WHILE,
+    DO,
+    VAR,
+    FUNCTION,
+    RETURN,
+    FALSE,
+    TRUE,
+    AND,
+    OR,
+    NOT,
+    FOR,
+    TO,
+    STEP,
+    ARRAY,
+    DICTIONARY,
+    DOT,
+    TYPE,
+    RECORD,
+    ENUM,
+    CONST,
+    IMPORT,
+    IN,
+    OUT,
+    INOUT,
+    ELSIF,
+    CASE,
+    WHEN,
+    DOTDOT,
+    EXTERNAL,
+    EXIT,
+    NEXT,
+    LOOP,
+    REPEAT,
+    UNTIL,
+    DECLARE,
+    EXCEPTION,
+    TRY,
+    RAISE,
+    POINTER,
+    NEW,
+    NIL,
+    VALID,
+    ARROW,
+    MAX_TOKEN
 };
 
-TokenizedSource tokenize(const std::string &source_path, const std::string &source);
+class Token {
+public:
+    Token(): source(), line(0), column(0), type(NONE), text(), value() {}
+    std::string source;
+    int line;
+    int column;
+    TokenType type;
+    std::string text;
+    Number value;
+
+    std::string tostring() const;
+};
+
+std::vector<Token> tokenize(const std::string &source);
 
 #endif

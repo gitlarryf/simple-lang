@@ -1,7 +1,0 @@
-%|
- |  File: hello
- |
- |  The canonical "Hello World" program.
- |%
-
-print("Hello World")

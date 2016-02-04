@@ -1,10 +1,10 @@
-VAR d: Dictionary<String> := {}
+VAR d: Dictionary<String>
 d["hello"] := "world"
 print(d["hello"])
 
 TRY
     print(d["foo"])
-EXCEPTION DictionaryIndexException DO
+EXCEPTION DictionaryIndex
     print("dictionary index")
 END TRY
 

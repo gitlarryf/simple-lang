@@ -1,4 +1,0 @@
-IMPORT module.var ALIAS v
-
-print(v)
-%= test

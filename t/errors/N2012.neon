@@ -1,2 +1,6 @@
-CONSTANT x: String = ", World!"
-                   %<
+TYPE Suit := ENUM
+    Heart,
+    Club
+    Spade
+    Diamond
+END ENUM

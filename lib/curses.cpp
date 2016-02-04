@@ -31,29 +31,14 @@ static std::vector<chtype> chtypes_from_numbers(const std::vector<Number> &chstr
 
 namespace rtl {
 
-Number curses$COLOR_PAIR(Number n)
-{
-    return number_from_uint32(COLOR_PAIR(number_to_uint32(n)));
-}
-
-Number curses$Cols()
+Number curses$COLS()
 {
     return number_from_sint32(COLS);
 }
 
-Number curses$KEY_F(Number c)
-{
-    return number_from_uint32(KEY_F(number_to_uint32(c)));
-}
-
-Number curses$Lines()
+Number curses$LINES()
 {
     return number_from_sint32(LINES);
-}
-
-Number curses$PAIR_NUMBER(Number n)
-{
-    return number_from_uint32(PAIR_NUMBER(number_to_uint32(n)));
 }
 
 void curses$addch(Number ch)
@@ -313,11 +298,6 @@ void curses$copywin(void *srcwin, void *dstwin, Number sminrow, Number smincol, 
 void curses$curs_set(Number visibility)
 {
     curs_set(number_to_sint32(visibility));
-}
-
-void *curses$curscr()
-{
-    return curscr;
 }
 
 std::string curses$curses_version()

@@ -1,0 +1,7 @@
+VAR a: String
+a := "H"
+
+CASE a
+   WHEN "H".."Z", "A".."Z" DO
+     print("5")
+END CASE

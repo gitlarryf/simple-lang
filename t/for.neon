@@ -1,3 +1,4 @@
+VAR a: Number
 VAR b: Number
 VAR c: Number
 b := 5
@@ -12,6 +13,17 @@ END FOR
 %= 3
 %= 4
 %= 5
+
+FOR a := 1 TO 10 DO
+    print(str(a))
+    a := a + 1
+END FOR
+
+%= 1
+%= 3
+%= 5
+%= 7
+%= 9
 
 FOR a := -1 TO -5 DO
     print(str(a))

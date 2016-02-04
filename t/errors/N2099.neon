@@ -1,2 +1,1 @@
-LET a: Array<Number> := [1 TO 10 OF
-                        %<2      %<1
+1 := 2

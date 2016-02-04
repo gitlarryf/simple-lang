@@ -1,7 +1,9 @@
+% TODO
+
 FUNCTION foo()
     VAR a: Number
 END FUNCTION
 
 VAR a: Number
 
-%! duplicate identifier
+%! name shadows outer

@@ -1,8 +1,8 @@
-DECLARE EXCEPTION PrinterOnFireException
+DECLARE EXCEPTION PrinterOnFire
 
 TRY
-    RAISE PrinterOnFireException
-EXCEPTION PrinterOnFireException DO
+    RAISE PrinterOnFire
+EXCEPTION PrinterOnFire
     print("conflagration")
 END TRY
 

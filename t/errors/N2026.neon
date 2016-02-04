@@ -1,4 +1,4 @@
-IF (TRUE) DO
-          %<
-    print("TRUE")
-END IF
+VAR a: String
+a := "Hello, World!"
+
+CONST x: String := a

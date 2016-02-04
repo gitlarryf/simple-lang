@@ -1,4 +1,0 @@
-VAR Record: String := ""
-
-Record["char(34)"]
-       %<

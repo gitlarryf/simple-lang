@@ -1,3 +1,0 @@
-VAR a: Array<Array<Number>> := [[]]
-print(str(a[0].size()))
-%= 0

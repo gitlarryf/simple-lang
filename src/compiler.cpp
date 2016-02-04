@@ -2,13 +2,11 @@
 
 #include <algorithm>
 #include <assert.h>
-#include <fstream>
 #include <iso646.h>
 #include <sstream>
 #include <stack>
 
 #include "ast.h"
-#include "bytecode.h"
 #include "debuginfo.h"
 #include "opcode.h"
 
@@ -18,13 +16,6 @@ class Emitter {
         Label(): fixups(), target(UINT_MAX) {}
         std::vector<unsigned int> fixups;
         unsigned int target;
-    public:
-        unsigned int get_target() {
-            if (target == UINT_MAX) {
-                internal_error("Label::get_target");
-            }
-            return target;
-        }
     };
     class LoopLabels {
     public:
@@ -34,7 +25,14 @@ class Emitter {
         Label *next;
     };
 public:
-    Emitter(const std::string &source_hash, DebugInfo *debug): source_hash(source_hash), object(), globals(), functions(), function_exit(), loop_labels(), exported_types(), debug_info(debug) {}
+    struct ExceptionInfo {
+        unsigned int start;
+        unsigned int end;
+        unsigned int excid;
+        unsigned int handler;
+    };
+public:
+    Emitter(DebugInfo *debug): code(), strings(), exceptions(), globals(), functions(), function_exit(), loop_labels(), debug_info(debug) {}
     void emit(unsigned char b);
     void emit_uint32(uint32_t value);
     void emit(unsigned char b, uint32_t value);
@@ -55,26 +53,18 @@ public:
     Label &get_exit_label(unsigned int loop_id);
     Label &get_next_label(unsigned int loop_id);
     void debug_line(int line);
-    void add_exception(const Bytecode::ExceptionInfo &ei);
+    void add_exception(const ExceptionInfo &ei);
     void push_function_exit(Label &label);
     void pop_function_exit();
     Label &get_function_exit();
-    void declare_export_type(const Type *type);
-    void add_export_type(const std::string &name, const std::string &descriptor);
-    void add_export_constant(const std::string &name, const std::string &type, const std::string &value);
-    void add_export_variable(const std::string &name, const std::string &type, int index);
-    void add_export_function(const std::string &name, const std::string &type, int entry);
-    void add_export_exception(const std::string &name);
-    void add_import(const std::string &name);
-    std::string get_type_reference(const Type *type);
 private:
-    const std::string source_hash;
-    Bytecode object;
+    std::vector<unsigned char> code;
+    std::vector<std::string> strings;
+    std::vector<ExceptionInfo> exceptions;
     std::vector<std::string> globals;
     std::vector<Label> functions;
     std::stack<Label *> function_exit;
     std::map<size_t, LoopLabels> loop_labels;
-    std::set<const Type *> exported_types;
     DebugInfo *debug_info;
 private:
     Emitter(const Emitter &);
@@ -83,7 +73,7 @@ private:
 
 void Emitter::emit(unsigned char b)
 {
-    object.code.push_back(b);
+    code.push_back(b);
 }
 
 void Emitter::emit_uint32(uint32_t value)
@@ -117,14 +107,40 @@ void Emitter::emit(unsigned char b, const Number &value)
 
 void Emitter::emit(const std::vector<unsigned char> &instr)
 {
-    std::copy(instr.begin(), instr.end(), std::back_inserter(object.code));
+    std::copy(instr.begin(), instr.end(), std::back_inserter(code));
 }
 
 std::vector<unsigned char> Emitter::getObject()
 {
-    object.source_hash = source_hash;
-    object.global_size = globals.size();
-    return object.getBytes();
+    std::vector<unsigned char> obj;
+
+    obj.push_back(static_cast<unsigned char>(globals.size() >> 8) & 0xff);
+    obj.push_back(static_cast<unsigned char>(globals.size() & 0xff));
+
+    std::vector<unsigned char> strtable;
+    for (auto s: strings) {
+        std::copy(s.begin(), s.end(), std::back_inserter(strtable));
+        strtable.push_back(0);
+    }
+    obj.push_back(static_cast<unsigned char>(strtable.size() >> 8) & 0xff);
+    obj.push_back(static_cast<unsigned char>(strtable.size() & 0xff));
+    std::copy(strtable.begin(), strtable.end(), std::back_inserter(obj));
+
+    obj.push_back(static_cast<unsigned char>(exceptions.size() >> 8) & 0xff);
+    obj.push_back(static_cast<unsigned char>(exceptions.size() & 0xff));
+    for (auto e: exceptions) {
+        obj.push_back(static_cast<unsigned char>(e.start >> 8) & 0xff);
+        obj.push_back(static_cast<unsigned char>(e.start & 0xff));
+        obj.push_back(static_cast<unsigned char>(e.end >> 8) & 0xff);
+        obj.push_back(static_cast<unsigned char>(e.end & 0xff));
+        obj.push_back(static_cast<unsigned char>(e.excid >> 8) & 0xff);
+        obj.push_back(static_cast<unsigned char>(e.excid & 0xff));
+        obj.push_back(static_cast<unsigned char>(e.handler >> 8) & 0xff);
+        obj.push_back(static_cast<unsigned char>(e.handler & 0xff));
+    }
+
+    std::copy(code.begin(), code.end(), std::back_inserter(obj));
+    return obj;
 }
 
 unsigned int Emitter::global(const std::string &name)
@@ -139,17 +155,17 @@ unsigned int Emitter::global(const std::string &name)
 
 unsigned int Emitter::str(const std::string &s)
 {
-    auto i = std::find(object.strtable.begin(), object.strtable.end(), s);
-    if (i == object.strtable.end()) {
-        object.strtable.push_back(s);
-        i = object.strtable.end() - 1;
+    auto i = std::find(strings.begin(), strings.end(), s);
+    if (i == strings.end()) {
+        strings.push_back(s);
+        i = strings.end() - 1;
     }
-    return static_cast<unsigned int>(i - object.strtable.begin());
+    return static_cast<unsigned int>(i - strings.begin());
 }
 
 unsigned int Emitter::current_ip()
 {
-    return static_cast<unsigned int>(object.code.size());
+    return static_cast<unsigned int>(code.size());
 }
 
 unsigned int Emitter::next_function()
@@ -175,7 +191,7 @@ void Emitter::emit_jump(unsigned char b, Label &label)
     if (label.target != UINT_MAX) {
         emit_uint32(label.target);
     } else {
-        label.fixups.push_back(static_cast<unsigned int>(object.code.size()));
+        label.fixups.push_back(static_cast<unsigned int>(code.size()));
         emit_uint32(UINT32_MAX);
     }
 }
@@ -183,12 +199,12 @@ void Emitter::emit_jump(unsigned char b, Label &label)
 void Emitter::jump_target(Label &label)
 {
     assert(label.target == UINT_MAX);
-    label.target = static_cast<unsigned int>(object.code.size());
+    label.target = static_cast<unsigned int>(code.size());
     for (auto offset: label.fixups) {
-        object.code[offset] = static_cast<unsigned char>((label.target >> 24) & 0xff);
-        object.code[offset+1] = static_cast<unsigned char>((label.target >> 16) & 0xff);
-        object.code[offset+2] = static_cast<unsigned char>((label.target >> 8) & 0xff);
-        object.code[offset+3] = static_cast<unsigned char>(label.target & 0xff);
+        code[offset] = static_cast<unsigned char>((label.target >> 24) & 0xff);
+        code[offset+1] = static_cast<unsigned char>((label.target >> 16) & 0xff);
+        code[offset+2] = static_cast<unsigned char>((label.target >> 8) & 0xff);
+        code[offset+3] = static_cast<unsigned char>(label.target & 0xff);
     }
 }
 
@@ -223,12 +239,12 @@ void Emitter::debug_line(int line)
     if (debug_info == nullptr) {
         return;
     }
-    debug_info->line_numbers[object.code.size()] = line;
+    debug_info->line_numbers[code.size()] = line;
 }
 
-void Emitter::add_exception(const Bytecode::ExceptionInfo &ei)
+void Emitter::add_exception(const ExceptionInfo &ei)
 {
-    object.exceptions.push_back(ei);
+    exceptions.push_back(ei);
 }
 
 void Emitter::push_function_exit(Label &exit)
@@ -249,101 +265,10 @@ Emitter::Label &Emitter::get_function_exit()
     return *function_exit.top();
 }
 
-void Emitter::declare_export_type(const Type *type)
-{
-    exported_types.insert(type);
-}
-
-void Emitter::add_export_type(const std::string &name, const std::string &descriptor)
-{
-    Bytecode::Type type;
-    type.name = str(name);
-    type.descriptor = str(descriptor);
-    object.types.push_back(type);
-}
-
-void Emitter::add_export_constant(const std::string &name, const std::string &type, const std::string &value)
-{
-    Bytecode::Constant constant;
-    constant.name = str(name);
-    constant.type = str(type);
-    constant.value = Bytecode::Bytes(value.data(), value.data()+value.length());
-    object.constants.push_back(constant);
-}
-
-void Emitter::add_export_variable(const std::string &name, const std::string &type, int index)
-{
-    Bytecode::Variable variable;
-    variable.name = str(name);
-    variable.type = str(type);
-    variable.index = index;
-    object.variables.push_back(variable);
-}
-
-void Emitter::add_export_function(const std::string &name, const std::string &type, int entry)
-{
-    Bytecode::Function function;
-    function.name = str(name);
-    function.descriptor = str(type);
-    function.entry = entry;
-    object.functions.push_back(function);
-}
-
-void Emitter::add_export_exception(const std::string &name)
-{
-    Bytecode::ExceptionExport exception;
-    exception.name = str(name);
-    object.exception_exports.push_back(exception);
-}
-
-void Emitter::add_import(const std::string &name)
-{
-    unsigned int index = str(name);
-    for (auto i: object.imports) {
-        if (i.first == index) {
-            return;
-        }
-    }
-    object.imports.push_back(std::make_pair(index, std::string(32, '0')));
-}
-
-std::string Emitter::get_type_reference(const Type *type)
-{
-    if (type->name.find('.') != std::string::npos || exported_types.find(type) != exported_types.end()) {
-        return "~" + type->name + ";";
-    }
-    return type->get_type_descriptor(*this);
-}
-
 void Type::predeclare(Emitter &emitter) const
 {
     for (auto m: methods) {
         m.second->predeclare(emitter);
-    }
-}
-
-void Type::postdeclare(Emitter &emitter) const
-{
-    for (auto m: methods) {
-        m.second->postdeclare(emitter);
-    }
-}
-
-void Type::generate_export(Emitter &emitter, const std::string &name) const
-{
-    emitter.add_export_type(name, get_type_descriptor(emitter));
-    for (auto m: methods) {
-        // TODO: This is kind of a hack. It seems to work because
-        // predefined functions are available everywhere and don't
-        // need to be actually exported.
-        if (dynamic_cast<const PredefinedFunction *>(m.second) != nullptr) {
-            continue;
-        }
-        const Function *f = dynamic_cast<const Function *>(m.second);
-        if (f == nullptr) {
-            internal_error("method should be function: " + this->name + "." + m.second->name + " " + m.second->text());
-        }
-        emitter.add_export_function(name + "." + m.first, f->type->get_type_descriptor(emitter), emitter.function_label(f->entry_label).get_target());
     }
 }
 
@@ -392,12 +317,6 @@ void TypeString::generate_call(Emitter &) const
     internal_error("TypeString");
 }
 
-void TypeFunction::predeclare(Emitter &emitter) const
-{
-    Type::predeclare(emitter);
-    returntype->predeclare(emitter);
-}
-
 void TypeFunction::generate_load(Emitter &) const
 {
     internal_error("TypeFunction");
@@ -411,36 +330,6 @@ void TypeFunction::generate_store(Emitter &) const
 void TypeFunction::generate_call(Emitter &) const
 {
     internal_error("TypeFunction");
-}
-
-std::string TypeFunction::get_type_descriptor(Emitter &emitter) const
-{
-    std::string r = "F[";
-    for (auto p: params) {
-        if (r.length() > 2) {
-            r += ",";
-        }
-        char m;
-        switch (p->mode) {
-            case ParameterType::IN:    m = '>'; break;
-            case ParameterType::INOUT: m = '*'; break;
-            case ParameterType::OUT:   m = '<'; break;
-            default:
-                internal_error("invalid parameter mode");
-        }
-        // TODO: default value
-        r += m + p->declaration.text + ":" + emitter.get_type_reference(p->type);
-    }
-    r += "]:" + emitter.get_type_reference(returntype);
-    return r;
-}
-
-void TypeArray::predeclare(Emitter &emitter) const
-{
-    Type::predeclare(emitter);
-    if (elementtype != nullptr) {
-        elementtype->predeclare(emitter);
-    }
 }
 
 void TypeArray::generate_load(Emitter &emitter) const
@@ -458,26 +347,6 @@ void TypeArray::generate_call(Emitter &) const
     internal_error("TypeArray");
 }
 
-std::string TypeArray::get_type_descriptor(Emitter &emitter) const
-{
-    return "A<" + emitter.get_type_reference(elementtype) + ">";
-}
-
-void TypeArray::get_type_references(std::set<const Type *> &references) const
-{
-    if (references.insert(elementtype).second) {
-        elementtype->get_type_references(references);
-    }
-}
-
-void TypeDictionary::predeclare(Emitter &emitter) const
-{
-    Type::predeclare(emitter);
-    if (elementtype != nullptr) {
-        elementtype->predeclare(emitter);
-    }
-}
-
 void TypeDictionary::generate_load(Emitter &emitter) const
 {
     emitter.emit(LOADD);
@@ -491,41 +360,6 @@ void TypeDictionary::generate_store(Emitter &emitter) const
 void TypeDictionary::generate_call(Emitter &) const
 {
     internal_error("TypeDictionary");
-}
-
-std::string TypeDictionary::get_type_descriptor(Emitter &emitter) const
-{
-    return "D<" + emitter.get_type_reference(elementtype) + ">";
-}
-
-void TypeDictionary::get_type_references(std::set<const Type *> &references) const
-{
-    if (references.insert(elementtype).second) {
-        elementtype->get_type_references(references);
-    }
-}
-
-void TypeRecord::predeclare(Emitter &emitter) const
-{
-    // Avoid unbounded recursion.
-    if (predeclared) {
-        return;
-    }
-    predeclared = true;
-    Type::predeclare(emitter);
-    for (auto f: fields) {
-        f.type->predeclare(emitter);
-    }
-}
-
-void TypeRecord::postdeclare(Emitter &emitter) const
-{
-    // Avoid unbounded recursion.
-    if (postdeclared) {
-        return;
-    }
-    postdeclared = true;
-    Type::postdeclare(emitter);
 }
 
 void TypeRecord::generate_load(Emitter &emitter) const
@@ -543,31 +377,6 @@ void TypeRecord::generate_call(Emitter &) const
     internal_error("TypeRecord");
 }
 
-std::string TypeRecord::get_type_descriptor(Emitter &emitter) const
-{
-    std::string r = "R[";
-    for (auto f: fields) {
-        if (r.length() > 2) {
-            r += ",";
-        }
-        if (f.is_private) {
-            r += "!";
-        }
-        r += f.name.text + ":" + emitter.get_type_reference(f.type);
-    }
-    r += "]";
-    return r;
-}
-
-void TypeRecord::get_type_references(std::set<const Type *> &references) const
-{
-    for (auto f: fields) {
-        if (references.insert(f.type).second) {
-            f.type->get_type_references(references);
-        }
-    }
-}
-
 void TypePointer::generate_load(Emitter &emitter) const
 {
     emitter.emit(LOADP);
@@ -583,65 +392,6 @@ void TypePointer::generate_call(Emitter &) const
     internal_error("TypePointer");
 }
 
-std::string TypePointer::get_type_descriptor(Emitter &emitter) const
-{
-    return "P<" + (reftype != nullptr ? emitter.get_type_reference(reftype) : "") + ">";
-}
-
-void TypePointer::get_type_references(std::set<const Type *> &references) const
-{
-    if (reftype != nullptr && references.insert(reftype).second) {
-        reftype->get_type_references(references);
-    }
-}
-
-void TypeFunctionPointer::generate_load(Emitter &emitter) const
-{
-    emitter.emit(LOADN);
-}
-
-void TypeFunctionPointer::generate_store(Emitter &emitter) const
-{
-    emitter.emit(STOREN);
-}
-
-void TypeFunctionPointer::generate_call(Emitter &emitter) const
-{
-    emitter.emit(CALLI);
-}
-
-std::string TypeFunctionPointer::get_type_descriptor(Emitter &emitter) const
-{
-    return "Q" + emitter.get_type_reference(functype);
-}
-
-void TypeFunctionPointer::get_type_references(std::set<const Type *> &references) const
-{
-    if (references.insert(functype).second) {
-        functype->get_type_references(references);
-    }
-}
-
-std::string TypeEnum::get_type_descriptor(Emitter &) const
-{
-    std::string r = "E[";
-    std::vector<std::string> namevector(names.size());
-    for (auto n: names) {
-        if (not namevector[n.second].empty()) {
-            internal_error("duplicate enum value");
-        }
-        namevector[n.second] = n.first;
-    }
-    for (auto n: namevector) {
-        if (r.length() > 2) {
-            r += ",";
-        }
-        r += n;
-    }
-    r += "]";
-    return r;
-}
-
 void Variable::generate_load(Emitter &emitter) const
 {
     type->generate_load(emitter);
@@ -654,29 +404,7 @@ void Variable::generate_store(Emitter &emitter) const
 
 void Variable::generate_call(Emitter &emitter) const
 {
-    // These two statements are for function pointer support.
-    // I'm not quite sure why this doesn't cause an internal compiler error
-    // for other things like PredefinedFunction (since its generate_address
-    // is not implemented), but nevertheless this seems to work.
-    generate_address(emitter, 0);
-    type->generate_load(emitter);
-
     type->generate_call(emitter);
-}
-
-void PredefinedVariable::generate_address(Emitter &emitter, int) const
-{
-    emitter.emit(PUSHPPG, emitter.str(name));
-}
-
-void ModuleVariable::predeclare(Emitter &emitter) const
-{
-    emitter.add_import(module);
-}
-
-void ModuleVariable::generate_address(Emitter &emitter, int) const
-{
-    emitter.emit(PUSHPMG, emitter.str(module), index);
 }
 
 void GlobalVariable::predeclare(Emitter &emitter) const
@@ -693,15 +421,10 @@ void GlobalVariable::generate_address(Emitter &emitter, int) const
     emitter.emit(PUSHPG, index);
 }
 
-void GlobalVariable::generate_export(Emitter &emitter, const std::string &name) const
-{
-    emitter.add_export_variable(name, emitter.get_type_reference(type), index);
-}
-
-void LocalVariable::predeclare(Emitter &emitter, int slot)
+void LocalVariable::predeclare(Emitter &emitter) const
 {
     type->predeclare(emitter);
-    index = slot;
+    index = scope->nextIndex();
 }
 
 void LocalVariable::generate_address(Emitter &emitter, int enclosing) const
@@ -735,21 +458,14 @@ void FunctionParameter::generate_address(Emitter &emitter, int) const
 
 void Function::predeclare(Emitter &emitter) const
 {
-    type->predeclare(emitter);
-    frame->predeclare(emitter);
-    // TODO: This hack ensures that we only allocate the
-    // entry label once, even if predeclare() is called
-    // more than once.
-    if (entry_label == UINT_MAX) {
-        entry_label = emitter.next_function();
-    }
+    scope->predeclare(emitter);
+    entry_label = emitter.next_function();
 }
 
 void Function::postdeclare(Emitter &emitter) const
 {
-    emitter.debug_line(declaration.line);
     emitter.jump_target(emitter.function_label(entry_label));
-    emitter.emit(ENTER, static_cast<uint32_t>(frame->getCount()));
+    emitter.emit(ENTER, scope->getCount());
     for (auto p = params.rbegin(); p != params.rend(); ++p) {
         switch ((*p)->mode) {
             case ParameterType::IN:
@@ -770,7 +486,6 @@ void Function::postdeclare(Emitter &emitter) const
         stmt->generate(emitter);
     }
     emitter.pop_function_exit();
-    emitter.jump_target(exit);
     for (auto p = params.rbegin(); p != params.rend(); ++p) {
         switch ((*p)->mode) {
             case ParameterType::IN:
@@ -782,25 +497,15 @@ void Function::postdeclare(Emitter &emitter) const
                 break;
         }
     }
+    emitter.jump_target(exit);
     emitter.emit(LEAVE);
     emitter.emit(RET);
-    frame->postdeclare(emitter);
-}
-
-void Function::generate_load(Emitter &emitter) const
-{
-    // Get the address of a function for function pointer support.
-    emitter.emit_jump(PUSHI, emitter.function_label(entry_label));
+    scope->postdeclare(emitter);
 }
 
 void Function::generate_call(Emitter &emitter) const
 {
     emitter.emit_jump(CALLF, emitter.function_label(entry_label));
-}
-
-void Function::generate_export(Emitter &emitter, const std::string &name) const
-{
-    emitter.add_export_function(name, type->get_type_descriptor(emitter), emitter.function_label(entry_label).get_target());
 }
 
 void PredefinedFunction::predeclare(Emitter &emitter) const
@@ -810,25 +515,11 @@ void PredefinedFunction::predeclare(Emitter &emitter) const
 
 void PredefinedFunction::generate_call(Emitter &emitter) const
 {
-    if (name_index == -1) {
-        internal_error("predefined function not generated: "+name);
-    }
     emitter.emit(CALLP, name_index);
-}
-
-void ModuleFunction::predeclare(Emitter &emitter) const
-{
-    emitter.add_import(module);
-}
-
-void ModuleFunction::generate_call(Emitter &emitter) const
-{
-    emitter.emit(CALLMF, emitter.str(module), entry);
 }
 
 void ExternalFunction::predeclare(Emitter &emitter) const
 {
-    Function::predeclare(emitter);
     std::stringstream ss;
     ss << library_name << ":" << name << ":";
     auto r = param_types.find("return");
@@ -842,20 +533,9 @@ void ExternalFunction::predeclare(Emitter &emitter) const
             ss << ",";
         }
         first = false;
-        if (param->mode == ParameterType::INOUT) {
-            ss << '*';
-        }
         ss << param_types.at(param->name);
     }
     external_index = emitter.str(ss.str());
-}
-
-void ExternalFunction::postdeclare(Emitter &emitter) const
-{
-    emitter.jump_target(emitter.function_label(entry_label));
-    generate_call(emitter);
-    emitter.emit(RET);
-    frame->postdeclare(emitter);
 }
 
 void ExternalFunction::generate_call(Emitter &emitter) const
@@ -863,58 +543,34 @@ void ExternalFunction::generate_call(Emitter &emitter) const
     emitter.emit(CALLE, external_index);
 }
 
-void Exception::generate_export(Emitter &emitter, const std::string &name) const
-{
-    emitter.add_export_exception(name);
-}
-
-void Constant::generate_export(Emitter &emitter, const std::string &name) const
-{
-    emitter.add_export_constant(name, emitter.get_type_reference(type), type->serialize(value));
-}
-
-void Expression::generate(Emitter &emitter) const
-{
-    if (type != nullptr) {
-        type->predeclare(emitter);
-    }
-    generate_expr(emitter);
-}
-
-void ConstantBooleanExpression::generate_expr(Emitter &emitter) const
+void ConstantBooleanExpression::generate(Emitter &emitter) const
 {
     emitter.emit(PUSHB);
     emitter.emit(value ? 1 : 0);
 }
 
-void ConstantNumberExpression::generate_expr(Emitter &emitter) const
+void ConstantNumberExpression::generate(Emitter &emitter) const
 {
     emitter.emit(PUSHN, value);
 }
 
-void ConstantStringExpression::generate_expr(Emitter &emitter) const
+void ConstantStringExpression::generate(Emitter &emitter) const
 {
     unsigned int index = emitter.str(value);
     emitter.emit(PUSHS, index);
 }
 
-void ConstantBytesExpression::generate_expr(Emitter &emitter) const
-{
-    unsigned int index = emitter.str(contents);
-    emitter.emit(PUSHS, index);
-}
-
-void ConstantEnumExpression::generate_expr(Emitter &emitter) const
+void ConstantEnumExpression::generate(Emitter &emitter) const
 {
     emitter.emit(PUSHN, number_from_uint32(value));
 }
 
-void ConstantNilExpression::generate_expr(Emitter &emitter) const
+void ConstantNilExpression::generate(Emitter &emitter) const
 {
     emitter.emit(PUSHNIL);
 }
 
-void ArrayLiteralExpression::generate_expr(Emitter &emitter) const
+void ArrayLiteralExpression::generate(Emitter &emitter) const
 {
     for (auto e = elements.rbegin(); e != elements.rend(); ++e) {
         (*e)->generate(emitter);
@@ -922,7 +578,7 @@ void ArrayLiteralExpression::generate_expr(Emitter &emitter) const
     emitter.emit(CONSA, static_cast<uint32_t>(elements.size()));
 }
 
-void DictionaryLiteralExpression::generate_expr(Emitter &emitter) const
+void DictionaryLiteralExpression::generate(Emitter &emitter) const
 {
     for (auto d = dict.rbegin(); d != dict.rend(); ++d) {
         emitter.emit(PUSHS, emitter.str(d->first));
@@ -931,32 +587,24 @@ void DictionaryLiteralExpression::generate_expr(Emitter &emitter) const
     emitter.emit(CONSD, static_cast<uint32_t>(dict.size()));
 }
 
-void RecordLiteralExpression::generate_expr(Emitter &emitter) const
-{
-    for (auto v = values.rbegin(); v != values.rend(); ++v) {
-        (*v)->generate(emitter);
-    }
-    emitter.emit(CONSA, static_cast<uint32_t>(values.size()));
-}
-
-void NewRecordExpression::generate_expr(Emitter &emitter) const
+void NewRecordExpression::generate(Emitter &emitter) const
 {
     emitter.emit(ALLOC, static_cast<uint32_t>(fields));
 }
 
-void UnaryMinusExpression::generate_expr(Emitter &emitter) const
+void UnaryMinusExpression::generate(Emitter &emitter) const
 {
     value->generate(emitter);
     emitter.emit(NEGN);
 }
 
-void LogicalNotExpression::generate_expr(Emitter &emitter) const
+void LogicalNotExpression::generate(Emitter &emitter) const
 {
     value->generate(emitter);
     emitter.emit(NOTB);
 }
 
-void ConditionalExpression::generate_expr(Emitter &emitter) const
+void ConditionalExpression::generate(Emitter &emitter) const
 {
     condition->generate(emitter);
     auto else_label = emitter.create_label();
@@ -969,7 +617,7 @@ void ConditionalExpression::generate_expr(Emitter &emitter) const
     emitter.jump_target(end_label);
 }
 
-void DisjunctionExpression::generate_expr(Emitter &emitter) const
+void DisjunctionExpression::generate(Emitter &emitter) const
 {
     left->generate(emitter);
     emitter.emit(DUP);
@@ -980,7 +628,7 @@ void DisjunctionExpression::generate_expr(Emitter &emitter) const
     emitter.jump_target(true_label);
 }
 
-void ConjunctionExpression::generate_expr(Emitter &emitter) const
+void ConjunctionExpression::generate(Emitter &emitter) const
 {
     left->generate(emitter);
     emitter.emit(DUP);
@@ -991,90 +639,69 @@ void ConjunctionExpression::generate_expr(Emitter &emitter) const
     emitter.jump_target(false_label);
 }
 
-void ArrayInExpression::generate_expr(Emitter &emitter) const
+void ArrayInExpression::generate(Emitter &emitter) const
 {
     left->generate(emitter);
     right->generate(emitter);
     emitter.emit(INA);
 }
 
-void DictionaryInExpression::generate_expr(Emitter &emitter) const
+void DictionaryInExpression::generate(Emitter &emitter) const
 {
     left->generate(emitter);
     right->generate(emitter);
     emitter.emit(IND);
 }
 
-void ComparisonExpression::generate_expr(Emitter &emitter) const
-{
-    left->generate(emitter);
-    right->generate(emitter);
-    generate_comparison_opcode(emitter);
-}
-
-void ChainedComparisonExpression::generate_expr(Emitter &emitter) const
-{
-    comps[0]->left->generate(emitter);
-    auto skip_label = emitter.create_label();
-    size_t i = 0;
-    for (auto c: comps) {
-        bool last = i == comps.size() - 1;
-        c->right->generate(emitter);
-        if (not last) {
-            emitter.emit(DUPX1);
-        }
-        c->generate_comparison_opcode(emitter);
-        if (not last) {
-            emitter.emit_jump(JFCHAIN, skip_label);
-        }
-        i++;
-    }
-    emitter.jump_target(skip_label);
-}
-
-void BooleanComparisonExpression::generate_comparison_opcode(Emitter &emitter) const
+void BooleanComparisonExpression::generate(Emitter &emitter) const
 {
     static const unsigned char op[] = {EQB, NEB};
+    left->generate(emitter);
+    right->generate(emitter);
     emitter.emit(op[comp]);
 }
 
-void NumericComparisonExpression::generate_comparison_opcode(Emitter &emitter) const
+void NumericComparisonExpression::generate(Emitter &emitter) const
 {
     static const unsigned char op[] = {EQN, NEN, LTN, GTN, LEN, GEN};
+    left->generate(emitter);
+    right->generate(emitter);
     emitter.emit(op[comp]);
 }
 
-void StringComparisonExpression::generate_comparison_opcode(Emitter &emitter) const
+void StringComparisonExpression::generate(Emitter &emitter) const
 {
     static const unsigned char op[] = {EQS, NES, LTS, GTS, LES, GES};
+    left->generate(emitter);
+    right->generate(emitter);
     emitter.emit(op[comp]);
 }
 
-void ArrayComparisonExpression::generate_comparison_opcode(Emitter &emitter) const
+void ArrayComparisonExpression::generate(Emitter &emitter) const
 {
     static const unsigned char op[] = {EQA, NEA};
+    left->generate(emitter);
+    right->generate(emitter);
     emitter.emit(op[comp]);
 }
 
-void DictionaryComparisonExpression::generate_comparison_opcode(Emitter &emitter) const
+void DictionaryComparisonExpression::generate(Emitter &emitter) const
 {
     static const unsigned char op[] = {EQD, NED};
+    left->generate(emitter);
+    right->generate(emitter);
     emitter.emit(op[comp]);
 }
 
-void PointerComparisonExpression::generate_comparison_opcode(Emitter &emitter) const
+void PointerComparisonExpression::generate(Emitter &emitter) const
 {
     static const unsigned char op[] = {EQP, NEP};
+    left->generate(emitter);
+    right->generate(emitter);
     emitter.emit(op[comp]);
 }
 
-void FunctionPointerComparisonExpression::generate_comparison_opcode(Emitter &emitter) const
-{
-    static const unsigned char op[] = {EQN, NEN};
-    emitter.emit(op[comp]);
-}
-
-void ValidPointerExpression::generate_expr(Emitter &emitter) const
+void ValidPointerExpression::generate(Emitter &emitter) const
 {
     left->generate(emitter);
     emitter.emit(DUP);
@@ -1084,42 +711,42 @@ void ValidPointerExpression::generate_expr(Emitter &emitter) const
     emitter.emit(NEP);
 }
 
-void AdditionExpression::generate_expr(Emitter &emitter) const
+void AdditionExpression::generate(Emitter &emitter) const
 {
     left->generate(emitter);
     right->generate(emitter);
     emitter.emit(ADDN);
 }
 
-void SubtractionExpression::generate_expr(Emitter &emitter) const
+void SubtractionExpression::generate(Emitter &emitter) const
 {
     left->generate(emitter);
     right->generate(emitter);
     emitter.emit(SUBN);
 }
 
-void MultiplicationExpression::generate_expr(Emitter &emitter) const
+void MultiplicationExpression::generate(Emitter &emitter) const
 {
     left->generate(emitter);
     right->generate(emitter);
     emitter.emit(MULN);
 }
 
-void DivisionExpression::generate_expr(Emitter &emitter) const
+void DivisionExpression::generate(Emitter &emitter) const
 {
     left->generate(emitter);
     right->generate(emitter);
     emitter.emit(DIVN);
 }
 
-void ModuloExpression::generate_expr(Emitter &emitter) const
+void ModuloExpression::generate(Emitter &emitter) const
 {
     left->generate(emitter);
     right->generate(emitter);
     emitter.emit(MODN);
 }
 
-void ExponentiationExpression::generate_expr(Emitter &emitter) const
+void ExponentiationExpression::generate(Emitter &emitter) const
 {
     left->generate(emitter);
     right->generate(emitter);
@@ -1138,38 +765,25 @@ void ReferenceExpression::generate_store(Emitter &emitter) const
     type->generate_store(emitter);
 }
 
-void DummyExpression::generate_store(Emitter &emitter) const
-{
-    emitter.emit(DROP);
-}
-
 void ArrayReferenceIndexExpression::generate_address_read(Emitter &emitter) const
 {
     array->generate_address_read(emitter);
     index->generate(emitter);
-    if (always_create) {
-        emitter.emit(INDEXAW);
-    } else {
-        emitter.emit(INDEXAR);
-    }
+    emitter.emit(INDEXAR);
 }
 
 void ArrayReferenceIndexExpression::generate_address_write(Emitter &emitter) const
 {
-    array->generate_address_write(emitter);
+    array->generate_address_read(emitter);
     index->generate(emitter);
     emitter.emit(INDEXAW);
 }
 
-void ArrayValueIndexExpression::generate_expr(Emitter &emitter) const
+void ArrayValueIndexExpression::generate(Emitter &emitter) const
 {
     array->generate(emitter);
     index->generate(emitter);
-    if (always_create) {
-        emitter.emit(INDEXAN);
-    } else {
-        emitter.emit(INDEXAV);
-    }
+    emitter.emit(INDEXAV);
 }
 
 void DictionaryReferenceIndexExpression::generate_address_read(Emitter &emitter) const
@@ -1181,64 +795,27 @@ void DictionaryReferenceIndexExpression::generate_address_read(Emitter &emitter)
 
 void DictionaryReferenceIndexExpression::generate_address_write(Emitter &emitter) const
 {
-    dictionary->generate_address_write(emitter);
+    dictionary->generate_address_read(emitter);
     index->generate(emitter);
     emitter.emit(INDEXDW);
 }
 
-void DictionaryValueIndexExpression::generate_expr(Emitter &emitter) const
+void DictionaryValueIndexExpression::generate(Emitter &emitter) const
 {
     dictionary->generate(emitter);
     index->generate(emitter);
     emitter.emit(INDEXDV);
 }
 
-void StringReferenceIndexExpression::generate_load(Emitter &emitter) const
+void StringIndexExpression::generate_load(Emitter &emitter) const
 {
     load->generate(emitter);
 }
 
-void StringReferenceIndexExpression::generate_store(Emitter &emitter) const
+void StringIndexExpression::generate_store(Emitter &emitter) const
 {
     store->generate(emitter);
     ref->generate_store(emitter);
-}
-
-void StringValueIndexExpression::generate_expr(Emitter &emitter) const
-{
-    load->generate(emitter);
-}
-
-void BytesReferenceIndexExpression::generate_load(Emitter &emitter) const
-{
-    load->generate(emitter);
-}
-
-void BytesReferenceIndexExpression::generate_store(Emitter &emitter) const
-{
-    store->generate(emitter);
-    ref->generate_store(emitter);
-}
-
-void BytesValueIndexExpression::generate_expr(Emitter &emitter) const
-{
-    load->generate(emitter);
-}
-
-void ArrayReferenceRangeExpression::generate_load(Emitter &emitter) const
-{
-    load->generate(emitter);
-}
-
-void ArrayReferenceRangeExpression::generate_store(Emitter &emitter) const
-{
-    store->generate(emitter);
-    ref->generate_store(emitter);
-}
-
-void ArrayValueRangeExpression::generate_expr(Emitter &emitter) const
-{
-    load->generate(emitter);
 }
 
 void PointerDereferenceExpression::generate_address_read(Emitter &emitter) const
@@ -1251,28 +828,19 @@ void PointerDereferenceExpression::generate_address_write(Emitter &emitter) cons
     ptr->generate(emitter);
 }
 
-void VariableExpression::generate_expr(Emitter &emitter) const
+void VariableExpression::generate(Emitter &emitter) const
 {
     generate_address_read(emitter);
     var->generate_load(emitter);
 }
 
-void FunctionCall::generate_parameters(Emitter &emitter) const
+void FunctionCall::generate(Emitter &emitter) const
 {
     const TypeFunction *ftype = dynamic_cast<const TypeFunction *>(func->type);
-    if (ftype == nullptr) {
-        const TypeFunctionPointer *pf = dynamic_cast<const TypeFunctionPointer *>(func->type);
-        if (pf == nullptr) {
-            internal_error("FunctionCall::generate_expr");
-        }
-        ftype = pf->functype;
-    }
     // TODO: This is a ridiculous hack because the way we compile
     // StringIndexExpression::store is not really legal. This assertion
     // holds true for any other function call.
-    if (func->text() != "VariableExpression(PredefinedFunction(string__splice, TypeFunction(...)))"
-     && func->text() != "VariableExpression(PredefinedFunction(bytes__splice, TypeFunction(...)))"
-     && func->text() != "VariableExpression(PredefinedFunction(array__splice, TypeFunction(...)))") {
+    if (func->text() != "VariableExpression(PredefinedFunction(splice, TypeFunction(...)))") {
         assert(args.size() == ftype->params.size());
     }
     for (size_t i = 0; i < args.size(); i++) {
@@ -1289,19 +857,6 @@ void FunctionCall::generate_parameters(Emitter &emitter) const
                 break;
         }
     }
-}
-
-void FunctionCall::generate_expr(Emitter &emitter) const
-{
-    generate_parameters(emitter);
-    const TypeFunction *ftype = dynamic_cast<const TypeFunction *>(func->type);
-    if (ftype == nullptr) {
-        const TypeFunctionPointer *pf = dynamic_cast<const TypeFunctionPointer *>(func->type);
-        if (pf == nullptr) {
-            internal_error("FunctionCall::generate_expr");
-        }
-        ftype = pf->functype;
-    }
     func->generate_call(emitter);
     for (size_t i = 0; i < args.size(); i++) {
         auto param = ftype->params[i];
@@ -1317,48 +872,10 @@ void FunctionCall::generate_expr(Emitter &emitter) const
     }
 }
 
-bool FunctionCall::all_in_parameters() const
-{
-    const TypeFunction *ftype = dynamic_cast<const TypeFunction *>(func->type);
-    if (ftype == nullptr) {
-        const TypeFunctionPointer *pf = dynamic_cast<const TypeFunctionPointer *>(func->type);
-        if (pf == nullptr) {
-            internal_error("FunctionCall::generate_expr");
-        }
-        ftype = pf->functype;
-    }
-    for (size_t i = 0; i < args.size(); i++) {
-        if (ftype->params[i]->mode != ParameterType::IN) {
-            return false;
-        }
-    }
-    return true;
-}
-
-void StatementExpression::generate_expr(Emitter &emitter) const
-{
-    stmt->generate(emitter);
-}
-
 void Statement::generate(Emitter &emitter) const
 {
     emitter.debug_line(line);
     generate_code(emitter);
-}
-
-void AssertStatement::generate_code(Emitter &emitter) const
-{
-    auto skip_label = emitter.create_label();
-    emitter.emit_jump(JNASSERT, skip_label);
-    expr->generate(emitter);
-    emitter.emit_jump(JT, skip_label);
-    for (auto stmt: statements) {
-        stmt->generate(emitter);
-    }
-    emitter.emit(PUSHS, emitter.str(source));
-    emitter.emit(CONSA, 1);
-    emitter.emit(EXCEPT, emitter.str("AssertFailed"));
-    emitter.jump_target(skip_label);
 }
 
 void AssignmentStatement::generate_code(Emitter &emitter) const
@@ -1375,17 +892,6 @@ void AssignmentStatement::generate_code(Emitter &emitter) const
 void ExpressionStatement::generate_code(Emitter &emitter) const
 {
     expr->generate(emitter);
-}
-
-void IncrementStatement::generate_code(Emitter &emitter) const
-{
-    // TODO: This can be improved considerably.
-    ref->generate_address_read(emitter);
-    emitter.emit(LOADN);
-    emitter.emit(PUSHN, number_from_sint32(delta));
-    emitter.emit(ADDN);
-    ref->generate_address_write(emitter);
-    emitter.emit(STOREN);
 }
 
 void IfStatement::generate_code(Emitter &emitter) const
@@ -1411,32 +917,6 @@ void IfStatement::generate_code(Emitter &emitter) const
 
 void ReturnStatement::generate_code(Emitter &emitter) const
 {
-    // Check for a possible tail call. We can only do this if all
-    // of the following conditions hold:
-    //  - The RETURN statement returns only a call to another function
-    //  - The function takes only IN parameters (it might also be possible
-    //    to do this with some kinds of INOUT parameters, but not in general)
-    //  - The function is an ordinary function that we can jump to (not a
-    //    predefined function or external function)
-    // If possible, then generate the parameters for the next function,
-    // emit a LEAVE instruction to discard our frame, and then jump to
-    // the entry point for the next function.
-    const FunctionCall *call = dynamic_cast<const FunctionCall *>(expr);
-    if (call != nullptr) {
-        if (call->all_in_parameters()) {
-            const VariableExpression *var = dynamic_cast<const VariableExpression *>(call->func);
-            if (var != nullptr) {
-                const Function *func = dynamic_cast<const Function *>(var->var);
-                if (func != nullptr) {
-                    call->generate_parameters(emitter);
-                    emitter.emit(LEAVE);
-                    emitter.emit_jump(JUMP, emitter.function_label(func->entry_label));
-                    return;
-                }
-            }
-        }
-    }
-
     if (expr != nullptr) {
         expr->generate(emitter);
     }
@@ -1544,11 +1024,9 @@ void ForStatement::generate_code(Emitter &emitter) const
 
     start->generate(emitter);
     var->generate_store(emitter);
-    end->generate(emitter);
-    bound->generate_store(emitter);
     emitter.jump_target(loop);
 
-    bound->generate_load(emitter);
+    end->generate(emitter);
     var->generate_load(emitter);
     emitter.emit(static_cast<char>(comp));
     emitter.emit_jump(JF, skip);
@@ -1565,46 +1043,7 @@ void ForStatement::generate_code(Emitter &emitter) const
     emitter.emit(ADDN);
     var->generate_store(emitter);
     emitter.emit_jump(JUMP, loop);
-
-    emitter.jump_target(skip);
-    emitter.remove_loop_labels(loop_id);
-}
-
-void ForeachStatement::generate_code(Emitter &emitter) const
-{
-    auto skip = emitter.create_label();
-    auto loop = emitter.create_label();
-    auto next = emitter.create_label();
-
-    emitter.emit(PUSHN, number_from_uint32(0));
-    index->generate_store(emitter);
-    array->generate(emitter);
-    emitter.emit(CALLP, dynamic_cast<const PredefinedFunction *>(array->type->methods.at("size"))->name_index);
-    bound->generate_store(emitter);
-
-    emitter.jump_target(loop);
-    bound->generate_load(emitter);
-    index->generate_load(emitter);
-    emitter.emit(GTN);
-    emitter.emit_jump(JF, skip);
-
-    emitter.add_loop_labels(loop_id, skip, next);
-
-    array->generate(emitter);
-    index->generate(emitter);
-    emitter.emit(INDEXAV);
-    var->generate_store(emitter);
-    for (auto stmt: statements) {
-        stmt->generate(emitter);
-    }
-
-    emitter.jump_target(next);
-    index->generate_load(emitter);
-    emitter.emit(PUSHN, number_from_uint32(1));
-    emitter.emit(ADDN);
-    index->generate_store(emitter);
-    emitter.emit_jump(JUMP, loop);
-
+    
     emitter.jump_target(skip);
     emitter.remove_loop_labels(loop_id);
 }
@@ -1650,7 +1089,7 @@ void NextStatement::generate_code(Emitter &emitter) const
 
 void TryStatement::generate_code(Emitter &emitter) const
 {
-    Bytecode::ExceptionInfo ei;
+    Emitter::ExceptionInfo ei;
     ei.start = emitter.current_ip();
     for (auto stmt: statements) {
         stmt->generate(emitter);
@@ -1667,12 +1106,6 @@ void TryStatement::generate_code(Emitter &emitter) const
         for (auto stmt: c.second) {
             stmt->generate(emitter);
         }
-        // TODO: Currently CLREXC only happens when exiting the
-        // exception handler block normally. How would the exception
-        // get cleared if the handler block is exited some other way,
-        // such as a RETURN or EXIT?
-        // See: t/exception-clear.neon
-        emitter.emit(CLREXC);
         emitter.emit_jump(JUMP, skip);
     }
     emitter.jump_target(skip);
@@ -1680,342 +1113,51 @@ void TryStatement::generate_code(Emitter &emitter) const
 
 void RaiseStatement::generate_code(Emitter &emitter) const
 {
-    info->generate(emitter);
     unsigned int index = emitter.str(exception->name);
     emitter.emit(EXCEPT, index);
 }
 
-void ResetStatement::generate_code(Emitter &emitter) const
-{
-    for (auto v: variables) {
-         v->generate_address_write(emitter);
-         emitter.emit(RESETC);
-    }
-}
-
-void Frame::predeclare(Emitter &emitter)
+void Scope::predeclare(Emitter &emitter) const
 {
     // Avoid unbounded recursion.
     if (predeclared) {
         return;
     }
     predeclared = true;
-    int slot = 0;
-    for (auto s: slots) {
-        if (s.referenced) {
-            // TODO: This hack passes the slot value to LocalVariable
-            // names, but doesn't bother for all other kinds of names.
-            LocalVariable *lv = dynamic_cast<LocalVariable *>(s.ref);
-            if (lv != nullptr) {
-                lv->predeclare(emitter, slot);
-            } else {
-                s.ref->predeclare(emitter);
-            }
-        }
-        slot++;
-    }
-}
-
-void Frame::postdeclare(Emitter &emitter)
-{
-    for (auto s: slots) {
-        if (s.referenced) {
-            s.ref->postdeclare(emitter);
+    for (auto n: names) {
+        if (referenced.find(n.second) != referenced.end()) {
+            n.second->predeclare(emitter);
         }
     }
 }
 
-void Module::predeclare(Emitter &) const
+void Scope::postdeclare(Emitter &emitter) const
 {
-    // TODO? scope->predeclare(emitter);
+    for (auto n: names) {
+        if (referenced.find(n.second) != referenced.end()) {
+            n.second->postdeclare(emitter);
+        }
+    }
 }
 
-static std::vector<std::pair<std::string, const Type *>> topo_sort(std::vector<std::pair<std::string, const Type*>> types, std::map<const Type *, std::set<const Type *>> references)
+void Module::predeclare(Emitter &emitter) const
 {
-    const size_t orig_types_size = types.size();
-    // First, scrub the dependency list of things we aren't actually exporting.
-    // Also remove self-references.
-    for (auto &ref: references) {
-        auto t = ref.second.begin();
-        while (t != ref.second.end()) {
-            auto r = references.find(*t);
-            if (r == references.end() || *t == ref.first) {
-                auto u = t;
-                ++t;
-                ref.second.erase(u);
-            } else {
-                ++t;
-            }
-        }
-    }
-    std::vector<std::pair<std::string, const Type *>> r;
-    while (not types.empty()) {
-        bool any = false;
-        for (auto t = types.begin(); t != types.end(); ++t) {
-            auto ref = references.find(t->second);
-            if (ref != references.end() && ref->second.size() == 0) {
-                r.push_back(*t);
-                for (auto &rr: references) {
-                    rr.second.erase(t->second);
-                }
-                types.erase(t);
-                any = true;
-                break;
-            }
-        }
-        if (not any) {
-            internal_error("recursive exported type dependency");
-        }
-    }
-    assert(r.size() == orig_types_size);
-    return r;
+    scope->predeclare(emitter);
 }
 
 void Program::generate(Emitter &emitter) const
 {
-    // Call predeclare on standard types so they always work in interpolations.
-    TYPE_BOOLEAN->predeclare(emitter);
-    TYPE_NUMBER->predeclare(emitter);
-
-    frame->predeclare(emitter);
+    scope->predeclare(emitter);
     for (auto stmt: statements) {
         stmt->generate(emitter);
     }
-    const Function *main = dynamic_cast<const Function *>(scope->lookupName("MAIN"));
-    if (main != nullptr) {
-        emitter.emit(CALLP, emitter.str("runtime$moduleIsMain"));
-        auto skip = emitter.create_label();
-        emitter.emit_jump(JF, skip);
-        emitter.emit_jump(CALLF, emitter.function_label(main->entry_label));
-        emitter.jump_target(skip);
-    }
     emitter.emit(RET);
-    frame->postdeclare(emitter);
-
-    TYPE_BOOLEAN->postdeclare(emitter);
-    TYPE_NUMBER->postdeclare(emitter);
-
-    // The following block does a topological sort on the dependencies
-    // between types. This is necessary so that the export table in a
-    // module always declares a type before any types that reference
-    // that exported type (using ~ notation).
-    std::map<const Type *, std::set<const Type *>> type_references;
-    for (auto exp: exports) {
-        const Type *type = dynamic_cast<const Type *>(exp.second);
-        if (type != nullptr) {
-            emitter.declare_export_type(type);
-            std::set<const Type *> references;
-            type->get_type_references(references);
-            type_references[type] = references;
-        }
-    }
-    std::vector<std::pair<std::string, const Type *>> export_types;
-    for (auto exp: exports) {
-        const Type *type = dynamic_cast<const Type *>(exp.second);
-        if (type != nullptr) {
-            export_types.push_back(std::make_pair(exp.first, type));
-        }
-    }
-    export_types = topo_sort(export_types, type_references);
-    for (auto t: export_types) {
-        t.second->generate_export(emitter, t.first);
-    }
-
-    for (auto exp: exports) {
-        if (dynamic_cast<const Type *>(exp.second) == nullptr) {
-            exp.second->generate_export(emitter, exp.first);
-        }
-    }
-}
-
-static std::string hex_from_binary(const std::string &bin)
-{
-    std::stringstream r;
-    r << std::hex << std::setfill('0');
-    for (auto b: bin) {
-        r << std::setw(2) << (static_cast<int>(b) & 0xff);
-    }
-    return r.str();
-}
-
-void TypeBoolean::debuginfo(Emitter &, minijson::object_writer &out) const
-{
-    auto type = out.nested_object("type");
-    type.write("display", "Boolean");
-    type.write("representation", "boolean");
-    type.close();
-}
-
-void TypeNumber::debuginfo(Emitter &, minijson::object_writer &out) const
-{
-    auto type = out.nested_object("type");
-    type.write("display", "Number");
-    type.write("representation", "number");
-    type.close();
-}
-
-void TypeString::debuginfo(Emitter &, minijson::object_writer &out) const
-{
-    auto type = out.nested_object("type");
-    type.write("display", "String");
-    type.write("representation", "string");
-    type.close();
-}
-
-void TypeBytes::debuginfo(Emitter &, minijson::object_writer &out) const
-{
-    auto type = out.nested_object("type");
-    type.write("display", "Bytes");
-    type.write("representation", "string");
-    type.close();
-}
-
-void TypeFunction::debuginfo(Emitter &, minijson::object_writer &out) const
-{
-    auto type = out.nested_object("type");
-    type.write("display", "Function(...)");
-    type.write("representation", "function");
-    type.close();
-}
-
-void TypeArray::debuginfo(Emitter &, minijson::object_writer &out) const
-{
-    auto type = out.nested_object("type");
-    type.write("display", "Array");
-    type.write("representation", "array");
-    type.close();
-}
-
-void TypeDictionary::debuginfo(Emitter &, minijson::object_writer &out) const
-{
-    auto type = out.nested_object("type");
-    type.write("display", "Dictionary");
-    type.write("representation", "dictionary");
-    type.close();
-}
-
-void TypeRecord::debuginfo(Emitter &, minijson::object_writer &out) const
-{
-    auto type = out.nested_object("type");
-    type.write("display", "Record");
-    type.write("representation", "array");
-    type.close();
-}
-
-void TypePointer::debuginfo(Emitter &, minijson::object_writer &out) const
-{
-    auto type = out.nested_object("type");
-    type.write("display", "Pointer");
-    type.write("representation", "address");
-    type.close();
-}
-
-void TypeFunctionPointer::debuginfo(Emitter &, minijson::object_writer &out) const
-{
-    auto type = out.nested_object("type");
-    type.write("display", "FunctionPointer");
-    type.write("representation", "array");
-    type.close();
-}
-
-void TypeEnum::debuginfo(Emitter &, minijson::object_writer &out) const
-{
-    auto type = out.nested_object("type");
-    type.write("display", "Enum");
-    type.write("representation", "number");
-    type.close();
-}
-
-void TypeModule::debuginfo(Emitter &, minijson::object_writer &out) const
-{
-    auto type = out.nested_object("type");
-    type.write("display", "Module");
-    type.write("representation", "module");
-    type.close();
-}
-
-void TypeException::debuginfo(Emitter &, minijson::object_writer &out) const
-{
-    auto type = out.nested_object("type");
-    type.write("display", "Exception");
-    type.write("representation", "none");
-    type.close();
-}
-
-void Function::debuginfo(Emitter &emitter, minijson::object_writer &out) const
-{
-    out.write("entry", emitter.function_label(entry_label).get_target());
-    auto locals = out.nested_array("locals");
-    for (size_t i = 0; i < frame->getCount(); i++) {
-        auto slot = frame->getSlot(i);
-        const LocalVariable *local = dynamic_cast<const LocalVariable *>(slot.ref);
-        if (local != nullptr) {
-            auto var = locals.nested_object();
-            var.write("name", slot.name);
-            var.write("index", local->index);
-            local->type->debuginfo(emitter, var);
-            var.close();
-        }
-    }
-    locals.close();
-}
-
-void Program::debuginfo(Emitter &emitter, minijson::object_writer &out) const
-{
-    {
-        auto globals = out.nested_array("globals");
-        for (size_t i = 0; i < frame->getCount(); i++) {
-            auto slot = frame->getSlot(i);
-            const GlobalVariable *global = dynamic_cast<const GlobalVariable *>(slot.ref);
-            if (global != nullptr) {
-                auto var = globals.nested_object();
-                var.write("name", slot.name);
-                var.write("index", global->index);
-                global->type->debuginfo(emitter, var);
-                var.close();
-            }
-        }
-        globals.close();
-    }
-    {
-        auto functions = out.nested_array("functions");
-        for (size_t i = 0; i < frame->getCount(); i++) {
-            auto slot = frame->getSlot(i);
-            const Function *function = dynamic_cast<const Function *>(slot.ref);
-            if (function != nullptr) {
-                auto func = functions.nested_object();
-                func.write("name", slot.name);
-                function->debuginfo(emitter, func);
-                func.close();
-            }
-        }
-        functions.close();
-    }
+    scope->postdeclare(emitter);
 }
 
 std::vector<unsigned char> compile(const Program *p, DebugInfo *debug)
 {
-    Emitter emitter(p->source_hash, debug);
+    Emitter emitter(debug);
     p->generate(emitter);
-    if (p->source_path != "-") {
-        std::ofstream out(p->source_path + "d");
-        minijson::object_writer writer(out, minijson::writer_configuration().pretty_printing(true));
-        writer.write("source_path", p->source_path);
-        writer.write("source_hash", hex_from_binary(p->source_hash));
-        if (debug != nullptr) {
-            writer.write_array("source", debug->source_lines.begin(), debug->source_lines.end());
-            std::vector<std::pair<size_t, int>> lines;
-            auto lw = writer.nested_array("line_numbers");
-            for (auto &n: debug->line_numbers) {
-                auto a = lw.nested_array();
-                a.write(n.first);
-                a.write(n.second);
-                a.close();
-            }
-            lw.close();
-        }
-        p->debuginfo(emitter, writer);
-        writer.close();
-    }
     return emitter.getObject();
 }

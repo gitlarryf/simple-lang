@@ -1,8 +1,0 @@
-VAR a: Number
-a := 5
-
-CASE a
-   WHEN = 5, = 5 DO
-          %<2  %<1
-     print("5")
-END CASE

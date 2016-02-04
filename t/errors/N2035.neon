@@ -1,7 +1,11 @@
-TYPE Suit IS ENUM
-    Heart
-    Club
-    Spade
-    Diamond
-END IF
-    %<
+TYPE Cards := ENUM
+  Hearts
+  Diamonds
+  Spades
+  Clubs
+END ENUM
+
+
+VAR a: Number
+
+a := Cards

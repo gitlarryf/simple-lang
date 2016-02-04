@@ -1,2 +1,1 @@
-DECLARE EXCEPTION 5
-                  %<
+a:= 1

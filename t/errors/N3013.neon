@@ -1,5 +1,0 @@
-VAR outer: Number
-    %<2
-
-TYPE outer IS Number
-     %<1

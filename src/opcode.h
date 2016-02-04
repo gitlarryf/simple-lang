@@ -8,11 +8,8 @@ enum Opcode {
     PUSHN,      // push number immediate
     PUSHS,      // push string immediate
     PUSHPG,     // push pointer to global
-    PUSHPPG,    // push pointer to predefined global
-    PUSHPMG,    // push pointer to module global
     PUSHPL,     // push pointer to local
     PUSHPOL,    // push pointer to outer local
-    PUSHI,      // push 32-bit integer immediate
     LOADB,      // load boolean
     LOADN,      // load number
     LOADS,      // load string
@@ -58,7 +55,6 @@ enum Opcode {
     INDEXAR,    // index array for read
     INDEXAW,    // index array for write
     INDEXAV,    // index array value
-    INDEXAN,    // index array value, no exception
     INDEXDR,    // index dictionary for read
     INDEXDW,    // index dictionary for write
     INDEXDV,    // index dictionary value
@@ -66,25 +62,18 @@ enum Opcode {
     IND,        // in dictionary
     CALLP,      // call predefined
     CALLF,      // call function
-    CALLMF,     // call module function
-    CALLI,      // call indirect
     JUMP,       // unconditional jump
     JF,         // jump if false
     JT,         // jump if true
-    JFCHAIN,    // jump and drop next if false
     DUP,        // duplicate
-    DUPX1,      // duplicate under second value
     DROP,       // drop
     RET,        // return
     CALLE,      // call external
     CONSA,      // construct array
     CONSD,      // construct dictionary
     EXCEPT,     // throw exception
-    CLREXC,     // clear exception
     ALLOC,      // allocate record
     PUSHNIL,    // push nil pointer
-    JNASSERT,   // jump if assertions disabled
-    RESETC,     // reset cell
 };
 
 #endif
