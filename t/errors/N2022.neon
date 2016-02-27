@@ -1,6 +1,4 @@
-VAR foo: Number
+VAR x: String
+x := "Hello"
 
-FOR "foo" IN 1 TO 10
-    %<
-    print(foo)
-END FOR
+CONST x: String = ", World!"

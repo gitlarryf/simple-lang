@@ -1,5 +1,5 @@
 * neon.kld - KEDIT Language Definition for the Neon Programming Language.
-* Version 1.6 - December, 2015
+* Version 1.3 - December, 2014
 
 :case
  respect
@@ -18,54 +18,32 @@
  [     ]
  <     >
  {     }
- "     "
- \(    )
- @@    @@
 :keyword
 * Language Keywords
- AS
- ASSERT
- BEGIN
  CASE
- CONSTANT
- DEC
+ CONST
  DECLARE
- DEFAULT
  DO
  ELSE
- ELSIF
- EMBED
+ ELSEIF
  END
  ENUM
- EXCEPTION
  EXIT
- EXPORT
  EXTERNAL
  FOR
- FOREACH
  FUNCTION
- HEXBYTES
  IF
  IMPORT
- INC
- INDEX
- IS
- LET
  LOOP
- MAIN
- NATIVE
  NEW
  NEXT
- OF
  POINTER
- PRIVATE
  RECORD
  REPEAT
  RETURN
  STEP
  THEN
  TO
- TRY
  TYPE
  UNTIL
  VALID
@@ -73,6 +51,8 @@
  WHEN
  WHILE
 * Exception Handling
+ EXCEPTION
+ TRY
  RAISE          alternate 1
 * Parameter Control
  IN             alternate 4
@@ -85,27 +65,19 @@
 * Data Types and Storage containers
  Array          alternate 6
  Boolean        alternate 2
- Bytes          alternate 2
  Dictionary     alternate 6
+ Nothing        alternate 2
  Number         alternate 2
  String         alternate 2
 * NIL is actually a unique value literal, used only with pointer operations.
  NIL            alternate 2
- FIRST          alternate 2
- INDEX          alternate 2
- LAST           alternate 2
- OF             alternate 2
 * Boolean literals
  FALSE          alternate 2
  TRUE           alternate 2
-* Library Keywords
- IMPORT         alternate 3
- EXTERNAL       alternate 3
- EXPORT         alternate 3
- NATIVE         alternate 3
 
 :postcompare
  text MOD       alternate 1
+ text ..        alternate 1
  text #         alternate 1
  text :=        alternate 1
  text <         alternate 1
@@ -121,6 +93,4 @@
  text ,         alternate 1
  text :         alternate 1
  text .         alternate 1
- text ->        alternate 1
- text MAIN      alternate 3
 

@@ -1,4 +1,4 @@
-TYPE Node IS RECORD
+TYPE Node := RECORD
     value: Number
 END RECORD
 

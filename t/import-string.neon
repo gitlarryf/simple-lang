@@ -1,3 +1,0 @@
-IMPORT "t/export" ALIAS export
-print(export.cs)
-%= a

@@ -1,5 +1,0 @@
-FUNCTION f(x: Number)
-           %<1
-END FUNCTION
-VAR x: Number
-    %<2

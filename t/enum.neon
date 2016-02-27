@@ -1,4 +1,4 @@
-TYPE Colour IS ENUM
+TYPE Colour := ENUM
     red
     orange
     yellow
@@ -11,5 +11,5 @@ END ENUM
 VAR a: Colour
 
 a := Colour.red
-print(a.toString())
+print(a.to_string())
 %= red

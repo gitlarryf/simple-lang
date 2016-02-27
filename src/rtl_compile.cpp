@@ -2,48 +2,39 @@
 
 #include "constants_compile.inc"
 #include "functions_compile.inc"
-#include "variables_compile.inc"
-
-static const Type *resolve_type(const PredefinedType &ptype, Scope *scope)
-{
-    auto *type = ptype.type;
-    if (type == nullptr && scope != nullptr) {
-        Name *name = scope->lookupName(ptype.modtypename);
-        type = dynamic_cast<const Type *>(name);
-    }
-    return type;
-}
 
 void rtl_compile_init(Scope *scope)
 {
     init_builtin_constants(scope);
     for (auto f: BuiltinFunctions) {
         std::vector<const ParameterType *> params;
-        for (int i = 0; i < f.count; i++) {
-            auto &p = f.params[i];
-            params.push_back(new ParameterType(Token(p.name), p.mode, resolve_type(p.ptype, nullptr), nullptr));
+        for (auto p: f.params) {
+            if (p.p == nullptr) {
+                break;
+            }
+            params.push_back(new ParameterType(p.m, p.p));
         }
-        scope->addName(Token(), f.name, new PredefinedFunction(f.name, new TypeFunction(resolve_type(f.returntype, nullptr), params)));
+        scope->addName(f.name, new PredefinedFunction(f.name, new TypeFunction(f.returntype, params)));
     }
 }
 
-bool rtl_import(const std::string &module, Module *mod)
+void rtl_import(Scope *scope, const std::string &name)
 {
-    std::string prefix = module + "$";
-    init_builtin_constants(module, mod->scope);
-    init_builtin_variables(module, mod->scope);
-    bool any = false;
+    std::string prefix = name + "$";
+    Module *module = new Module(scope, name);
+    init_builtin_constants(name, module->scope);
     for (auto f: BuiltinFunctions) {
         std::string qualified_name(f.name);
         if (qualified_name.substr(0, prefix.length()) == prefix) {
             std::vector<const ParameterType *> params;
-            for (int i = 0; i < f.count; i++) {
-                auto &p = f.params[i];
-                params.push_back(new ParameterType(Token(p.name), p.mode, resolve_type(p.ptype, mod->scope), nullptr));
+            for (auto p: f.params) {
+                if (p.p == nullptr) {
+                    break;
+                }
+                params.push_back(new ParameterType(p.m, p.p));
             }
-            mod->scope->addName(Token(), qualified_name.substr(prefix.length()), new PredefinedFunction(f.name, new TypeFunction(resolve_type(f.returntype, mod->scope), params)));
-            any = true;
+            module->scope->addName(qualified_name.substr(prefix.length()), new PredefinedFunction(f.name, new TypeFunction(f.returntype, params)));
         }
     }
-    return any;
+    scope->addName(name, module);
 }

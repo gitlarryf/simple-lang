@@ -1,2 +1,3 @@
-IMPORT module ALIAS 5
-                    %<
+IF (TRUE) THEN
+    print("TRUE")
+

@@ -1,2 +1,5 @@
-a[1 TO LAST/5]
-           %<
+FUNCTION (a: Number): Number
+    a = a + 1
+    RETURN a
+END FUNCTION
+  

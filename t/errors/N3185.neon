@@ -1,6 +1,0 @@
-FUNCTION f(INOUT a: Number)
-END FUNCTION
-
-VAR x: Number
-f(x)
-  %<

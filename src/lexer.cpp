@@ -4,7 +4,6 @@
 #include <iso646.h>
 #include <sstream>
 
-#include <sha256.h>
 #include <utf8.h>
 
 #include "util.h"
@@ -64,7 +63,7 @@ std::string Token::tostring() const
         case TYPE:        s << "TYPE"; break;
         case RECORD:      s << "RECORD"; break;
         case ENUM:        s << "ENUM"; break;
-        case CONSTANT:    s << "CONSTANT"; break;
+        case CONST:       s << "CONST"; break;
         case IMPORT:      s << "IMPORT"; break;
         case IN:          s << "IN"; break;
         case OUT:         s << "OUT"; break;
@@ -72,6 +71,7 @@ std::string Token::tostring() const
         case ELSIF:       s << "ELSIF"; break;
         case CASE:        s << "CASE"; break;
         case WHEN:        s << "WHEN"; break;
+        case DOTDOT:      s << "DOTDOT"; break;
         case EXTERNAL:    s << "EXTERNAL"; break;
         case EXIT:        s << "EXIT"; break;
         case NEXT:        s << "NEXT"; break;
@@ -87,32 +87,6 @@ std::string Token::tostring() const
         case NIL:         s << "NIL"; break;
         case VALID:       s << "VALID"; break;
         case ARROW:       s << "ARROW"; break;
-        case SUBBEGIN:    s << "SUBBEGIN"; break;
-        case SUBFMT:      s << "SUBFMT"; break;
-        case SUBEND:      s << "SUBEND"; break;
-        case LET:         s << "LET"; break;
-        case FIRST:       s << "FIRST"; break;
-        case LAST:        s << "LAST"; break;
-        case AS:          s << "AS"; break;
-        case DEFAULT:     s << "DEFAULT"; break;
-        case EXPORT:      s << "EXPORT"; break;
-        case PRIVATE:     s << "PRIVATE"; break;
-        case NATIVE:      s << "NATIVE"; break;
-        case FOREACH:     s << "FOREACH"; break;
-        case OF:          s << "OF"; break;
-        case INDEX:       s << "INDEX"; break;
-        case ASSERT:      s << "ASSERT"; break;
-        case EMBED:       s << "EMBED"; break;
-        case ALIAS:       s << "ALIAS"; break;
-        case IS:          s << "IS"; break;
-        case BEGIN:       s << "BEGIN"; break;
-        case MAIN:        s << "MAIN"; break;
-        case HEXBYTES:    s << "HEXBYTES"; break;
-        case INC:         s << "INC"; break;
-        case DEC:         s << "DEC"; break;
-        case UNDERSCORE:  s << "_"; break;
-        case OTHERS:      s << "OTHERS"; break;
-        case WITH:        s << "WITH"; break;
         case MAX_TOKEN:   s << "MAX_TOKEN"; break;
     }
     s << ">";
@@ -121,22 +95,12 @@ std::string Token::tostring() const
 
 inline bool identifier_start(uint32_t c)
 {
-    return c < 256 && (isalpha(c) || c == '_');
+    return c < 256 && isalpha(c);
 }
 
 inline bool identifier_body(uint32_t c)
 {
     return c < 256 && (isalnum(c) || c == '_');
-}
-
-inline bool all_upper(const std::string &s)
-{
-    for (auto c: s) {
-        if (not isupper(c)) {
-            return false;
-        }
-    }
-    return true;
 }
 
 inline bool number_start(uint32_t c)
@@ -146,7 +110,7 @@ inline bool number_start(uint32_t c)
 
 inline bool number_body(uint32_t c)
 {
-    return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_';
+    return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 }
 
 inline bool number_base(uint32_t c)
@@ -156,7 +120,7 @@ inline bool number_base(uint32_t c)
 
 inline bool number_decimal_body(uint32_t c)
 {
-    return (c >= '0' && c <= '9') || c == '_';
+    return c >= '0' && c <= '9';
 }
 
 inline bool space(uint32_t c)
@@ -164,19 +128,41 @@ inline bool space(uint32_t c)
     return c < 256 && isspace(c);
 }
 
-static std::vector<Token> tokenize_fragment(const std::string &source_path, int &line, size_t column, const std::string &source, const std::string &actual_source_line = std::string())
+std::vector<Token> tokenize(const std::string &source)
 {
+    auto inv = utf8::find_invalid(source.begin(), source.end());
+    if (inv != source.end()) {
+        int line = static_cast<int>(1 + std::count(source.begin(), inv, '\n'));
+        auto bol = source.rfind('\n', inv-source.begin());
+        if (bol != std::string::npos) {
+            bol++;
+        } else {
+            bol = 0;
+        }
+        int column = static_cast<int>(1 + inv - (source.begin() + bol));
+        Token t;
+        t.line = line;
+        t.column = column;
+        error(1000, t, "invalid UTF-8 data in source");
+    }
+    int line = 1;
+    int column = 1;
     std::vector<Token> tokens;
     std::string::const_iterator linestart = source.begin();
     std::string::const_iterator lineend = std::find(source.begin(), source.end(), '\n');
     std::string::const_iterator i = source.begin();
+    if (source.substr(0, 2) == "#!") {
+        while (i != source.end() && *i != '\n') {
+            utf8::advance(i, 1, source.end());
+        }
+        line++;
+    }
     while (i != source.end()) {
         uint32_t c = utf8::peek_next(i, source.end());
         //printf("index %lu char %c\n", i, c);
         auto startindex = i;
         Token t;
-        t.file = source_path;
-        t.source = actual_source_line.empty() ? std::string(linestart, lineend) : actual_source_line;
+        t.source = std::string(linestart, lineend);
         t.line = line;
         t.column = column;
         t.type = NONE;
@@ -194,19 +180,12 @@ static std::vector<Token> tokenize_fragment(const std::string &source_path, int 
         else if (c == '=') { t.type = EQUAL; utf8::advance(i, 1, source.end()); }
         else if (c == '#') { t.type = NOTEQUAL; utf8::advance(i, 1, source.end()); }
         else if (c == ',') { t.type = COMMA; utf8::advance(i, 1, source.end()); }
-        else if (c == '.') { t.type = DOT; utf8::advance(i, 1, source.end()); }
-        else if (c == 0x2212 /*'−'*/) { t.type = MINUS; utf8::advance(i, 1, source.end()); }
-        else if (c == 0x00D7 /*'×'*/) { t.type = TIMES; utf8::advance(i, 1, source.end()); }
-        else if (c == 0x2215 /*'∕'*/) { t.type = DIVIDE; utf8::advance(i, 1, source.end()); }
-        else if (c == 0x00F7 /*'÷'*/) { t.type = DIVIDE; utf8::advance(i, 1, source.end()); }
         else if (c == 0x2260 /*'≠'*/) { t.type = NOTEQUAL; utf8::advance(i, 1, source.end()); }
         else if (c == 0x2264 /*'≤'*/) { t.type = LESSEQ; utf8::advance(i, 1, source.end()); }
         else if (c == 0x2265 /*'≥'*/) { t.type = GREATEREQ; utf8::advance(i, 1, source.end()); }
         else if (c == 0x00ac /*'¬'*/) { t.type = NOT; utf8::advance(i, 1, source.end()); }
         else if (c == 0x2227 /*'∧'*/) { t.type = AND; utf8::advance(i, 1, source.end()); }
         else if (c == 0x2228 /*'∨'*/) { t.type = OR; utf8::advance(i, 1, source.end()); }
-        else if (c == 0x2208 /*'∈'*/) { t.type = IN; utf8::advance(i, 1, source.end()); }
-        // TODO else if (c == 0x2209 /*'∉'*/) { t.type = NOTIN; utf8::advance(i, 1, source.end()); }
         else if (c == '-') {
             if (i+1 != source.end() && *(i+1) == '>') {
                 t.type = ARROW;
@@ -229,6 +208,14 @@ static std::vector<Token> tokenize_fragment(const std::string &source_path, int 
                 utf8::advance(i, 2, source.end());
             } else {
                 t.type = GREATER;
+                utf8::advance(i, 1, source.end());
+            }
+        } else if (c == '.') {
+            if (i+1 != source.end() && *(i+1) == '.') {
+                t.type = DOTDOT;
+                utf8::advance(i, 2, source.end());
+            } else {
+                t.type = DOT;
                 utf8::advance(i, 1, source.end());
             }
         } else if (c == ':') {
@@ -269,7 +256,7 @@ static std::vector<Token> tokenize_fragment(const std::string &source_path, int 
             else if (t.text == "TYPE") t.type = TYPE;
             else if (t.text == "RECORD") t.type = RECORD;
             else if (t.text == "ENUM") t.type = ENUM;
-            else if (t.text == "CONSTANT") t.type = CONSTANT;
+            else if (t.text == "CONST") t.type = CONST;
             else if (t.text == "IMPORT") t.type = IMPORT;
             else if (t.text == "IN") t.type = IN;
             else if (t.text == "OUT") t.type = OUT;
@@ -291,44 +278,13 @@ static std::vector<Token> tokenize_fragment(const std::string &source_path, int 
             else if (t.text == "NEW") t.type = NEW;
             else if (t.text == "NIL") t.type = NIL;
             else if (t.text == "VALID") t.type = VALID;
-            else if (t.text == "LET") t.type = LET;
-            else if (t.text == "FIRST") t.type = FIRST;
-            else if (t.text == "LAST") t.type = LAST;
-            else if (t.text == "AS") t.type = AS;
-            else if (t.text == "DEFAULT") t.type = DEFAULT;
-            else if (t.text == "EXPORT") t.type = EXPORT;
-            else if (t.text == "PRIVATE") t.type = PRIVATE;
-            else if (t.text == "NATIVE") t.type = NATIVE;
-            else if (t.text == "FOREACH") t.type = FOREACH;
-            else if (t.text == "OF") t.type = OF;
-            else if (t.text == "INDEX") t.type = INDEX;
-            else if (t.text == "ASSERT") t.type = ASSERT;
-            else if (t.text == "EMBED") t.type = EMBED;
-            else if (t.text == "ALIAS") t.type = ALIAS;
-            else if (t.text == "IS") t.type = IS;
-            else if (t.text == "BEGIN") t.type = BEGIN;
-            else if (t.text == "MAIN") t.type = MAIN;
-            else if (t.text == "HEXBYTES") t.type = HEXBYTES;
-            else if (t.text == "INC") t.type = INC;
-            else if (t.text == "DEC") t.type = DEC;
-            else if (t.text == "_") t.type = UNDERSCORE;
-            else if (t.text == "OTHERS") t.type = OTHERS;
-            else if (t.text == "WITH") t.type = WITH;
-            else if (all_upper(t.text)) {
-                error(1023, t, "identifier cannot be all upper case (reserved for keywords)");
-            } else if (t.text.find("__") != std::string::npos) {
-                error(1024, t, "identifier cannot contain double underscore (reserved)");
-            } else if (t.text.length() >= 2 && t.text[0] == '_') {
-                error(1025, t, "identifier cannot start with underscore");
-            }
         } else if (number_start(c)) {
             t.type = NUMBER;
-            auto start = i;
             if (c == '0' && (i+1 != source.end()) && *(i+1) != '.' && tolower(*(i+1)) != 'e' && not number_decimal_body(*(i+1))) {
                 utf8::advance(i, 1, source.end());
                 c = static_cast<char>(tolower(*i));
                 if (number_base(c)) {
-                    long base = 0;
+                    long base;
                     if (c == 'b') {
                         base = 2;
                         utf8::advance(i, 1, source.end());
@@ -340,10 +296,8 @@ static std::vector<Token> tokenize_fragment(const std::string &source_path, int 
                         utf8::advance(i, 1, source.end());
                     } else if (c == '#') {
                         utf8::advance(i, 1, source.end());
-                        char *end = nullptr;
-                        if (i < source.end()) {
-                            base = strtol(&*i, &end, 10);
-                        }
+                        char *end = NULL;
+                        base = strtol(&*i, &end, 10);
                         if (base < 2 || base > 36) {
                             error(1001, t, "invalid base");
                         }
@@ -367,13 +321,11 @@ static std::vector<Token> tokenize_fragment(const std::string &source_path, int 
                         if (not number_body(c)) {
                             break;
                         }
-                        if (c != '_') {
-                            int d = c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'z' ? c - 'a' + 10 : -1;
-                            if (d < 0 || d >= base) {
-                                error(1005, t, "invalid digit for given base");
-                            }
-                            value = number_add(number_multiply(value, number_from_uint32(base)), number_from_uint32(d));
+                        int d = c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'z' ? c - 'a' + 10 : -1;
+                        if (d < 0 || d >= base) {
+                            error(1005, t, "invalid digit for given base");
                         }
+                        value = number_add(number_multiply(value, number_from_uint32(base)), number_from_uint32(d));
                         utf8::advance(i, 1, source.end());
                     }
                     if (i == start) {
@@ -384,40 +336,27 @@ static std::vector<Token> tokenize_fragment(const std::string &source_path, int 
                     t.value = number_from_uint32(0);
                 }
             } else {
-                std::string n;
+                const auto start = i;
                 while (i != source.end() && number_decimal_body(*i)) {
-                    if (*i != '_') {
-                        n.push_back(*i);
-                    }
                     utf8::advance(i, 1, source.end());
                 }
-                if (i != source.end() && *i == '.') {
-                    n.push_back(*i);
+                if (i != source.end() && i+1 != source.end() && *i == '.' && *(i+1) != '.') {
                     utf8::advance(i, 1, source.end());
                     while (i != source.end() && number_decimal_body(*i)) {
-                        if (*i != '_') {
-                            n.push_back(*i);
-                        }
                         utf8::advance(i, 1, source.end());
                     }
                 }
                 if (i != source.end() && tolower(*i) == 'e') {
-                    n.push_back(*i);
                     utf8::advance(i, 1, source.end());
                     if (i != source.end() && (*i == '+' || *i == '-')) {
-                        n.push_back(*i);
                         utf8::advance(i, 1, source.end());
                     }
                     while (i != source.end() && number_decimal_body(*i)) {
-                        if (*i != '_') {
-                            n.push_back(*i);
-                        }
                         utf8::advance(i, 1, source.end());
                     }
                 }
-                t.value = number_from_string(n);
+                t.value = number_from_string(std::string(start, i));
             }
-            t.text = std::string(start, i);
         } else if (c == '"') {
             utf8::advance(i, 1, source.end());
             t.type = STRING;
@@ -425,176 +364,17 @@ static std::vector<Token> tokenize_fragment(const std::string &source_path, int 
             while (i != source.end()) {
                 c = utf8::next(i, source.end());
                 if (c == '"') {
-                    break;
-                }
-                if (i == source.end()) {
-                    error(1010, t, "unterminated string");
-                }
-                if (c == '\n') {
-                    error(1021, t, "unterminated string (must be single line)");
-                }
-                if (c == '\\') {
-                    c = utf8::next(i, source.end());
                     if (i == source.end()) {
-                        error(1011, t, "unterminated string");
+                        break;
                     }
-                    switch (c) {
-                        case '"': break;
-                        case '\\': break;
-                        case 'b': c = '\b'; break;
-                        case 'f': c = '\f'; break;
-                        case 'n': c = '\n'; break;
-                        case 'r': c = '\r'; break;
-                        case 't': c = '\t'; break;
-                        case 'u':
-                            if (source.end() - i < 4) {
-                                error(1012, t, "unterminated string");
-                            }
-                            for (int j = 0; j < 4; j++) {
-                                if (not isxdigit(i[j])) {
-                                    error(1013, t, "invalid hex character");
-                                }
-                            }
-                            c = std::stoul(std::string(i, i+4), nullptr, 16);
-                            utf8::advance(i, 4, source.end());
-                            break;
-                        case '(': {
-                            tokens.push_back(t);
-                            t.column = column + (i - startindex) - 1;
-                            t.type = SUBBEGIN;
-                            tokens.push_back(t);
-                            auto start = i;
-                            auto colon = start;
-                            int nest = 1;
-                            bool inquote = false;
-                            while (nest > 0) {
-                                if (i == source.end()) {
-                                    error(1015, t, "unexpected end of file");
-                                }
-                                c = utf8::next(i, source.end());
-                                switch (c) {
-                                    case '(':
-                                        if (not inquote) {
-                                            nest++;
-                                        }
-                                        break;
-                                    case ')':
-                                        if (not inquote) {
-                                            nest--;
-                                        }
-                                        break;
-                                    case ':':
-                                        if (not inquote && nest == 1) {
-                                            colon = i - 1;
-                                        }
-                                        break;
-                                    case '"':
-                                        inquote = not inquote;
-                                        break;
-                                    case '\\':
-                                    case '\n':
-                                        error(1014, t, "invalid char embedded in string substitution");
-                                }
-                            }
-                            auto end = i - 1;
-                            if (colon > start) {
-                                end = colon;
-                            }
-                            size_t col = column + (start - startindex);
-                            auto subtokens = tokenize_fragment(source_path, line, col, std::string(start, end), t.source);
-                            std::copy(subtokens.begin(), subtokens.end(), std::back_inserter(tokens));
-                            if (colon > start) {
-                                t.column = column + (colon - startindex);
-                                t.type = SUBFMT;
-                                tokens.push_back(t);
-                                t.column += 1;
-                                t.type = STRING;
-                                t.text = std::string(colon + 1, i - 1);
-                                tokens.push_back(t);
-                            }
-                            t.column = column + (i - startindex) - 1;
-                            t.type = SUBEND;
-                            tokens.push_back(t);
-                            t.column = column + (i - startindex);
-                            t.type = STRING;
-                            t.text = "";
-                            continue;
-                        }
-                        default:
-                            error(1009, t, "invalid escape character");
+                    auto j = i;
+                    c = utf8::next(j, source.end());
+                    if (c != '"') {
+                        break;
                     }
+                    i = j;
                 }
                 utf8::append(c, std::back_inserter(t.text));
-            }
-        } else if (c == '@') {
-            utf8::advance(i, 1, source.end());
-            t.type = STRING;
-            t.text = "";
-            if (i == source.end()) {
-                error(1016, t, "unterminated raw string");
-            }
-            c = utf8::peek_next(i, source.end());
-            if (c == '"') {
-                utf8::advance(i, 1, source.end());
-                while (i != source.end()) {
-                    c = utf8::next(i, source.end());
-                    if (c == '"') {
-                        break;
-                    }
-                    if (i == source.end()) {
-                        error(1017, t, "unterminated raw string");
-                    }
-                    if (c == '\n') {
-                        error(1022, t, "unterminated raw string (must be single line)");
-                    }
-                    utf8::append(c, std::back_inserter(t.text));
-                }
-            } else {
-                std::string delimiter;
-                while (i != source.end()) {
-                    c = utf8::next(i, source.end());
-                    if (c == '@') {
-                        break;
-                    }
-                    if (i == source.end()) {
-                        error(1018, t, "unterminated delimiter");
-                    }
-                    utf8::append(c, std::back_inserter(delimiter));
-                }
-                if (i == source.end() || utf8::next(i, source.end()) != '"') {
-                    error(1019, t, "'\"' expected");
-                }
-                delimiter = "\"@" + delimiter + "@";
-                auto d = delimiter.begin();
-                while (i != source.end()) {
-                    c = utf8::next(i, source.end());
-                    if (c == utf8::next(d, delimiter.end())) {
-                        if (d == delimiter.end()) {
-                            auto j = t.text.end();
-                            for (std::string::size_type trunc = delimiter.length() - 1; trunc > 0; trunc--) {
-                                utf8::prior(j, t.text.begin());
-                            }
-                            t.text = std::string(t.text.begin(), j);
-                            break;
-                        }
-                    } else {
-                        d = delimiter.begin();
-                        if (c == '"') {
-                            utf8::advance(d, 1, delimiter.end());
-                        }
-                    }
-                    if (i == source.end()) {
-                        error(1020, t, "unterminated raw string");
-                    }
-                    if (c == '\n') {
-                        line++;
-                        startindex = i+1;
-                        column = 1;
-                        linestart = i+1;
-                        lineend = std::find(i+1, source.end(), '\n');
-                    }
-                    utf8::append(c, std::back_inserter(t.text));
-                }
             }
         } else if (c == '%') {
             if (i+1 == source.end()) {
@@ -631,8 +411,7 @@ static std::vector<Token> tokenize_fragment(const std::string &source_path, int 
             while (i != source.end() && space(*i)) {
                 if (*i == '\n') {
                     line++;
-                    startindex = i+1;
-                    column = 1;
+                    column = 0;
                     linestart = i+1;
                     lineend = std::find(i+1, source.end(), '\n');
                 }
@@ -644,74 +423,12 @@ static std::vector<Token> tokenize_fragment(const std::string &source_path, int 
         if (t.type != NONE) {
             tokens.push_back(t);
         }
-        column += (i - startindex);
+        column += static_cast<int>(i - startindex);
     }
-    return tokens;
-}
-
-std::string expand_tabs(const std::string &s)
-{
-    std::string r;
-    int column = 0;
-    for (auto c: s) {
-        switch (c) {
-        case '\n':
-            r.push_back(c);
-            column = 0;
-            break;
-        case '\t':
-            r.append(std::string(8 - (column % 8), ' '));
-            column = (column + 8) - (column % 8);
-            break;
-        default:
-            r.push_back(c);
-            break;
-        }
-    }
-    return r;
-}
-
-TokenizedSource tokenize(const std::string &source_path, const std::string &orig_source)
-{
-    auto inv = utf8::find_invalid(orig_source.begin(), orig_source.end());
-    if (inv != orig_source.end()) {
-        int line = static_cast<int>(1 + std::count(orig_source.begin(), inv, '\n'));
-        auto bol = orig_source.rfind('\n', inv-orig_source.begin());
-        if (bol != std::string::npos) {
-            bol++;
-        } else {
-            bol = 0;
-        }
-        size_t column = (1 + inv - (orig_source.begin() + bol));
-        Token t;
-        t.line = line;
-        t.column = column;
-        error(1000, t, "invalid UTF-8 data in source");
-    }
-
-    SHA256 sha256;
-    sha256(orig_source);
-    unsigned char h[SHA256::HashBytes];
-    sha256.getHash(h);
-
-    const std::string source = expand_tabs(orig_source);
-
-    int line = 1;
-    std::string::const_iterator i = source.begin();
-    if (source.substr(0, 2) == "#!") {
-        while (i != source.end() && *i != '\n') {
-            utf8::advance(i, 1, source.end());
-        }
-    }
-
-    TokenizedSource r;
-    r.source_path = source_path;
-    r.source_hash = std::string(h, h+sizeof(h));
-    r.tokens = tokenize_fragment(source_path, line, 1, std::string(i, source.end()));
     Token t;
-    t.line = line;
+    t.line = line + 1;
     t.column = 1;
     t.type = END_OF_FILE;
-    r.tokens.push_back(t);
-    return r;
+    tokens.push_back(t);
+    return tokens;
 }

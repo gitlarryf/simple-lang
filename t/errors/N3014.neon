@@ -1,6 +1,0 @@
-VAR x: String
-    %<2
-x := "Hello"
-
-CONSTANT x: String := ", World!"
-         %<1

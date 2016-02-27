@@ -1,8 +1,0 @@
-VAR s: String
-IF TRUE THEN
-    s := "hello"
-ELSE
-    s := "hi"
-END IF
-print(s)
-%= hello

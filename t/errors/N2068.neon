@@ -1,2 +1,3 @@
-FUNCTION Foo.5
-             %<
+VAR Record: Number
+
+Record[1]

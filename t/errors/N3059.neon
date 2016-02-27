@@ -1,6 +1,0 @@
-FUNCTION One(): Number
-  RETURN 1
-END FUNCTION
-
-One()
-%<

@@ -1,7 +1,0 @@
-FUNCTION foo()
-    foo()
-END FUNCTION
-
-foo()
-
-%! StackOverflow

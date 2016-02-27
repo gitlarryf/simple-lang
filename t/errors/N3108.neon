@@ -1,4 +1,0 @@
-FUNCTION foo(): Number
-    EXIT FUNCTION
-    %<
-END FUNCTION

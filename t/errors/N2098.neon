@@ -1,5 +1,2 @@
-TRY
-    print("hello")
-EXCEPTION InvalidValue THEN
-                       %<
-END TRY
+VAR a: Number
+a

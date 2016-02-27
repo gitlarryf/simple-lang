@@ -25,10 +25,10 @@
 #endif
 
 struct Number {
-    Number(): x(bid128_from_uint32(0)) {}
-    BID_UINT128 x;
+    Number(): x(bid64_from_uint32(0)) {}
+    BID_UINT64 x;
 private:
-    Number(BID_UINT128 x): x(x) {}
+    Number(BID_UINT64 x): x(x) {}
 
     friend Number number_add(Number x, Number y);
     friend Number number_subtract(Number x, Number y);
@@ -38,10 +38,8 @@ private:
     friend Number number_pow(Number x, Number y);
     friend Number number_negate(Number x);
     friend Number number_abs(Number x);
-    friend Number number_sign(Number x);
     friend Number number_ceil(Number x);
     friend Number number_floor(Number x);
-    friend Number number_trunc(Number x);
     friend Number number_exp(Number x);
     friend Number number_log(Number x);
     friend Number number_sqrt(Number x);
@@ -51,27 +49,6 @@ private:
     friend Number number_cos(Number x);
     friend Number number_sin(Number x);
     friend Number number_tan(Number x);
-    friend Number number_acosh(Number x);
-    friend Number number_asinh(Number x);
-    friend Number number_atanh(Number x);
-    friend Number number_atan2(Number y, Number x);
-    friend Number number_cbrt(Number x);
-    friend Number number_cosh(Number x);
-    friend Number number_erf(Number x);
-    friend Number number_erfc(Number x);
-    friend Number number_exp2(Number x);
-    friend Number number_expm1(Number x);
-    friend Number number_frexp(Number x, int *exp);
-    friend Number number_hypot(Number x, Number y);
-    friend Number number_ldexp(Number x, int exp);
-    friend Number number_lgamma(Number x);
-    friend Number number_log10(Number x);
-    friend Number number_log1p(Number x);
-    friend Number number_log2(Number x);
-    friend Number number_nearbyint(Number x);
-    friend Number number_sinh(Number x);
-    friend Number number_tanh(Number x);
-    friend Number number_tgamma(Number x);
     friend Number number_from_string(const std::string &s);
     friend Number number_from_uint8(uint8_t x);
     friend Number number_from_sint8(int8_t x);
@@ -93,10 +70,8 @@ Number number_modulo(Number x, Number y);
 Number number_pow(Number x, Number y);
 Number number_negate(Number x);
 Number number_abs(Number x);
-Number number_sign(Number x);
 Number number_ceil(Number x);
 Number number_floor(Number x);
-Number number_trunc(Number x);
 Number number_exp(Number x);
 Number number_log(Number x);
 Number number_sqrt(Number x);
@@ -106,27 +81,6 @@ Number number_atan(Number x);
 Number number_cos(Number x);
 Number number_sin(Number x);
 Number number_tan(Number x);
-Number number_acosh(Number x);
-Number number_asinh(Number x);
-Number number_atanh(Number x);
-Number number_atan2(Number y, Number x);
-Number number_cbrt(Number x);
-Number number_cosh(Number x);
-Number number_erf(Number x);
-Number number_erfc(Number x);
-Number number_exp2(Number x);
-Number number_expm1(Number x);
-Number number_frexp(Number x, int *exp);
-Number number_hypot(Number x, Number y);
-Number number_ldexp(Number x, int exp);
-Number number_lgamma(Number x);
-Number number_log10(Number x);
-Number number_log1p(Number x);
-Number number_log2(Number x);
-Number number_nearbyint(Number x);
-Number number_sinh(Number x);
-Number number_tanh(Number x);
-Number number_tgamma(Number x);
 bool number_is_zero(Number x);
 bool number_is_negative(Number x);
 bool number_is_equal(Number x, Number y);

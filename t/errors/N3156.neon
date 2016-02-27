@@ -1,4 +1,0 @@
-IMPORT module
-
-VAR x: module.const
-              %<

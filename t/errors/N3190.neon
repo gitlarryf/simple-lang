@@ -1,4 +1,0 @@
-VAR s: String
-    %<2
-print(s)
-      %<1

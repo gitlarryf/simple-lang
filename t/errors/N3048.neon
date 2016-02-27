@@ -1,4 +1,0 @@
-IF (1) THEN
-   %<
-    print("TRUE")
-END IF

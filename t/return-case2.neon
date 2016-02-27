@@ -2,7 +2,7 @@ FUNCTION foo(x: Number): Number
     CASE x
         WHEN < 5 DO
             RETURN -1
-        WHEN OTHERS DO
+        ELSE
             RETURN 1
     END CASE
 END FUNCTION

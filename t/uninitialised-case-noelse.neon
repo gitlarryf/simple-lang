@@ -1,8 +1,0 @@
-VAR s: String
-CASE 1
-    WHEN 1 DO
-        s := "hello"
-END CASE
-print(s)
-
-%! Uninitialised

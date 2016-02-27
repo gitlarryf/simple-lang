@@ -1,6 +1,0 @@
-FUNCTION f(x: Number)
-           %<2
-END FUNCTION
-
-f(_)
-  %<1

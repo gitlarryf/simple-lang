@@ -1,13 +1,10 @@
-#include <iso646.h>
 #include <windows.h>
 
 #include "number.h"
 
-const ULONGLONG FILETIME_UNIX_EPOCH = 116444736000000000ULL;
+const ULONGLONG FILETIME_UNIX_EPOCH = 11644473600000000ULL;
 
-namespace rtl {
-
-Number time$now()
+Number rtl_time_now()
 {
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
@@ -16,20 +13,3 @@ Number time$now()
     ticks.HighPart = ft.dwHighDateTime;
     return number_divide(number_from_uint64(ticks.QuadPart - FILETIME_UNIX_EPOCH), number_from_uint32(10000000));
 }
-
-Number time$tick()
-{
-    static bool init = false;
-    static Number frequency;
-    if (not init) {
-        init = true;
-        LARGE_INTEGER freq;
-        QueryPerformanceFrequency(&freq);
-        frequency = number_from_uint64(freq.QuadPart);
-    }
-    LARGE_INTEGER now;
-    QueryPerformanceCounter(&now);
-    return number_divide(number_from_uint64(now.QuadPart), frequency);
-}
-
-} // namespace rtl

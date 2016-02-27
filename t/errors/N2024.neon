@@ -1,6 +1,1 @@
-FUNCTION add: Number
-            %<
-    a = a + 1
-    RETURN a
-END FUNCTION
-  
+CONST x: String = ", World!"

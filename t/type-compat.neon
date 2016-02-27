@@ -1,6 +1,6 @@
-FUNCTION foo(x: Array<String>)
+FUNCTION foo(a: Array<String>)
     % ...
 END FUNCTION
 
-VAR a: Array<String> := []
+VAR a: Array<String>
 foo(a)

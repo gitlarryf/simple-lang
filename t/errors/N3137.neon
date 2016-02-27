@@ -1,4 +1,0 @@
-TYPE Foo IS RECORD END RECORD
-VAR f: Foo := Foo()
-f.bar()
-  %<

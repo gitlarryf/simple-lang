@@ -1,3 +1,2 @@
-VAR a: Number
-a := IF 1 = 2 ELSE
-              %<
+VAR Integer: Number
+VAR a: Integer

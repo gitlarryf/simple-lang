@@ -1,8 +1,11 @@
-VAR lib: Dictionary<String>
+TYPE lh := RECORD
+  var1: Number
+  var2: String
+END RECORD
 
-lib := {
-       %<2
-     "Key1": "Value1"
-     "key2": "value2"
-END
-%<1
+VAR a: lh
+VAR b: lh
+
+IF a <= b THEN
+  print("Woah...")
+END IF

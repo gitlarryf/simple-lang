@@ -1,4 +1,0 @@
-FUNCTION foo(OUT t: String)
-                 %<2
-END FUNCTION
-%<1

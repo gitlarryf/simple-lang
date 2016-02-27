@@ -1,3 +1,6 @@
+print(str(abs(-4)))
+%= 4
+
 print(chr(65))
 %= A
 
@@ -16,13 +19,6 @@ print(str(num("45")))
 print(str(ord("B")))
 %= 66
 
-TRY
-    print(str(ord("AB")))
-EXCEPTION ArrayIndexException DO
-    print(CURRENT_EXCEPTION.info)
-END TRY
-%= ord() requires string of length 1
-
 print("hello")
 %= hello
 
@@ -34,12 +30,3 @@ print(strb(TRUE))
 
 print(substring("hello world", 2, 5))
 %= llo w
-
-print(str(int(4)))
-%= 4
-
-print(str(int(3.9)))
-%= 3
-
-print(str(int(-3.9)))
-%= -3

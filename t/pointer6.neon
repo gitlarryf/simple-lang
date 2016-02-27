@@ -1,10 +1,10 @@
-TYPE Node IS RECORD
+TYPE Node := RECORD
     value: Number
 END RECORD
 
-VAR a, b: POINTER TO Node := NIL
+VAR a, b: POINTER TO Node
 
-IF VALID a AS p THEN
+IF VALID p := a THEN
     p := b
     p->value := 5
 END IF

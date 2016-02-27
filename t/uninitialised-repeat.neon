@@ -1,6 +1,0 @@
-VAR s: String
-REPEAT
-    s := "hello"
-UNTIL TRUE
-print(s)
-%= hello

@@ -1,2 +1,2 @@
-RAISE 5
-      %<
+VAR a: Number
+Number := 1

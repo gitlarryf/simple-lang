@@ -1,5 +1,0 @@
-VAR Records: Array<Number> := []
-             %<2
-
-Records["UserName"]
-        %<1

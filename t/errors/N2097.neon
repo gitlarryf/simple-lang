@@ -1,2 +1,2 @@
-_ IN
-  %<
+VAR a: Number
+a = 2

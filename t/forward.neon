@@ -1,3 +1,5 @@
+DECLARE FUNCTION pong(n: Number)
+
 FUNCTION ping(n: Number)
     IF n > 0 THEN
         print("ping " & str(n))

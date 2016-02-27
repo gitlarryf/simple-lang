@@ -1,13 +1,13 @@
-DECLARE EXCEPTION PrinterOnFireException
+DECLARE EXCEPTION PrinterOnFire
 
 TRY
     print("one")
     TRY
-        RAISE PrinterOnFireException
-    EXCEPTION PrinterOnFireException DO
+        RAISE PrinterOnFire
+    EXCEPTION PrinterOnFire
         print("two")
     END TRY
-EXCEPTION PrinterOnFireException DO
+EXCEPTION PrinterOnFire
     print("three")
 END TRY
 

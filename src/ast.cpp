@@ -3,20 +3,16 @@
 #include <iostream>
 #include <iso646.h>
 #include <sstream>
-#include <string.h>
 
-#include "intrinsic.h"
 #include "rtl_compile.h"
-#include "rtl_exec.h"
 
 TypeNothing *TYPE_NOTHING = new TypeNothing();
-TypeDummy *TYPE_DUMMY = new TypeDummy();
 TypeBoolean *TYPE_BOOLEAN = new TypeBoolean();
-TypeNumber *TYPE_NUMBER = new TypeNumber(Token());
+TypeNumber *TYPE_NUMBER = new TypeNumber();
 TypeString *TYPE_STRING = new TypeString();
-TypeBytes *TYPE_BYTES = new TypeBytes();
-TypeArray *TYPE_ARRAY_NUMBER = new TypeArray(Token(), TYPE_NUMBER);
-TypeArray *TYPE_ARRAY_STRING = new TypeArray(Token(), TYPE_STRING);
+TypeArray *TYPE_ARRAY_NUMBER = new TypeArray(TYPE_NUMBER);
+TypeArray *TYPE_ARRAY_STRING = new TypeArray(TYPE_STRING);
+TypePointer *TYPE_POINTER = new TypePointer(nullptr);
 TypeModule *TYPE_MODULE = new TypeModule();
 TypeException *TYPE_EXCEPTION = new TypeException();
 
@@ -26,363 +22,51 @@ void AstNode::dump(std::ostream &out, int depth) const
     dumpsubnodes(out, depth);
 }
 
-std::string TypeBoolean::serialize(const Expression *value) const
-{
-    return value->eval_boolean() ? std::string(1, 1) : std::string(1, 0);
-}
-
-const Expression *TypeBoolean::deserialize_value(const Bytecode::Bytes &value, int &i) const
-{
-    unsigned char b = value.at(i);
-    i++;
-    return new ConstantBooleanExpression(b != 0);
-}
-
-std::string TypeNumber::serialize(const Expression *value) const
-{
-    Number x = value->eval_number();
-    return std::string(reinterpret_cast<const char *>(&x), sizeof(x));
-}
-
-const Expression *TypeNumber::deserialize_value(const Bytecode::Bytes &value, int &i) const
-{
-    // TODO: endian
-    Number x;
-    memcpy(&x, &value.at(i), sizeof(Number));
-    i += sizeof(Number);
-    return new ConstantNumberExpression(x);
-}
-
-std::string TypeString::serialize(const std::string &value)
-{
-    uint32_t len = static_cast<uint32_t>(value.length());
-    std::string r;
-    r.push_back(static_cast<unsigned char>(len >> 24) & 0xff);
-    r.push_back(static_cast<unsigned char>(len >> 16) & 0xff);
-    r.push_back(static_cast<unsigned char>(len >> 8) & 0xff);
-    r.push_back(static_cast<unsigned char>(len & 0xff));
-    return r + value;
-}
-
-std::string TypeString::serialize(const Expression *value) const
-{
-    return serialize(value->eval_string());
-}
-
-std::string TypeString::deserialize_string(const Bytecode::Bytes &value, int &i)
-{
-    uint32_t len = (value.at(i) << 24) | (value.at(i+1) << 16) | (value.at(i+2) << 8) | value.at(i+3);
-    std::string s(&value.at(i+4), &value.at(i+4)+len);
-    i += 4 + len;
-    return s;
-}
-
-const Expression *TypeString::deserialize_value(const Bytecode::Bytes &value, int &i) const
-{
-    return new ConstantStringExpression(deserialize_string(value, i));
-}
-
-TypeArray::TypeArray(const Token &declaration, const Type *elementtype)
-  : Type(declaration, "array"),
+TypeArray::TypeArray(const Type *elementtype)
+  : Type("array"),
     elementtype(elementtype)
 {
     {
         std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::INOUT, this, nullptr));
-        params.push_back(new ParameterType(Token(), ParameterType::IN, elementtype, nullptr));
-        methods["append"] = new PredefinedFunction("array__append", new TypeFunction(TYPE_NOTHING, params));
-    }
-    {
-        std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::INOUT, this, nullptr));
-        params.push_back(new ParameterType(Token(), ParameterType::IN, this, nullptr));
-        methods["extend"] = new PredefinedFunction("array__extend", new TypeFunction(TYPE_NOTHING, params));
-    }
-    {
-        std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::INOUT, this, nullptr));
-        params.push_back(new ParameterType(Token(), ParameterType::IN, TYPE_NUMBER, nullptr));
-        methods["resize"] = new PredefinedFunction("array__resize", new TypeFunction(TYPE_NOTHING, params));
-    }
-    {
-        std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::IN, this, nullptr));
-        methods["size"] = new PredefinedFunction("array__size", new TypeFunction(TYPE_NUMBER, params));
-    }
-    {
-        std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::IN, this, nullptr));
-        // TODO: This is just a hack to make this work for now.
-        // Need to do this properly in a general purpose way.
-        if (elementtype == TYPE_NUMBER) {
-            methods["toBytes"] = new PredefinedFunction("array__toBytes__number", new TypeFunction(TYPE_BYTES, params));
-            methods["toString"] = new PredefinedFunction("array__toString__number", new TypeFunction(TYPE_STRING, params));
-        } else if (elementtype == TYPE_STRING) {
-            methods["toString"] = new PredefinedFunction("array__toString__string", new TypeFunction(TYPE_STRING, params));
-        }
+        params.push_back(new ParameterType(ParameterType::INOUT, this));
+        methods["size"] = new PredefinedFunction("array.size", new TypeFunction(TYPE_NUMBER, params));
     }
 }
 
-bool TypeFunction::is_assignment_compatible(const Type *rhs) const
-{
-    // TODO: There needs to be a mechanism for reporting more detail about why the
-    // type does not match. There are quite a few reasons for this to return false,
-    // and the user would probably appreciate more detail.
-    const TypeFunction *f = dynamic_cast<const TypeFunction *>(rhs);
-    if (f == nullptr) {
-        const TypeFunctionPointer *p = dynamic_cast<const TypeFunctionPointer *>(rhs);
-        if (p == nullptr) {
-            return false;
-        }
-        f = p->functype;
-    }
-    if (not returntype->is_assignment_compatible(f->returntype)) {
-        return false;
-    }
-    if (params.size() != f->params.size()) {
-        return false;
-    }
-    for (size_t i = 0; i < params.size(); i++) {
-        if (params[i]->declaration.text != f->params[i]->declaration.text) {
-            return false;
-        }
-        if (params[i]->mode != f->params[i]->mode) {
-            return false;
-        }
-        if (not f->params[i]->type->is_assignment_compatible(params[i]->type)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool TypeArray::is_assignment_compatible(const Type *rhs) const
+bool TypeArray::is_equivalent(const Type *rhs) const
 {
     const TypeArray *a = dynamic_cast<const TypeArray *>(rhs);
     if (a == nullptr) {
         return false;
     }
-    return elementtype == nullptr || a->elementtype == nullptr || elementtype->is_assignment_compatible(a->elementtype);
+    return elementtype == nullptr || a->elementtype == nullptr || elementtype->is_equivalent(a->elementtype);
 }
 
-std::string TypeArray::serialize(const Expression *value) const
-{
-    std::string r;
-    const ArrayLiteralExpression *a = dynamic_cast<const ArrayLiteralExpression *>(value);
-    r.push_back(static_cast<unsigned char>(a->elements.size() >> 24) & 0xff);
-    r.push_back(static_cast<unsigned char>(a->elements.size() >> 16) & 0xff);
-    r.push_back(static_cast<unsigned char>(a->elements.size() >> 8) & 0xff);
-    r.push_back(static_cast<unsigned char>(a->elements.size() & 0xff));
-    for (auto x: a->elements) {
-        r.append(a->elementtype->serialize(x));
-    }
-    return r;
-}
-
-const Expression *TypeArray::deserialize_value(const Bytecode::Bytes &value, int &i) const
-{
-    std::vector<const Expression *> elements;
-    uint32_t len = (value.at(i) << 24) | (value.at(i+1) << 16) | (value.at(i+2) << 8) | value.at(i+3);
-    i += 4;
-    while (len > 0) {
-        elements.push_back(elementtype->deserialize_value(value, i));
-        len--;
-    }
-    return new ArrayLiteralExpression(elementtype, elements);
-}
-
-TypeDictionary::TypeDictionary(const Token &declaration, const Type *elementtype)
-  : Type(declaration, "dictionary"),
-    elementtype(elementtype)
-{
-    {
-        std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::IN, this, nullptr));
-        methods["size"] = new PredefinedFunction("dictionary__size", new TypeFunction(TYPE_NUMBER, params));
-    }
-    {
-        std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::IN, this, nullptr));
-        methods["keys"] = new PredefinedFunction("dictionary__keys", new TypeFunction(TYPE_ARRAY_STRING, params));
-    }
-}
-
-bool TypeDictionary::is_assignment_compatible(const Type *rhs) const
+bool TypeDictionary::is_equivalent(const Type *rhs) const
 {
     const TypeDictionary *d = dynamic_cast<const TypeDictionary *>(rhs);
     if (d == nullptr) {
         return false;
     }
-    return elementtype == nullptr || d->elementtype == nullptr || elementtype->is_assignment_compatible(d->elementtype);
+    return elementtype == nullptr || d->elementtype == nullptr || elementtype->is_equivalent(d->elementtype);
 }
 
-std::string TypeDictionary::serialize(const Expression *value) const
-{
-    std::string r;
-    const DictionaryLiteralExpression *d = dynamic_cast<const DictionaryLiteralExpression *>(value);
-    r.push_back(static_cast<unsigned char>(d->dict.size() >> 24) & 0xff);
-    r.push_back(static_cast<unsigned char>(d->dict.size() >> 16) & 0xff);
-    r.push_back(static_cast<unsigned char>(d->dict.size() >> 8) & 0xff);
-    r.push_back(static_cast<unsigned char>(d->dict.size() & 0xff));
-    for (auto x: d->dict) {
-        r.append(TypeString::serialize(x.first));
-        r.append(d->elementtype->serialize(x.second));
-    }
-    return r;
-}
-
-const Expression *TypeDictionary::deserialize_value(const Bytecode::Bytes &value, int &i) const
-{
-    std::vector<std::pair<std::string, const Expression *>> dict;
-    uint32_t len = (value.at(i) << 24) | (value.at(i+1) << 16) | (value.at(i+2) << 8) | value.at(i+3);
-    i += 4;
-    while (len > 0) {
-        std::string name = TypeString::deserialize_string(value, i);
-        dict.push_back(std::make_pair(name, elementtype->deserialize_value(value, i)));
-        len--;
-    }
-    return new DictionaryLiteralExpression(elementtype, dict);
-}
-
-bool TypeRecord::is_assignment_compatible(const Type *rhs) const
+bool TypeRecord::is_equivalent(const Type *rhs) const
 {
     return this == rhs;
 }
 
-std::string TypeRecord::serialize(const Expression *value) const
+bool TypePointer::is_equivalent(const Type *rhs) const
 {
-    std::string r;
-    const RecordLiteralExpression *a = dynamic_cast<const RecordLiteralExpression *>(value);
-    r.push_back(static_cast<unsigned char>(a->values.size() >> 24) & 0xff);
-    r.push_back(static_cast<unsigned char>(a->values.size() >> 16) & 0xff);
-    r.push_back(static_cast<unsigned char>(a->values.size() >> 8) & 0xff);
-    r.push_back(static_cast<unsigned char>(a->values.size() & 0xff));
-    for (auto x: a->values) {
-        r.append(x->type->serialize(x));
-    }
-    return r;
-}
-
-const Expression *TypeRecord::deserialize_value(const Bytecode::Bytes &value, int &i) const
-{
-    std::vector<const Expression *> elements;
-    uint32_t len = (value.at(i) << 24) | (value.at(i+1) << 16) | (value.at(i+2) << 8) | value.at(i+3);
-    i += 4;
-    int f = 0;
-    while (len > 0) {
-        elements.push_back(fields[f].type->deserialize_value(value, i));
-        f++;
-        len--;
-    }
-    return new RecordLiteralExpression(this, elements);
-}
-
-std::string TypeRecord::text() const
-{
-    std::string r = "TypeRecord(";
-    bool first = true;
-    for (auto f: fields) {
-        if (not first) {
-            r.append(",");
-        }
-        first = false;
-        r.append(f.name.text);
-    }
-    r.append(")");
-    return r;
-}
-
-TypePointer::TypePointer(const Token &declaration, const TypeRecord *reftype)
-  : Type(declaration, "pointer"),
-    reftype(reftype)
-{
-    {
-        std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::IN, this, nullptr));
-        methods["toString"] = new PredefinedFunction("pointer__toString", new TypeFunction(TYPE_STRING, params));
-    }
-}
-
-bool TypePointer::is_assignment_compatible(const Type *rhs) const
-{
-    if (this == rhs) {
-        return true;
-    }
-    if (dynamic_cast<const TypePointerNil *>(rhs) != nullptr) {
-        return true;
-    }
     const TypePointer *p = dynamic_cast<const TypePointer *>(rhs);
     if (p == nullptr) {
         return false;
     }
     if (reftype == nullptr || p->reftype == nullptr) {
-        return false;
+        return true;
     }
     // Shortcut check avoids infinite recursion on records with pointer to itself.
-    return reftype == p->reftype || reftype->is_assignment_compatible(p->reftype);
-}
-
-std::string TypePointer::serialize(const Expression *) const
-{
-    return std::string();
-}
-
-const Expression *TypePointer::deserialize_value(const Bytecode::Bytes &, int &) const
-{
-    return new ConstantNilExpression();
-}
-
-TypeFunctionPointer::TypeFunctionPointer(const Token &declaration, const TypeFunction *functype)
-  : Type(declaration, "function-pointer"),
-    functype(functype)
-{
-    {
-        std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::IN, this, nullptr));
-        methods["toString"] = new PredefinedFunction("functionpointer__toString", new TypeFunction(TYPE_STRING, params));
-    }
-}
-
-bool TypeFunctionPointer::is_assignment_compatible(const Type *rhs) const
-{
-    return functype->is_assignment_compatible(rhs);
-}
-
-std::string TypeFunctionPointer::serialize(const Expression *) const
-{
-    return std::string();
-}
-
-const Expression *TypeFunctionPointer::deserialize_value(const Bytecode::Bytes &, int &) const
-{
-    return new ConstantNumberExpression(number_from_sint32(0));
-}
-
-bool Expression::eval_boolean(const Token &token) const
-{
-    try {
-        return eval_boolean();
-    } catch (RtlException &e) {
-        error(3195, token, "Boolean evaluation exception: " + e.name + ": " + e.info);
-    }
-}
-
-Number Expression::eval_number(const Token &token) const
-{
-    try {
-        return eval_number();
-    } catch (RtlException &e) {
-        error(3196, token, "Numeric evaluation exception: " + e.name + ": " + e.info);
-    }
-}
-
-std::string Expression::eval_string(const Token &token) const
-{
-    try {
-        return eval_string();
-    } catch (RtlException &e) {
-        error(3197, token, "String evaluation exception: " + e.name + ": " + e.info);
-    }
+    return reftype == p->reftype || reftype->is_equivalent(p->reftype);
 }
 
 std::string ConstantBooleanExpression::text() const
@@ -403,13 +87,6 @@ std::string ConstantStringExpression::text() const
 {
     std::stringstream s;
     s << "ConstantStringExpression(" << value << ")";
-    return s.str();
-}
-
-std::string ConstantBytesExpression::text() const
-{
-    std::stringstream s;
-    s << "ConstantBytesExpression(" << name << ")";
     return s.str();
 }
 
@@ -440,16 +117,6 @@ bool DictionaryLiteralExpression::all_constant(const std::vector<std::pair<std::
     return true;
 }
 
-bool RecordLiteralExpression::all_constant(const std::vector<const Expression *> &elements)
-{
-    for (auto e: elements) {
-        if (not e->is_constant) {
-            return false;
-        }
-    }
-    return true;
-}
-
 std::map<std::string, const Expression *> DictionaryLiteralExpression::make_dictionary(const std::vector<std::pair<std::string, const Expression *>> &elements)
 {
     std::map<std::string, const Expression *> dict;
@@ -457,46 +124,6 @@ std::map<std::string, const Expression *> DictionaryLiteralExpression::make_dict
         dict[e.first] = e.second;
     }
     return dict;
-}
-
-bool BooleanComparisonExpression::eval_boolean() const
-{
-    switch (comp) {
-        case EQ: return left->eval_boolean() == right->eval_boolean();
-        case NE: return left->eval_boolean() != right->eval_boolean();
-        case LT:
-        case GT:
-        case LE:
-        case GE:
-            internal_error("BooleanComparisonExpression");
-    }
-    internal_error("BooleanComparisonExpression");
-}
-
-bool NumericComparisonExpression::eval_boolean() const
-{
-    switch (comp) {
-        case EQ: return number_is_equal        (left->eval_number(), right->eval_number());
-        case NE: return number_is_not_equal    (left->eval_number(), right->eval_number());
-        case LT: return number_is_less         (left->eval_number(), right->eval_number());
-        case GT: return number_is_greater      (left->eval_number(), right->eval_number());
-        case LE: return number_is_less_equal   (left->eval_number(), right->eval_number());
-        case GE: return number_is_greater_equal(left->eval_number(), right->eval_number());
-    }
-    internal_error("NumericComparisonExpression");
-}
-
-bool StringComparisonExpression::eval_boolean() const
-{
-    switch (comp) {
-        case EQ: return left->eval_string() == right->eval_string();
-        case NE: return left->eval_string() != right->eval_string();
-        case LT: return left->eval_string() <  right->eval_string();
-        case GT: return left->eval_string() >  right->eval_string();
-        case LE: return left->eval_string() <= right->eval_string();
-        case GE: return left->eval_string() >= right->eval_string();
-    }
-    internal_error("StringComparisonExpression");
 }
 
 bool IfStatement::always_returns() const
@@ -559,62 +186,6 @@ std::string FunctionCall::text() const
     return s.str();
 }
 
-Number FunctionCall::eval_number() const
-{
-    const VariableExpression *ve = dynamic_cast<const VariableExpression *>(func);
-    const PredefinedFunction *f = dynamic_cast<const PredefinedFunction *>(ve->var);
-    if (f->name == "ord") return rtl::global$ord(args[0]->eval_string());
-    if (f->name == "int") return rtl::global$int(args[0]->eval_number());
-    if (f->name == "max") return rtl::global$max(args[0]->eval_number(), args[1]->eval_number());
-    if (f->name == "min") return rtl::global$min(args[0]->eval_number(), args[1]->eval_number());
-    if (f->name == "num") return rtl::global$num(args[0]->eval_string());
-    internal_error("unexpected intrinsic");
-}
-
-std::string FunctionCall::eval_string() const
-{
-    const VariableExpression *ve = dynamic_cast<const VariableExpression *>(func);
-    const PredefinedFunction *f = dynamic_cast<const PredefinedFunction *>(ve->var);
-    if (f->name == "chr") return rtl::global$chr(args[0]->eval_number());
-    if (f->name == "concat") return rtl::global$concat(args[0]->eval_string(), args[1]->eval_string());
-    if (f->name == "format") return rtl::global$format(args[0]->eval_string(), args[1]->eval_string());
-    if (f->name == "str") return rtl::global$str(args[0]->eval_number());
-    if (f->name == "strb") return rtl::global$strb(args[0]->eval_boolean());
-    if (f->name == "substring") return rtl::global$substring(args[0]->eval_string(), args[1]->eval_number(), args[2]->eval_number());
-    internal_error("unexpected intrinsic");
-}
-
-bool FunctionCall::is_intrinsic(const Expression *func, const std::vector<const Expression *> &args)
-{
-    for (auto a: args) {
-        if (not a->is_constant) {
-            return false;
-        }
-    }
-    const VariableExpression *ve = dynamic_cast<const VariableExpression *>(func);
-    if (ve == nullptr) {
-        return false;
-    }
-    const PredefinedFunction *f = dynamic_cast<const PredefinedFunction *>(ve->var);
-    if (f == nullptr) {
-        return false;
-    }
-    if (f->name == "chr"
-     || f->name == "concat"
-     || f->name == "format"
-     || f->name == "int"
-     || f->name == "max"
-     || f->name == "min"
-     || f->name == "num"
-     || f->name == "ord"
-     || f->name == "str"
-     || f->name == "strb"
-     || f->name == "substring") {
-        return true;
-    }
-    return false;
-}
-
 void CompoundStatement::dumpsubnodes(std::ostream &out, int depth) const
 {
     for (std::vector<const Statement *>::const_iterator i = statements.begin(); i != statements.end(); ++i) {
@@ -622,73 +193,31 @@ void CompoundStatement::dumpsubnodes(std::ostream &out, int depth) const
     }
 }
 
-int Frame::addSlot(const Token &token, const std::string &name, Name *ref, bool init_referenced)
+Name *Scope::lookupName(const std::string &name)
 {
-    Slot slot(token, name, ref, init_referenced);
-    int r = static_cast<int>(slots.size());
-    slots.push_back(slot);
-    return r;
+    int enclosing;
+    return lookupName(name, enclosing);
 }
 
-const Frame::Slot Frame::getSlot(size_t slot)
+Name *Scope::lookupName(const std::string &name, int &enclosing)
 {
-    return slots.at(slot);
-}
-
-void Frame::setReferent(int slot, Name *ref)
-{
-    if (slots.at(slot).ref != nullptr) {
-        internal_error("ref not null");
-    }
-    slots.at(slot).ref = ref;
-}
-
-void Frame::setReferenced(int slot)
-{
-    slots.at(slot).referenced = true;
-}
-
-bool Scope::allocateName(const Token &token, const std::string &name)
-{
-    if (getDeclaration(name).type != NONE) {
-        return false;
-    }
-    names[name] = frame->addSlot(token, name, nullptr, false);
-    return true;
-}
-
-Name *Scope::lookupName(const std::string &name, bool mark_referenced)
-{
+    enclosing = 0;
     Scope *s = this;
     while (s != nullptr) {
         auto n = s->names.find(name);
         if (n != s->names.end()) {
-            if (mark_referenced) {
-                s->frame->setReferenced(n->second);
-            }
-            return s->frame->getSlot(n->second).ref;
+            s->referenced.insert(n->second);
+            return n->second;
         }
+        enclosing++;
         s = s->parent;
     }
     return nullptr;
 }
 
-Token Scope::getDeclaration(const std::string &name) const
+void Scope::addName(const std::string &name, Name *ref, bool init_referenced)
 {
-    const Scope *s = this;
-    while (s != nullptr) {
-        auto d = s->names.find(name);
-        if (d != s->names.end()) {
-            return s->frame->getSlot(d->second).token;
-        }
-        s = s->parent;
-    }
-    return Token();
-}
-
-void Scope::addName(const Token &token, const std::string &name, Name *ref, bool init_referenced, bool allow_shadow)
-{
-    if (not allow_shadow and lookupName(name, false) != nullptr) {
+    if (lookupName(name) != nullptr) {
         // If this error occurs, it means a new name was introduced
         // but no check was made with lookupName() to see whether the
         // name already exists yet. This error needs to be detected
@@ -696,15 +225,28 @@ void Scope::addName(const Token &token, const std::string &name, Name *ref, bool
         // pass to the normal error function.
         internal_error("name presence not checked: " + name);
     }
-    auto a = names.find(name);
-    if (a != names.end()) {
-        frame->setReferent(a->second, ref);
-        if (init_referenced) {
-            frame->setReferenced(a->second);
-        }
-    } else {
-        names[name] = frame->addSlot(token, name, ref, init_referenced);
+    names[name] = ref;
+    if (init_referenced) {
+        referenced.insert(ref);
     }
+}
+
+void Scope::scrubName(const std::string &name)
+{
+    auto i = names.find(name);
+    names[std::to_string(reinterpret_cast<intptr_t>(i->second))] = i->second;
+    names.erase(i);
+    referenced.insert(i->second);
+}
+
+int Scope::nextIndex()
+{
+    return count++;
+}
+
+int Scope::getCount() const
+{
+    return count;
 }
 
 void Scope::addForward(const std::string &name, TypePointer *ptrtype)
@@ -732,118 +274,46 @@ void Scope::checkForward()
     }
 }
 
-Function::Function(const Token &declaration, const std::string &name, const Type *returntype, Frame *outer, Scope *parent, const std::vector<FunctionParameter *> &params)
-  : Variable(declaration, name, makeFunctionType(returntype, params), true),
-    frame(new Frame(outer)),
-    scope(new Scope(parent, frame)),
-    params(params),
-    entry_label(UINT_MAX),
-    statements()
-{
-    for (auto p: params) {
-        scope->addName(p->declaration, p->name, p, true);
-    }
-}
-
 const Type *Function::makeFunctionType(const Type *returntype, const std::vector<FunctionParameter *> &params)
 {
     std::vector<const ParameterType *> paramtypes;
     for (auto p: params) {
-        paramtypes.push_back(new ParameterType(p->declaration, p->mode, p->type, p->default_value));
+        paramtypes.push_back(new ParameterType(p->mode, p->type));
     }
     return new TypeFunction(returntype, paramtypes);
 }
 
-Program::Program(const std::string &source_path, const std::string &source_hash)
-  : source_path(source_path),
-    source_hash(source_hash),
-    frame(new Frame(nullptr)),
-    scope(new Scope(nullptr, frame)),
-    statements(),
-    exports()
+Program::Program()
+  : scope(new Scope(nullptr)),
+    statements()
 {
-    scope->addName(Token(), "Boolean", TYPE_BOOLEAN);
-    scope->addName(Token(), "Number", TYPE_NUMBER);
-    scope->addName(Token(), "String", TYPE_STRING);
-    scope->addName(Token(), "Bytes", TYPE_BYTES);
+    scope->addName("Boolean", TYPE_BOOLEAN);
+    scope->addName("Number", TYPE_NUMBER);
+    scope->addName("String", TYPE_STRING);
 
     {
         std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::IN, TYPE_BOOLEAN, nullptr));
-        TYPE_BOOLEAN->methods["toString"] = new PredefinedFunction("boolean__toString", new TypeFunction(TYPE_STRING, params));
-    }
-
-    {
-        std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::IN, TYPE_NUMBER, nullptr));
-        TYPE_NUMBER->methods["toString"] = new PredefinedFunction("number__toString", new TypeFunction(TYPE_STRING, params));
+        params.push_back(new ParameterType(ParameterType::INOUT, TYPE_BOOLEAN));
+        TYPE_BOOLEAN->methods["to_string"] = new PredefinedFunction("boolean.to_string", new TypeFunction(TYPE_STRING, params));
     }
 
     {
         std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::IN, TYPE_STRING, nullptr));
-        TYPE_STRING->methods["length"] = new PredefinedFunction("string__length", new TypeFunction(TYPE_NUMBER, params));
+        params.push_back(new ParameterType(ParameterType::INOUT, TYPE_NUMBER));
+        TYPE_NUMBER->methods["to_string"] = new PredefinedFunction("number.to_string", new TypeFunction(TYPE_STRING, params));
     }
 
     {
         std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::INOUT, TYPE_STRING, nullptr));
-        params.push_back(new ParameterType(Token(), ParameterType::IN, TYPE_STRING, nullptr));
-        TYPE_STRING->methods["append"] = new PredefinedFunction("string__append", new TypeFunction(TYPE_NOTHING, params));
-    }
-    {
-        std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::IN, TYPE_STRING, nullptr));
-        TYPE_STRING->methods["toBytes"] = new PredefinedFunction("string__toBytes", new TypeFunction(TYPE_BYTES, params));
+        params.push_back(new ParameterType(ParameterType::INOUT, TYPE_STRING));
+        TYPE_STRING->methods["length"] = new PredefinedFunction("string.length", new TypeFunction(TYPE_NUMBER, params));
     }
 
-    {
-        std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::INOUT, TYPE_BYTES, nullptr));
-        params.push_back(new ParameterType(Token(), ParameterType::IN, TYPE_ARRAY_NUMBER, nullptr));
-    }
-    {
-        std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::IN, TYPE_BYTES, nullptr));
-        TYPE_BYTES->methods["size"] = new PredefinedFunction("bytes__size", new TypeFunction(TYPE_NUMBER, params));
-    }
-    {
-        std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::IN, TYPE_BYTES, nullptr));
-        TYPE_BYTES->methods["toArray"] = new PredefinedFunction("bytes__toArray", new TypeFunction(TYPE_ARRAY_NUMBER, params));
-    }
-    {
-        std::vector<const ParameterType *> params;
-        params.push_back(new ParameterType(Token(), ParameterType::IN, TYPE_BYTES, nullptr));
-        TYPE_BYTES->methods["toString"] = new PredefinedFunction("bytes__toString", new TypeFunction(TYPE_STRING, params));
-    }
-
-    for (auto e: ExceptionNames) {
-        scope->addName(Token(), e.name, new Exception(Token(), e.name));
-    }
-
-    {
-        // The fields here must match the corresponding references to
-        // ExceptionInfo in exec.cpp.
-        std::vector<TypeRecord::Field> fields;
-        fields.push_back(TypeRecord::Field(Token("info"), TYPE_STRING, false));
-        fields.push_back(TypeRecord::Field(Token("code"), TYPE_NUMBER, false));
-        Type *exception_info = new TypeRecord(Token(), "ExceptionInfo", fields);
-        scope->addName(Token(), "ExceptionInfo", exception_info, true);
-    }
-    {
-        // The fields here must match the corresponding references to
-        // ExceptionType in exec.cpp.
-        std::vector<TypeRecord::Field> fields;
-        fields.push_back(TypeRecord::Field(Token("name"), TYPE_STRING, false));
-        fields.push_back(TypeRecord::Field(Token("info"), TYPE_STRING, false));
-        fields.push_back(TypeRecord::Field(Token("code"), TYPE_NUMBER, false));
-        fields.push_back(TypeRecord::Field(Token("offset"), TYPE_NUMBER, false));
-        Type *exception_type = new TypeRecord(Token(), "ExceptionType", fields);
-        scope->addName(Token(), "ExceptionType", exception_type, true);
-        GlobalVariable *current_exception = new GlobalVariable(Token(), "CURRENT_EXCEPTION", exception_type, true);
-        scope->addName(Token(), "CURRENT_EXCEPTION", current_exception, true);
-    }
+    scope->addName("DivideByZero", new Exception("DivideByZero"));
+    scope->addName("ArrayIndex", new Exception("ArrayIndex"));
+    scope->addName("DictionaryIndex", new Exception("DictionaryIndex"));
+    scope->addName("FunctionNotFound", new Exception("FunctionNotFound"));
+    scope->addName("LibraryNotFound", new Exception("LibraryNotFound"));
 
     rtl_compile_init(scope);
 }

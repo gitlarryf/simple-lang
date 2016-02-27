@@ -144,7 +144,7 @@ EXTERNAL FUNCTION write_stdout(IN s: String)
         "name": "bin/libtest_ffi"
     }
     "types": {
-        "s": "string"
+        "s": "pointer"
     }
 }
 END FUNCTION
@@ -155,22 +155,24 @@ EXTERNAL FUNCTION string_length(IN s: String): Number
         "name": "bin/libtest_ffi"
     }
     "types": {
-        "s": "string"
+        "s": "pointer"
         "return": "uint32"
     }
 }
 END FUNCTION
 
+%|
 EXTERNAL FUNCTION upper_string(INOUT s: String)
 {
     "library": {
         "name": "bin/libtest_ffi"
     }
     "types": {
-        "s": "string"
+        "s": "pointer"
     }
 }
 END FUNCTION
+|%
 
 EXTERNAL FUNCTION nonexistent_function()
 {
@@ -230,22 +232,24 @@ print(str(sub_double(8, 5)))
 print(str(string_length("Hello")))
 %= 5
 
+%|
 VAR s: String
 s := "Hello World"
-upper_string(INOUT s)
+upper_string(s)
 print(s)
-%= HELLO WORLD
+%# HELLO WORLD
+|%
 
 TRY
     nonexistent_function()
-EXCEPTION FunctionNotFoundException DO
+EXCEPTION FunctionNotFound
     print("function not found")
 END TRY
 %= function not found
 
 TRY
     nonexistent_library()
-EXCEPTION LibraryNotFoundException DO
+EXCEPTION LibraryNotFound
     print("library not found")
 END TRY
 %= library not found

@@ -1,2 +1,4 @@
-LET b: Bytes := HEXBYTES 5
-                         %<
+VAR a: Number
+VAR b: String
+
+a := b

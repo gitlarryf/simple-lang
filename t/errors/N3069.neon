@@ -1,3 +1,0 @@
-FOR a := 1 TO 2 STEP "up" DO
-                     %<
-END FOR

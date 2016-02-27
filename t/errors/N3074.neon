@@ -1,8 +1,0 @@
-EXTERNAL FUNCTION Sleep(ms: Number)
-{
-%<
-     "library": {     
-          "name": 5
-     }
-}
-END FUNCTION

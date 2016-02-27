@@ -1,5 +1,1 @@
-TYPE Point IS RECORD
-    x Number
-      %<
-END RECORD
-
+VAR a: Dictionary(Number)

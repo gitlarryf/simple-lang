@@ -1,3 +1,0 @@
-FOR a := 1 TO "two" DO
-              %<
-END FOR

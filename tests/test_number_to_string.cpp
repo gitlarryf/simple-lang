@@ -7,14 +7,12 @@
 
 int main()
 {
-    std::random_device rd;
-    std::mt19937_64 r(rd());
+    std::mt19937_64 r;
     for (int i = 0; i < 100000; i++) {
         Number n;
-        n.x.w[0] = r();
-        n.x.w[1] = r();
-        char buf1[50];
-        bid128_to_string(buf1, n.x);
+        n.x = r();
+        char buf1[40];
+        bid64_to_string(buf1, n.x);
         std::string buf2 = number_to_string(n);
         Number x = number_from_string(buf1);
         Number y = number_from_string(buf2.c_str());
