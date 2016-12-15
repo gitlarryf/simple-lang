@@ -31,15 +31,15 @@ bool rtl_import(const std::string &module, ast::Module *mod)
     std::string prefix = module + "$";
     init_builtin_variables(module, mod->scope);
     bool any = false;
-    for (auto f: BuiltinFunctions) {
-        std::string qualified_name(f.name);
-        if (f.exported && qualified_name.substr(0, prefix.length()) == prefix) {
+    for (auto f = 0; f < sizeof(BuiltinFunctions) / sizeof(BuiltinFunctions[0]); f++) {
+        std::string qualified_name(BuiltinFunctions[f].name);
+        if (BuiltinFunctions[f].exported && qualified_name.substr(0, prefix.length()) == prefix) {
             std::vector<const ast::ParameterType *> params;
-            for (int i = 0; i < f.count; i++) {
-                auto &p = f.params[i];
+            for (int i = 0; i < sizeof(BuiltinFunctions) / sizeof(BuiltinFunctions[0]); i++) {
+                auto &p = BuiltinFunctions[f].params[i];
                 params.push_back(new ast::ParameterType(Token(p.name), p.mode, resolve_type(p.ptype, mod->scope), nullptr));
             }
-            mod->scope->addName(Token(IDENTIFIER, f.name), qualified_name.substr(prefix.length()), new ast::PredefinedFunction(f.name, new ast::TypeFunction(resolve_type(f.returntype, mod->scope), params)));
+            mod->scope->addName(Token(IDENTIFIER, BuiltinFunctions[f].name), qualified_name.substr(prefix.length()), new ast::PredefinedFunction(BuiltinFunctions[f].name, new ast::TypeFunction(resolve_type(BuiltinFunctions[f].returntype, mod->scope), params)));
             any = true;
         }
     }

@@ -264,10 +264,10 @@ with open("src/thunks.inc", "w") as inc:
             from_stack = True
             if a[0].startswith("TYPE_ARRAY_") and a[1] == VALUE:
                 print >>inc, "    {} a{};".format(CppFromAstParam[a], i)
-                print >>inc, "    for (auto x: stack.peek({}).array()) a{}.push_back(x.{});".format(d, i, ArrayElementField[a])
+                print >>inc, "    for (auto xi = stack.peek({}).array().begin(); xi != stack.peek({}).array().end(); ++xi) {{ auto x = *xi; a{}.push_back(x.{}); }}".format(d, d, i, ArrayElementField[a])
             elif a[0].startswith("TYPE_ARRAY_") and a[1] == REF:
                 print >>inc, "    {} t{};".format(CppFromAstParam[a], i)
-                print >>inc, "    for (auto x: stack.peek({}).address()->array()) t{}.push_back(x.{});".format(d, i, ArrayElementField[a])
+                print >>inc, "    for (auto x = stack.peek({}).address().begin(); xi != stack.peek({}).address().end(); ++xi) { auto x = *xi; t{}.push_back(x.{}); }".format(d, d, i, ArrayElementField[a])
                 print >>inc, "    {} *a{} = &t{};".format(CppFromAstParam[a], i, i)
             elif a[0].startswith("TYPE_ARRAY_") and a[1] == OUT:
                 print >>inc, "    {} t{};".format(CppFromAstParam[a], i)
@@ -275,7 +275,7 @@ with open("src/thunks.inc", "w") as inc:
                 from_stack = False
             elif a[0].startswith("TYPE_DICTIONARY_") and a[1] == VALUE:
                 print >>inc, "    {} a{};".format(CppFromAstParam[a], i)
-                print >>inc, "    for (auto x: stack.peek({}).dictionary()) a{}[x.first] = x.second.{};".format(d, i, ArrayElementField[a])
+                print >>inc, "    for (auto xi = stack.peek({}).dictionary().begin(); xi != stack.peek({}).dictionary().end(); ++xi) {{ auto x = *xi; a{}[x.first] = x.second.{}; }}".format(d, d, i, ArrayElementField[a])
             elif a == ("TYPE_GENERIC", VALUE):
                 print >>inc, "    {} a{} = stack.peek({});".format(CppFromAstParam[a], i, d)
             elif a == ("TYPE_GENERIC", REF):
@@ -298,13 +298,13 @@ with open("src/thunks.inc", "w") as inc:
             d = len(params) - 1 - i
             if a[0].startswith("TYPE_ARRAY_") and a[1] == REF:
                 print >>inc, "        stack.peek({}).address()->array_for_write().clear();".format(d)
-                print >>inc, "        for (auto x: t{}) stack.peek({}).address()->array_for_write().push_back(Cell(x));".format(i, d)
+                print >>inc, "        for (auto xi = t{}.begin(); xi != t{}.end(); ++xi) { auto x = *xi; stack.peek({}).address()->array_for_write().push_back(Cell(x)); }".format(i, i, d)
         if params:
             print >>inc, "        stack.drop({});".format(stack_count)
         if rtype[0] != "TYPE_NOTHING":
             if rtype[0].startswith("TYPE_ARRAY_"):
                 print >>inc, "        std::vector<Cell> t;"
-                print >>inc, "        for (auto x: r) t.push_back(Cell(x));"
+                print >>inc, "        for (auto xi = r.begin(); xi != r.end(); ++xi) { auto x = *xi; t.push_back(Cell(x)); }"
                 print >>inc, "        stack.push(Cell(t));"
             elif rtype[0] == "TYPE_POINTER":
                 print >>inc, "        stack.push(Cell(static_cast<Cell *>(r)));"
@@ -314,7 +314,7 @@ with open("src/thunks.inc", "w") as inc:
             if a[1] == OUT:
                 if a[0].startswith("TYPE_ARRAY_"):
                     print >>inc, "        std::vector<Cell> o{};".format(i)
-                    print >>inc, "        for (auto x: t{}) o{}.push_back(Cell(x));".format(i, i)
+                    print >>inc, "        for (auto xi = t{}.begin(); xi != t{}.end(); ++xi) {{ auto x = *xi; o{}.push_back(Cell(x)); }}".format(i, i, i)
                     print >>inc, "        stack.push(Cell(o{}));".format(i)
                 else:
                     print >>inc, "        stack.push(Cell(t{}));".format(i)

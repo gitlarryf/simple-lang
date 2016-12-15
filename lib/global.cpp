@@ -115,8 +115,8 @@ std::string array__toBytes__number(const std::vector<Number> &a)
 {
     std::string r;
     r.reserve(a.size());
-    for (auto x: a) {
-        uint64_t b = number_to_uint64(x);
+    for (auto x = a.begin(); x != a.end(); ++x) {
+        uint64_t b = number_to_uint64(*x);
         if (b >= 256) {
             throw RtlException(Exception_ByteOutOfRangeException, std::to_string(b));
         }
@@ -128,11 +128,11 @@ std::string array__toBytes__number(const std::vector<Number> &a)
 std::string array__toString__number(const std::vector<Number> &a)
 {
     std::string r = "[";
-    for (Number x: a) {
+    for (auto x = a.begin(); x != a.end(); ++x) {
         if (r.length() > 1) {
             r.append(", ");
         }
-        r.append(number_to_string(x));
+        r.append(number_to_string(*x));
     }
     r.append("]");
     return r;
@@ -141,12 +141,12 @@ std::string array__toString__number(const std::vector<Number> &a)
 std::string array__toString__string(const std::vector<utf8string> &a)
 {
     std::string r = "[";
-    for (utf8string x: a) {
+    for (auto x = a.begin(); x != a.end(); ++x) {
         if (r.length() > 1) {
             r.append(", ");
         }
         // TODO: Escape embedded quotes as necessary.
-        r.append("\"" + x.str() + "\"");
+        r.append("\"" + x->str() + "\"");
     }
     r.append("]");
     return r;
@@ -165,8 +165,8 @@ Number dictionary__size(Cell &self)
 std::vector<utf8string> dictionary__keys(Cell &self)
 {
     std::vector<utf8string> r;
-    for (auto d: self.dictionary()) {
-        r.push_back(d.first);
+    for (auto d = self.dictionary().begin(); d != self.dictionary().end(); ++d) {
+        r.push_back(d->first);
     }
     return r;
 }
@@ -274,8 +274,8 @@ std::string bytes__decodeToString(const std::string &self)
 std::vector<Number> bytes__toArray(const std::string &self)
 {
     std::vector<Number> r;
-    for (auto x: self) {
-        r.push_back(number_from_uint8(x));
+    for (auto x = self.begin(); x != self.end(); ++x) {
+        r.push_back(number_from_uint8(*x));
     }
     return r;
 }
