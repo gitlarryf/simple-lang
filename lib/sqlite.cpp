@@ -38,12 +38,12 @@ Cell exec(void *db, const std::string &sql, const std::map<utf8string, utf8strin
     if (r != SQLITE_OK) {
         throw RtlException(global::Exception_SqlException, sqlite3_errmsg(static_cast<sqlite3 *>(db)), r);
     }
-    for (auto p: parameters) {
-        int c = sqlite3_bind_parameter_index(stmt, p.first.c_str());
+    for (auto p = parameters.begin(); p != parameters.end(); ++p) {
+        int c = sqlite3_bind_parameter_index(stmt, p->first.c_str());
         if (c == 0) {
-            throw RtlException(Exception_SqliteException_ParameterName, p.first.c_str());
+            throw RtlException(Exception_SqliteException_ParameterName, p->first.c_str());
         }
-        r = sqlite3_bind_text(stmt, c, p.second.c_str(), -1, SQLITE_TRANSIENT);
+        r = sqlite3_bind_text(stmt, c, p->second.c_str(), -1, SQLITE_TRANSIENT);
         if (r != SQLITE_OK) {
             throw RtlException(global::Exception_SqlException, sqlite3_errmsg(static_cast<sqlite3 *>(db)), r);
         }
@@ -75,12 +75,12 @@ bool execOne(void *db, const std::string &sql, const std::map<utf8string, utf8st
     if (r != SQLITE_OK) {
         throw RtlException(global::Exception_SqlException, sqlite3_errmsg(static_cast<sqlite3 *>(db)), r);
     }
-    for (auto p: parameters) {
-        int c = sqlite3_bind_parameter_index(stmt, p.first.c_str());
+    for (auto p = parameters.begin(); p != parameters.end(); ++p) {
+        int c = sqlite3_bind_parameter_index(stmt, p->first.c_str());
         if (c == 0) {
-            throw RtlException(Exception_SqliteException_ParameterName, p.first.c_str());
+            throw RtlException(Exception_SqliteException_ParameterName, p->first.c_str());
         }
-        r = sqlite3_bind_text(stmt, c, p.second.c_str(), -1, SQLITE_TRANSIENT);
+        r = sqlite3_bind_text(stmt, c, p->second.c_str(), -1, SQLITE_TRANSIENT);
         if (r != SQLITE_OK) {
             throw RtlException(global::Exception_SqlException, sqlite3_errmsg(static_cast<sqlite3 *>(db)), r);
         }

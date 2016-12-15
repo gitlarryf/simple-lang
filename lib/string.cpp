@@ -32,11 +32,11 @@ bool hasSuffix(const std::string &s, const std::string &suffix)
 std::string join(const std::vector<utf8string> &a, const std::string &d)
 {
     std::string r;
-    for (auto s: a) {
+    for (auto s = a.begin(); s != a.end(); ++s) {
         if (not r.empty()) {
             r.append(d);
         }
-        r.append(s.str());
+        r.append(s->str());
     }
     return r;
 }

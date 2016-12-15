@@ -19,7 +19,8 @@ static std::vector<Process *> g_children;
 
 void closer()
 {
-    for (auto p: g_children) {
+    for (auto pi = g_children.begin(); pi != g_children.end(); ++pi) {
+        auto p = *pi;
         kill(-p->pid, 9);
     }
 }
