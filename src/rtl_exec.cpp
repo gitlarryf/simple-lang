@@ -24,14 +24,14 @@ void rtl_exec_init(int argc, char *argv[])
     VariableNames.clear();
 
     size_t i = 0;
-    for (auto f: BuiltinFunctions) {
-        FunctionNames[f.name] = i;
+    for (auto f = 0; f < sizeof(BuiltinFunctions) / sizeof(BuiltinFunctions[0]); f++) {
+        FunctionNames[BuiltinFunctions[f].name] = i;
         i++;
     }
 
     i = 0;
-    for (auto v: BuiltinVariables) {
-        VariableNames[v.name] = i;
+    for (auto v = 0; v < sizeof(BuiltinVariables) / sizeof(BuiltinVariables[0]; v++) {
+        VariableNames[BuiltinVariables[v].name] = i;
         i++;
     }
 }

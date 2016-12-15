@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include <ffi.h>
-#include <minijson_writer.hpp>
+//#include <minijson_writer.hpp>
 
 #include "bytecode.h"
 #include "cell.h"
@@ -389,8 +389,8 @@ Module::Module(const std::string &name, const Bytecode &object, const DebugInfo 
     number_table(object.strtable.size()),
     external_functions()
 {
-    for (auto i: object.imports) {
-        std::string name = object.strtable[i.first];
+    for (std::vector<std::pair<unsigned int, std::string>>::const_iterator i = object.imports.begin(); i != object.imports.end(); ++i) {
+        std::string name = object.strtable[i->first];
         if (executor->modules.find(name) != executor->modules.end()) {
             continue;
         }
@@ -1148,25 +1148,25 @@ void Executor::exec_CALLE()
             raise(x);
             return;
         }
-        for (auto p: params) {
-                 if (p == "uint8" )   { eci->types.push_back(&ffi_type_uint8 );  eci->marshal.push_back(marshal_number<uint8_t >); }
-            else if (p == "sint8" )   { eci->types.push_back(&ffi_type_sint8 );  eci->marshal.push_back(marshal_number< int8_t >); }
-            else if (p == "uint16")   { eci->types.push_back(&ffi_type_uint16);  eci->marshal.push_back(marshal_number<uint16_t>); }
-            else if (p == "sint16")   { eci->types.push_back(&ffi_type_sint16);  eci->marshal.push_back(marshal_number< int16_t>); }
-            else if (p == "uint32")   { eci->types.push_back(&ffi_type_uint32);  eci->marshal.push_back(marshal_number<uint32_t>); }
-            else if (p == "sint32")   { eci->types.push_back(&ffi_type_sint32);  eci->marshal.push_back(marshal_number< int32_t>); }
-            else if (p == "uint64")   { eci->types.push_back(&ffi_type_uint64);  eci->marshal.push_back(marshal_number<uint64_t>); }
-            else if (p == "sint64")   { eci->types.push_back(&ffi_type_sint64);  eci->marshal.push_back(marshal_number< int64_t>); }
-            else if (p == "float" )   { eci->types.push_back(&ffi_type_float );  eci->marshal.push_back(marshal_number<float   >); }
-            else if (p == "double")   { eci->types.push_back(&ffi_type_double);  eci->marshal.push_back(marshal_number<double  >); }
-            else if (p == "string")   { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_string          ); }
-            else if (p == "*string")  { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_string_a        ); }
-            else if (p == "bytes")    { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_string          ); }
-            else if (p == "*bytes")   { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_string_a        ); }
-            else if (p == "pointer")  { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_pointer         ); }
-            else if (p == "*pointer") { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_pointer_a       ); }
+        for (std::vector<std::string>::const_iterator p = params.begin(); p != params.end(); ++p) {
+                 if (*p == "uint8" )   { eci->types.push_back(&ffi_type_uint8 );  eci->marshal.push_back(marshal_number<uint8_t >); }
+            else if (*p == "sint8" )   { eci->types.push_back(&ffi_type_sint8 );  eci->marshal.push_back(marshal_number< int8_t >); }
+            else if (*p == "uint16")   { eci->types.push_back(&ffi_type_uint16);  eci->marshal.push_back(marshal_number<uint16_t>); }
+            else if (*p == "sint16")   { eci->types.push_back(&ffi_type_sint16);  eci->marshal.push_back(marshal_number< int16_t>); }
+            else if (*p == "uint32")   { eci->types.push_back(&ffi_type_uint32);  eci->marshal.push_back(marshal_number<uint32_t>); }
+            else if (*p == "sint32")   { eci->types.push_back(&ffi_type_sint32);  eci->marshal.push_back(marshal_number< int32_t>); }
+            else if (*p == "uint64")   { eci->types.push_back(&ffi_type_uint64);  eci->marshal.push_back(marshal_number<uint64_t>); }
+            else if (*p == "sint64")   { eci->types.push_back(&ffi_type_sint64);  eci->marshal.push_back(marshal_number< int64_t>); }
+            else if (*p == "float" )   { eci->types.push_back(&ffi_type_float );  eci->marshal.push_back(marshal_number<float   >); }
+            else if (*p == "double")   { eci->types.push_back(&ffi_type_double);  eci->marshal.push_back(marshal_number<double  >); }
+            else if (*p == "string")   { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_string          ); }
+            else if (*p == "*string")  { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_string_a        ); }
+            else if (*p == "bytes")    { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_string          ); }
+            else if (*p == "*bytes")   { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_string_a        ); }
+            else if (*p == "pointer")  { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_pointer         ); }
+            else if (*p == "*pointer") { eci->types.push_back(&ffi_type_pointer); eci->marshal.push_back(marshal_pointer_a       ); }
             else {
-                fprintf(stderr, "ffi type not supported: %s\n", p.c_str());
+                fprintf(stderr, "ffi type not supported: %s\n", p->c_str());
                 exit(1);
             }
         }
@@ -1440,13 +1440,13 @@ static void mark(Cell *c)
                 todo.push_back(c->address());
                 break;
             case Cell::cArray:
-                for (auto &x: c->array()) {
-                    todo.push_back(const_cast<Cell *>(&x));
+                for (std::vector<Cell>::const_iterator x = c->array().begin(); x != c->array().end(); ++x) {
+                    todo.push_back(const_cast<Cell *>(&*x));
                 }
                 break;
             case Cell::cDictionary:
-                for (auto &x: c->dictionary()) {
-                    todo.push_back(const_cast<Cell *>(&x.second));
+                for (std::map<utf8string, Cell>::const_iterator x = c->dictionary().begin(); x != c->dictionary().end(); ++x) {
+                    todo.push_back(const_cast<Cell *>(&x->second));
                 }
                 break;
         }
@@ -1456,20 +1456,20 @@ static void mark(Cell *c)
 void Executor::garbage_collect()
 {
     // Clear marked bits.
-    for (Cell &c: allocs) {
-        assert(c.gc.alloced);
-        c.gc.marked = false;
+    for (std::list<Cell>::iterator c = allocs.begin(); c != allocs.end(); ++c) {
+        assert(c->gc.alloced);
+        c->gc.marked = false;
     }
 
     // Mark reachable objects.
-    for (auto m: modules) {
-        for (auto &g: m.second->globals) {
-            mark(&g);
+    for (std::map<std::string, Module*>::const_iterator m = modules.begin(); m != modules.end(); ++m) {
+        for (std::vector<Cell>::const_iterator g = m->second->globals.begin(); g != m->second->globals.end(); ++g) {
+            mark((Cell*)(&g));
         }
     }
-    for (auto &f: frames) {
-        for (auto &v: f.locals) {
-            mark(&v);
+    for (std::list<ActivationFrame>::const_iterator f = frames.begin(); f != frames.end(); ++f) {
+        for (std::vector<Cell>::const_iterator v = f->locals.begin(); v != f->locals.end(); ++v) {
+            mark((Cell*)(&v));
         }
     }
     for (size_t i = 0; i < stack.depth(); i++) {
@@ -1650,6 +1650,15 @@ void Executor::exec()
     assert(stack.empty());
 }
 
+void Executor::handle_GET(const std::string&, HttpResponse &)
+{
+}
+
+void Executor::handle_POST(const std::string&, const std::string&, HttpResponse &)
+{
+}
+
+/*
 namespace minijson {
 
 template <> struct default_value_writer<Number> {
@@ -1692,8 +1701,8 @@ template <> struct default_value_writer<Cell> {
             case Cell::cDictionary: {
                 writer.write("type", "dictionary");
                 auto d = writer.nested_object("value");
-                for (auto &x: cell.dictionary_for_write()) {
-                    d.write(x.first.str().c_str(), x.second);
+                for (std::map<utf8string, Cell>::iterator x = cell.dictionary_for_write().begin(); x != cell.dictionary_for_write().end(); ++x) {
+                    d.write(x->first.str().c_str(), x->second);
                 }
                 d.close();
                 break;
@@ -1713,7 +1722,7 @@ void Executor::handle_GET(const std::string &path, HttpResponse &response)
     if (path == "/break") {
         response.code = 200;
         minijson::array_writer writer(r, config);
-        for (auto b: debugger_breakpoints) {
+        for (std::set<size_t>::const_iterator b = debugger_breakpoints.begin(); b != debugger_breakpoints.end(); ++b) {
             writer.write(b);
         }
         writer.close();
@@ -1733,7 +1742,7 @@ void Executor::handle_GET(const std::string &path, HttpResponse &response)
         for (auto i = frames.rbegin(); i != frames.rend(); ++i) {
             auto wf = writer.nested_object();
             auto wl = wf.nested_array("locals");
-            for (auto &local: i->locals) {
+            for (std::vector<Cell>::const_iterator local = i->locals.begin(); local != i->locals.end(); ++i) {
                 wl.write(local);
             }
             wl.close();
@@ -1763,8 +1772,8 @@ void Executor::handle_GET(const std::string &path, HttpResponse &response)
     } else if (path == "/modules") {
         response.code = 200;
         std::vector<std::string> names;
-        for (auto m: modules) {
-            names.push_back(m.first);
+        for (std::map<std::string, Module*>::const_iterator m = modules.begin(); m != modules.end(); ++m) {
+            names.push_back(m->first);
         }
         minijson::write_array(r, names.begin(), names.end());
     } else if (path == "/opstack") {
@@ -1826,7 +1835,7 @@ void Executor::handle_POST(const std::string &path, const std::string &data, Htt
     }
     response.content = r.str();
 }
-
+*/
 void executor_breakpoint()
 {
     g_executor->breakpoint();

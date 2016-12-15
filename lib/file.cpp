@@ -59,8 +59,8 @@ void writeLines(const std::string &filename, const std::vector<utf8string> &line
     if (not f.is_open()) {
         throw RtlException(Exception_FileException_Open, filename);
     }
-    for (auto s: lines) {
-        f << s.str() << "\n";   // Write line, and line-ending for each element in the array.
+    for (auto s = lines.begin(); s != lines.end(); ++s) {
+        f << s->str() << "\n";   // Write line, and line-ending for each element in the array.
         if (f.fail()) {
             // If the write fails for any reason, consider that a FileException.Write exception.
             throw RtlException(Exception_FileException_Write, filename);

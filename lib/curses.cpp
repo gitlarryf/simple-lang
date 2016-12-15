@@ -23,7 +23,8 @@
 static std::vector<chtype> chtypes_from_numbers(const std::vector<Number> &chstr)
 {
     std::vector<chtype> r;
-    for (auto c: chstr) {
+    for (auto ci = chstr.begin(); ci != chstr.end(); ++ci) {
+        auto c = *ci;
         r.push_back(number_to_uint32(c));
     }
     return r;

@@ -120,8 +120,8 @@ bool socket_select(Cell *read, Cell *write, Cell *error, Number timeout_seconds)
     int nfds = 0;
 
     std::vector<Cell> &ra = read->array_for_write();
-    for (auto s: ra) {
-        int fd = number_to_sint32(s.array_for_write()[0].number());
+    for (auto s = ra.begin(); s != ra.end(); ++s) {
+        int fd = number_to_sint32(s->array_for_write()[0].number());
         FD_SET(fd, &rfds);
         if (fd+1 > nfds) {
             nfds = fd+1;
@@ -129,8 +129,8 @@ bool socket_select(Cell *read, Cell *write, Cell *error, Number timeout_seconds)
     }
 
     std::vector<Cell> &wa = write->array_for_write();
-    for (auto s: wa) {
-        int fd = number_to_sint32(s.array_for_write()[0].number());
+    for (auto s = wa.begin(); s != wa.end(); ++s) {
+        int fd = number_to_sint32(s->array_for_write()[0].number());
         FD_SET(fd, &wfds);
         if (fd+1 > nfds) {
             nfds = fd+1;
@@ -138,8 +138,8 @@ bool socket_select(Cell *read, Cell *write, Cell *error, Number timeout_seconds)
     }
 
     std::vector<Cell> &ea = error->array_for_write();
-    for (auto s: ea) {
-        int fd = number_to_sint32(s.array_for_write()[0].number());
+    for (auto s = ea.begin(); s != ea.end(); ++s) {
+        int fd = number_to_sint32(s->array_for_write()[0].number());
         FD_SET(fd, &efds);
         if (fd+1 > nfds) {
             nfds = fd+1;
