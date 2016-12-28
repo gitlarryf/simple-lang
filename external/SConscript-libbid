@@ -18,9 +18,9 @@ elif not os.path.exists("IntelRDFPMathLib20U1/LIBRARY/makefile.mak"):
             open("IntelRDFPMathLib20U1/LIBRARY/makefile.mak", "w").write(makefile)
 
 if sys.platform == "win32":
-    libbid = bidenv.Command("IntelRDFPMathLib20U1/LIBRARY/libbid.lib", "IntelRDFPMathLib20U1/LIBRARY/makefile.mak", "cd external/IntelRDFPMathLib20U1/LIBRARY && nmake -fmakefile.mak CC=cl GLOBAL_RND=1 GLOBAL_FLAGS=1 DBG={0}".format(not env["RELEASE"]))
+    libbid = bidenv.Command("IntelRDFPMathLib20U1/LIBRARY/libbid.lib", "IntelRDFPMathLib20U1/LIBRARY/makefile.mak", "cd external/IntelRDFPMathLib20U1/LIBRARY && nmake -fmakefile.mak CC=cl GLOBAL_RND=1 GLOBAL_FLAGS=1 DBG={0}".format("0" if env["RELEASE"] else "1"))
 else:
-    libbid = bidenv.Command("IntelRDFPMathLib20U1/LIBRARY/libbid.a", "IntelRDFPMathLib20U1/LIBRARY/makefile.mak", "cd external/IntelRDFPMathLib20U1/LIBRARY && make CC=gcc GLOBAL_RND=1 GLOBAL_FLAGS=1 DBG={0}".format(not env["RELEASE"]))
+    libbid = bidenv.Command("IntelRDFPMathLib20U1/LIBRARY/libbid.a", "IntelRDFPMathLib20U1/LIBRARY/makefile.mak", "cd external/IntelRDFPMathLib20U1/LIBRARY && make CC=gcc GLOBAL_RND=1 GLOBAL_FLAGS=1 DBG={0}".format("0" if env["RELEASE"] else "1"))
 
 env.Append(CPPPATH=["external/IntelRDFPMathLib20U1/LIBRARY/src"])
 

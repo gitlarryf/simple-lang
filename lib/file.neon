@@ -260,19 +260,6 @@ DECLARE NATIVE FUNCTION removeEmptyDirectory(path: String)
 DECLARE NATIVE FUNCTION rename(oldname: String, newname: String)
 
 %|
- |  Function: size
- |
- |  Returns the size of the file
- |
- |  Exceptions:
- |      - <FileNotFound> - if the file does not exist
- |%
-FUNCTION size(path: String): Number
-
-
-
-
-%|
  |  Function: symlink
  |
  |  Create a symlink named newlink that points to target.

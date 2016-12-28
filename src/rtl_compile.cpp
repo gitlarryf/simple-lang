@@ -35,7 +35,7 @@ bool rtl_import(const std::string &module, ast::Module *mod)
         std::string qualified_name(BuiltinFunctions[f].name);
         if (BuiltinFunctions[f].exported && qualified_name.substr(0, prefix.length()) == prefix) {
             std::vector<const ast::ParameterType *> params;
-            for (size_t i = 0; i < (sizeof(BuiltinFunctions) / sizeof(BuiltinFunctions[0])); i++) {
+            for (size_t i = 0; i < BuiltinFunctions[f].count; i++) {
                 auto p = BuiltinFunctions[f].params[i];
                 params.push_back(new ast::ParameterType(Token(p.name), p.mode, resolve_type(p.ptype, mod->scope), nullptr));
             }
