@@ -237,7 +237,7 @@ Bytecode::Bytes Bytecode::getBytes() const
     }
 
     put_uint16(obj, static_cast<uint16_t>(imports.size()));
-    for (std::vector<std::pair<unsigned int, std::string>>::const_iterator i = imports.begin(); i != imports.end(); ++i) {
+    for (std::vector<std::pair<unsigned int, std::string> >::const_iterator i = imports.begin(); i != imports.end(); ++i) {
         put_uint16(obj, static_cast<uint16_t>(i->first));
         assert(i->second.length() == 32);
         for (int j = 0; j < 32; j++) {

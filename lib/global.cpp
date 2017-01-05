@@ -9,6 +9,7 @@
 #include "format.h"
 #include "number.h"
 #include "rtl_exec.h"
+#include "stdutl.h"
 
 namespace rtl {
 
@@ -285,15 +286,15 @@ std::string bytes__toString(const std::string &self)
     std::stringstream r;
     r << "HEXBYTES \"";
     bool first = true;
-    for (char c: self) {
+    for (auto ci = self.begin(); ci != self.end(); ++ci) {
         if (first) {
             first = false;
         } else {
             r << ' ';
         }
         static const char hex[] = "0123456789abcdef";
-        r << hex[(c >> 4) & 0xf];
-        r << hex[c & 0xf];
+        r << hex[(*ci >> 4) & 0xf];
+        r << hex[*ci & 0xf];
     }
     r << "\"";
     return r.str();

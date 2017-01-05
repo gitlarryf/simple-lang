@@ -2,6 +2,7 @@
 #define BYTECODE_H
 
 #include <string>
+#include <utility>
 #include <vector>
 
 class Bytecode {
@@ -80,7 +81,7 @@ public:
     std::vector<Variable> export_variables;
     std::vector<Function> export_functions;
     std::vector<ExceptionExport> export_exceptions;
-    std::vector<std::pair<unsigned int, std::string>> imports;
+    std::vector<std::pair<unsigned int, std::string> > imports;
     std::vector<FunctionInfo> functions;
     std::vector<ExceptionInfo> exceptions;
     Bytes code;

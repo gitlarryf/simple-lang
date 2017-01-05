@@ -48,6 +48,16 @@ std::vector<std::string> split(const std::string &s, char d)
 
 } // namespace
 
+namespace std {
+template <typename T> std::string to_string(T x)
+{
+    std::stringstream buf;
+    buf << x;
+    return buf.str();
+}
+
+} // namespace std
+
 class ExternalCallInfo {
 public:
     typedef void (*marshal_f)(Cell &cell, void *&p, size_t &space);

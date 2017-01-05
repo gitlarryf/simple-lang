@@ -41,6 +41,7 @@ if sys.platform != "nt":
                         assert "\r\n" not in data, fn
 
 env = Environment()
+SConscript("/home/larryf/projects/SConscript-LDM", exports='env')
 
 vars = Variables(["config.cache", "config.py"])
 vars.AddVariables(

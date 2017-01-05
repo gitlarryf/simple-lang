@@ -3,8 +3,12 @@
 #include <algorithm>
 #include <assert.h>
 #include <list>
+#include <sstream>
 #include <vector>
 
+#include <stdio.h>
+
+#include "stdutl.h"
 #include "socketx.h"
 
 const int POST_MAX_LENGTH = 10000000;
@@ -113,9 +117,9 @@ bool Client::handle_request()
     if (method == "GET") {
         handler->handle_GET(path, response);
     } else if (method == "POST") {
-        for (auto &h: lines) {
+        for (auto h = lines.begin(); h != lines.end(); ++h) {
             std::string value;
-            if (header_match(h, "Content-Length:", value)) {
+            if (header_match(*h, "Content-Length:", value)) {
                 int length = std::stoi(value);
                 if (length >= 0 && length <= POST_MAX_LENGTH) {
                     post_length = length;
@@ -226,10 +230,10 @@ void HttpServerImpl::service(bool wait)
     FD_ZERO(&rfds);
     FD_SET(server, &rfds);
     SOCKET maxsocket = server;
-    for (auto &c: clients) {
-        FD_SET(c.socket, &rfds);
-        if (c.socket > maxsocket) {
-            maxsocket = c.socket;
+    for (auto c = clients.begin(); c != clients.end(); ++c) {
+        FD_SET(c->socket, &rfds);
+        if (c->socket > maxsocket) {
+            maxsocket = c->socket;
         }
     }
     timeval tv = {0, 0};

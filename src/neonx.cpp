@@ -1,9 +1,13 @@
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
+#include <stdlib.h>
+
 #include "bundle.h"
 #include "exec.h"
+#include "stdutl.h"
 #include "support.h"
 
 bool g_enable_assert = true;

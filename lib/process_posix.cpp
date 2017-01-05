@@ -1,8 +1,12 @@
+#include <cstdlib>
 #include <errno.h>
+#include <sstream>
+#include <string>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #include "rtl_exec.h"
+#include "stdutl.h"
 
 namespace rtl {
 

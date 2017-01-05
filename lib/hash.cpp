@@ -7,6 +7,7 @@
 #include "sha1.h"
 #include "sha256.h"
 #include "sha3.h"
+#include <stdio.h>
 
 #include "rtl_exec.h"
 

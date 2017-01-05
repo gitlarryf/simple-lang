@@ -2,6 +2,10 @@
 
 #include <iso646.h>
 
+#include <cstdlib>
+#include <stdutl.h>
+#include <sstream>
+
 Number number_add(Number x, Number y)
 {
     return bid128_add(x.x, y.x);

@@ -2,6 +2,7 @@
 
 #include <dlfcn.h>
 #include <map>
+#include <stdio.h>
 
 #include "rtl_exec.h"
 

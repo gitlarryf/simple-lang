@@ -2,6 +2,7 @@
 
 #include <iomanip>
 #include <ostream>
+#include <stdutl.h>
 
 // TODO: Currently throwing compiler exceptions by pointer in order
 // to maintain alignment requirements of BID_UINT128 type on some

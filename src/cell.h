@@ -1,6 +1,7 @@
 #ifndef CELL_H
 #define CELL_H
 
+#include <cstdlib>
 #include <map>
 #include <memory>
 #include <vector>

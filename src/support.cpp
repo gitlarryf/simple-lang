@@ -4,6 +4,7 @@
 
 #include "support.h"
 
+#include <cstdlib>
 #include <fstream>
 #include <iso646.h>
 #include <sstream>
@@ -75,7 +76,7 @@ std::pair<std::string, std::string> PathSupport::findModule(const std::string &n
     const std::string source_name = module_name + ".neon";
     const std::string object_name = module_name + ".neonx";
     std::pair<std::string, std::string> r;
-    for (auto p: use_paths) {
+    for (auto p = use_paths.begin(); p != use_paths.end(); ++p) {
 #ifdef _WIN32
         WIN32_FIND_DATA fd;
         HANDLE ff = FindFirstFile((p + module_name + ".neon*").c_str(), &fd);
@@ -91,7 +92,7 @@ std::pair<std::string, std::string> PathSupport::findModule(const std::string &n
             FindClose(ff);
         }
 #else
-        DIR *d = opendir(p.c_str());
+        DIR *d = opendir(p->c_str());
         if (d != NULL) {
             for (;;) {
                 struct dirent *de = readdir(d);
@@ -100,9 +101,9 @@ std::pair<std::string, std::string> PathSupport::findModule(const std::string &n
                 }
                 std::string fn = de->d_name;
                 if (fn == source_name) {
-                    r.first = p + source_name;
+                    r.first = *p + source_name;
                 } else if (fn == object_name) {
-                    r.second = p + object_name;
+                    r.second = *p + object_name;
                 }
             }
             closedir(d);

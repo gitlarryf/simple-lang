@@ -1,6 +1,9 @@
+#include <cstdlib>
 #include <errno.h>
 #include <fcntl.h>
+#include <sstream>
 #include <stdio.h>
+#include <string>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -9,6 +12,7 @@
 #include "cell.h"
 #include "number.h"
 #include "rtl_exec.h"
+#include "stdutl.h"
 
 class MemoryFile {
 public:

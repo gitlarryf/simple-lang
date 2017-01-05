@@ -1,12 +1,14 @@
 #include "format.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <iso646.h>
 
 #include <utf8.h>
 
 #include "number.h"
 #include "rtl_exec.h"
+#include "stdutl.h"
 
 namespace format {
 

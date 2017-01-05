@@ -1,5 +1,6 @@
 #include "bundle.h"
 
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <iso646.h>
@@ -13,7 +14,7 @@
 #include "exec.h"
 #include "support.h"
 
-std::map<std::string, std::vector<unsigned char>> g_Contents;
+std::map<std::string, std::vector<unsigned char> > g_Contents;
 
 class ZipSupport: public ICompilerSupport {
 public:
@@ -22,7 +23,8 @@ public:
 
 bool ZipSupport::loadBytecode(const std::string &module, Bytecode &bytecode)
 {
-    auto i = g_Contents.find(module + ".neonx");
+    std::map<std::string, std::vector<unsigned char> >::iterator i = g_Contents.find(module + ".neonx");
+//    std::pair<std::string, std::vector<unsigned char> > i = g_Contents.find(module + ".neonx");
     if (i == g_Contents.end()) {
         return false;
     }
@@ -67,7 +69,7 @@ void run_from_bundle(const std::string &name, bool enable_assert, unsigned short
                 fprintf(stderr, "zip read\n");
                 exit(1);
             }
-            for (auto i = 0; i < n; i++) {
+            for (int i = 0; i < n; i++) {
                 bytecode.push_back(buf[i]);
             }
         }

@@ -25,7 +25,7 @@ public:
     bool empty() const { return s.empty(); }
     std::string::size_type index(std::string::size_type i) const {
         if (indexes.empty()) {
-            for (auto x = s.begin(); x != s.end(); utf8::advance(x, 1, s.end())) {
+            for (std::string::const_iterator x = s.begin(); x != s.end(); utf8::advance(x, 1, s.end())) {
                 indexes.push_back(x - s.begin());
             }
         }
