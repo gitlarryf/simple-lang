@@ -41,7 +41,7 @@ if sys.platform != "nt":
                         assert "\r\n" not in data, fn
 
 env = Environment()
-SConscript("/home/larryf/projects/SConscript-LDM", exports='env')
+#SConscript("/home/larryf/projects/SConscript-LDM", exports='env')
 
 vars = Variables(["config.cache", "config.py"])
 vars.AddVariables(
@@ -71,7 +71,8 @@ use_curses = not env["MINIMAL"]
 use_pcre = not env["MINIMAL"]
 use_curl = not env["MINIMAL"]
 use_easysid = not env["MINIMAL"]
-use_sqlite = not env["MINIMAL"] or True # Need this for embedded sql
+#use_sqlite = not env["MINIMAL"] or True # Need this for embedded sql
+use_sqlite = False
 use_bz2 = not env["MINIMAL"]
 use_lzma = not env["MINIMAL"]
 use_sdl = not env["MINIMAL"]
@@ -135,6 +136,8 @@ else:
         "-Weffc++",
         #"-Wold-style-cast",    # Enable this temporarily to check, but it breaks with gcc and #defines with C casts in standard headers.
         "-Werror",
+        #"-Dnullptr=NULL",
+        #"-Dalignof=sizeof",
     ])
     if not env["RELEASE"]:
         env.Append(CXXFLAGS=[

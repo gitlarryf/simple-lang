@@ -1,24 +1,33 @@
 cmake_minimum_required(VERSION 3.1)
-#project("neon")
+cmake_policy(SET CMP0005 NEW)
 
-string(TOLOWER CMAKE_HOST_SYSTEM_NAME _type)
-if (_type STREQUAL posix)
+project("neon")
 
-endif()
+set(INSTALL_BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin"       CACHE PATH "Installation directory for executables")
+set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/libs"      CACHE PATH "Installation directory for libraries")
+set(INSTALL_MAN_DIR "${CMAKE_INSTALL_PREFIX}/docs"      CACHE PATH "Installation directory for documentation")
 
-if (CMAKE_HOST_SYSTEM_NAME STREQUAL Posix)
-    message(ERROR "Running on a POSIX system.")
+string(TOLOWER CMAKE_HOST_SYSTEM_NAME _host)
+if (_host STREQUAL Posix)
+    message(STATUS "Running on a POSIX system.")
     set(TARGET_SYSTEM_POSIX TRUE)
 elseif (_type STREQUAL "linux")
-    message(ERROR "Running on a LINUXsystem.")
+    message(STATUS "Running on a LINUXsystem.")
     set(TARGET_SYSTEM_UNIX  TRUE)
-elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL "nt")
-    message(ERROR "Running on a WIN32 system.")
+elseif (_host STREQUAL "nt")
+    message(STATUS "Running on a WIN32 system.")
     set(TARGET_SYSTEM_WIN32 TRUE)
-elseif (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
-    message(ERROR "Running on a DARWIN system.")
+elseif (_host STREQUAL "Darwin")
+    message(STATUS "Running on a DARWIN system.")
     set(TARGET_SYSTEM_OSX   TRUE)
 endif ()
+
+if(MSVC)
+    set(CMAKE_DEBUG_POSTFIX "d")
+    add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
+    add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+endif()
 
 option(MINIMAL      "Build the minimal components for the Neon VM."     OFF)
 option(RELEASE      "Build in release mode, instead of debug."          OFF)
@@ -46,21 +55,21 @@ endif (MINIMAL)
 #endif()
 #add_library(archive SHARED ${srcs})
 
-
 if (TARGET_SYSTEM_UNIX)
-    set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -Wall -Wextra -Weffc++ -Werror")
+    set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -Wall -Wextra -Weffc++ -Werror")
+    set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
     if (RELEASE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+        set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -O3")
     else ()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+        set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -g")
     endif (RELEASE)
 elseif (TARGET_SYSTEM_WIN32)
-    set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} /EHsc /W4 /WX /FS")
+    set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} /EHsc /W4 /WX /FS")
     if (RELEASE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MTd /Zi /Od")
-        set(CMAKE_LINK_FLAGS "${CMAKE_CXX_FLAGS} /DEBUG")
+        set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} /MTd /Zi /Od")
+        set(CMAKE_LINK_FLAGS    "${CMAKE_CXX_FLAGS} /DEBUG")
     else ()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Ox /MT")
+        set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} /Ox /MT")
     endif (RELEASE)
 endif ()
 
@@ -70,11 +79,139 @@ if (COVERAGE)
 endif ()
 
 if (CMAKE_CROSSCOMPILING)
-    set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -std=gnu++0x")
+    set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -std=gnu++0x")
 else ()
-    set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -std=c++0x")
+    set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -std=c++0x")
 endif ()
 
+if (USE_CURSES)
+    list(APPEND RTL_CONST lib/curses_const.cpp)
+endif (USE_CURSES)
+if (USE_SDL)
+    list(APPEND RTL_CONST lib/sdk_const.cpp)
+endif (USE_SDL)
+if (USE_SODIUM)
+    list(APPEND RTL_CONST lib/sodium_const.cpp)
+endif (USE_SODIUM)
+
+if (TARGET_SYSTEM_POSIX)
+    list(APPEND RTL_CONST lib/file_const_posix.cpp)
+elseif (TARGET_SYSTEM_WIN32)
+    list(APPEND RTL_CONST lib/file_const_win32.cpp)
+else ()
+    message(ERROR "Unsupported platform: " os.name)
+endif ()
+
+set(RTL_CONST
+    lib/binary.cpp
+    lib/datetime.cpp
+    lib/debugger.cpp
+    lib/global.cpp
+    lib/file.cpp
+    lib/hash.cpp
+    lib/io.cpp
+    lib/math.cpp
+    lib/net.cpp
+    lib/os.cpp
+    lib/random.cpp
+    lib/runtime.cpp
+    lib/string.cpp
+    lib/sys.cpp
+    lib/time.cpp
+)
+
+if (USE_BZ2 AND USE_LZMA)
+    list(APPEND RTL_CONST lib/compress.cpp)
+endif ()
+if (USE_CURSES)
+    list(APPEND RTL_CONST lib/curses)
+endif ()
+if (USE_CURL)
+    list(APPEND RTL_CONST lib/http.cpp)
+endif ()
+if (USE_POSIX)
+    list(APPEND RTL_CONST lib/posix.cpp)
+endif ()
+if (USE_PCRE)
+    list(APPEND RTL_CONST lib/regex.cpp)
+endif ()
+if (USE_SDL)
+    list(APPEND RTL_CONST lib/sdl.cpp)
+endif ()
+if (USE_SODIUM)
+    list(APPEND RTL_CONST lib/sodium.cpp)
+endif ()
+if (USE_SQLITE)
+    list(APPEND RTL_CONST lib/sqlite.cpp)
+endif ()
+
+#rtl_neon = squeeze([
+#    "lib/binary.neon",
+#    "lib/compress.neon" if use_bz2 and use_lzma else None,
+#    "lib/curses.neon" if use_curses else None,
+#    "lib/datetime.neon",
+#    "lib/debugger.neon",
+#    "lib/file.neon",
+#    "lib/global.neon",
+#    "lib/hash.neon",
+#    "lib/http.neon" if use_curl else None,
+#    "lib/io.neon",
+#    "lib/math.neon",
+#    "lib/mmap.neon",
+#    "lib/net.neon",
+#    "lib/os.neon",
+#    "lib/posix.neon" if use_posix else None,
+#    "lib/process.neon",
+#    "lib/random.neon",
+#    "lib/runtime.neon",
+#    "lib/regex.neon" if use_pcre else None,
+ #   "lib/sdl.neon" if use_sdl else None,
+  #  "lib/sodium.neon" if use_sodium else None,
+   # "lib/sqlite.neon" if use_sqlite else None,
+#    "lib/string.neon",
+#    "lib/sys.neon",
+#    "lib/time.neon",
+#])
+
+
+#if os.name == "posix":
+#    rtl_cpp.extend([
+##        "lib/file_posix.cpp",
+ #       "lib/mmap_posix.cpp",
+#        "lib/os_posix.cpp",
+#        "lib/process_posix.cpp",
+#        "lib/time_posix.cpp",
+#    ])
+#    if sys.platform.startswith("darwin"):
+#        rtl_cpp.extend([
+#            "lib/time_darwin.cpp",
+#        ])
+#    elif sys.platform.startswith("linux"):
+#        rtl_cpp.extend([
+#            "lib/time_linux.cpp",
+#        ])
+#    else:
+#        print >>sys.stderr, "Unsupported platform:", sys.platform
+#        sys.exit(1)
+#    rtl_platform = "src/rtl_posix.cpp"
+#elif os.name == "nt":
+#    rtl_cpp.extend([
+#        "lib/file_win32.cpp",
+#        "lib/mmap_win32.cpp",
+#        "lib/os_win32.cpp",
+#        "lib/process_win32.cpp",
+#        "lib/time_win32.cpp",
+#    ])
+#    rtl_platform = "src/rtl_win32.cpp"
+#else:
+#    print "Unsupported platform:", os.name
+#    sys.exit(1)
+
+#env.Command(["src/thunks.inc", "src/functions_compile.inc", "src/functions_exec.inc", "src/enums.inc", "src/exceptions.inc", "src/constants_compile.inc"], [rtl_neon, "scripts/make_thunks.py"], sys.executable + " scripts/make_thunks.py " + " ".join(rtl_neon))
+
+#Static start
+set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+#Static Libs
 
 include_directories(external/IntelRDFPMathLib20U1/LIBRARY/src
                     external/bzip2-1.0.6
@@ -93,6 +230,7 @@ include_directories(external/IntelRDFPMathLib20U1/LIBRARY/src
 )
 
 link_directories(external/lib/
+                 external/libffi-3.2.1/armv5l-timesys-linux-gnueabi/.libs/
                  external/bzip2-1.0.6/
                  external/hash-library/
                  external/curl-7.41.0/lib/.libs/
@@ -120,7 +258,7 @@ add_executable(neonx
      lib/file_posix.cpp
      lib/global.cpp
      lib/hash.cpp
-     lib/http.cpp
+     #lib/http.cpp
      lib/io.cpp
      lib/math.cpp
      lib/mmap_posix.cpp
@@ -159,6 +297,24 @@ add_executable(neonx
 #     lib/sqlite.cpp  
 )
 
+add_executable(neondis
+     src/bytecode.cpp
+     src/debuginfo.cpp
+     src/disassembler.cpp
+     src/neondis.cpp
+     src/number.cpp
+     src/lexer.cpp
+     src/util.cpp
+     src/stdutl.cpp
+)
+
+add_executable(neonbind
+    src/bytecode.cpp
+    src/neonbind.cpp
+    src/support.cpp
+)
+
+set_target_properties(neonx PROPERTIES LINK_SEARCH_START_STATIC 1)
 message($<JOIN:$<TARGET_LINKER_FILE:neonx>, -I>)
 
 #target_link_libraries(neonx
@@ -171,7 +327,8 @@ message($<JOIN:$<TARGET_LINKER_FILE:neonx>, -I>)
 target_link_libraries(neonx rt
                             dl
                             bid
-                            bz2
+                            libbz2.a
+                            minizip
                             lzma
                             libcrypto.a
                             libssl.a
@@ -184,8 +341,25 @@ target_link_libraries(neonx rt
                             hash-library
                             lzma
                             pcre2-8
-                            minizip
 #                            libSDL2.so
 #                            libsodium.a
-)                        
+)
+
+target_link_libraries(neondis   rt
+                                dl
+                                bid
+                                ffi
+)
+
+target_link_libraries(neonbind  rt
+                                dl
+                                bid
+                                ffi
+                                z
+                                minizip
+)
+
+
+
+set_target_properties(neonx PROPERTIES LINK_SEARCH_END_STATIC 1)
 

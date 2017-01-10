@@ -686,19 +686,19 @@ void Disassembler::disassemble()
     out << "Global size: " << obj.global_size << "\n";
     out << "String table: [\n";
     int i = 0;
-    for (auto s: obj.strtable) {
-        out << "  " << i << " " << s << "\n";
+    for (auto s = obj.strtable.begin(); s != obj.strtable.end(); ++s) {
+        out << "  " << i << " " << *s << "\n";
         i++;
     }
     out << "]\n";
 
     out << "Exports:\n";
     out << "  Types:\n";
-    for (auto t: obj.export_types) {
-        out << "    " << obj.strtable[t.name] << " " << obj.strtable[t.descriptor] << "\n";
+    for (auto t = obj->export_types.begin(); t != obj.export_types.end(); ++obj) {
+        out << "    " << obj.strtable[t->name] << " " << obj.strtable[t->descriptor] << "\n";
     }
     out << "  Constants:\n";
-    for (auto c: obj.export_constants) {
+    for (auto c = obj.export_constants; c != obj.constants.end(); ++c) {
         out << "    " << obj.strtable[c.name] << " " << obj.strtable[c.type] << " " << decode_value(obj.strtable[c.type], c.value) << "\n";
     }
     out << "  Variables:\n";

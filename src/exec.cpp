@@ -1535,7 +1535,7 @@ void Executor::exec()
     exec_RET();
 
     while (not callstack.empty() && ip < module->object.code.size()) {
-        //std::cerr << "mod " << module->name << " ip " << ip << " op " << (int)module->object.code[ip] << " st " << stack.depth() << "\n";
+        std::cerr << "mod " << module->name << " ip " << ip << " op " << (int)module->object.code[ip] << " st " << stack.depth() << "\n";
         if (debug_server != nullptr) {
             switch (debugger_state) {
                 case DEBUGGER_STOPPED:

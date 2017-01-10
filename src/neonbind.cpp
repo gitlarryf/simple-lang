@@ -30,8 +30,8 @@ RuntimeSupport support(".");
 
 void get_modules(const Bytecode &obj, std::map<std::string, Bytecode> &modules)
 {
-    for (auto x: obj.imports) {
-        std::string name = obj.strtable[x.first];
+    for (auto x = obj.imports.begin(); x != obj.imports.end(); ++x) {
+        std::string name = obj.strtable[x->first];
         if (modules.find(name) == modules.end()) {
             Bytecode bytecode;
             if (support.loadBytecode(name, bytecode)) {
@@ -103,13 +103,13 @@ int main(int argc, char *argv[])
             fprintf(stderr, "zip open error\n");
             exit(1);
         }
-        for (auto m: modules) {
-            int r = zipOpenNewFileInZip(zip, (m.first+".neonx").c_str(), NULL, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
+        for (auto m = modules.begin(); m != modules.end(); ++m) {
+            int r = zipOpenNewFileInZip(zip, (m->first+".neonx").c_str(), NULL, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
             if (r != ZIP_OK) {
                 fprintf(stderr, "zip open error\n");
                 exit(1);
             }
-            r = zipWriteInFileInZip(zip, m.second.obj.data(), static_cast<unsigned int>(m.second.obj.size()));
+            r = zipWriteInFileInZip(zip, m->second.obj.data(), static_cast<unsigned int>(m->second.obj.size()));
             zipCloseFileInZip(zip);
         }
         zipClose(zip, NULL);

@@ -1,0 +1,2 @@
+#! /bin/sh
+python scripts/make_thunks.py lib/binary.neon lib/compress.neon lib/curses.neon lib/datetime.neon lib/debugger.neon  lib/file.neon lib/global.neon lib/hash.neon lib/io.neon lib/math.neon lib/mmap.neon lib/net.neon lib/os.neon lib/posix.neon lib/process.neon lib/random.neon lib/runtime.neon lib/regex.neon lib/string.neon lib/sys.neon lib/time.neon
