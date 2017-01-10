@@ -694,34 +694,34 @@ void Disassembler::disassemble()
 
     out << "Exports:\n";
     out << "  Types:\n";
-    for (auto t = obj->export_types.begin(); t != obj.export_types.end(); ++obj) {
+    for (auto t = obj.export_types.begin(); t != obj.export_types.end(); ++t) {
         out << "    " << obj.strtable[t->name] << " " << obj.strtable[t->descriptor] << "\n";
     }
     out << "  Constants:\n";
-    for (auto c = obj.export_constants; c != obj.constants.end(); ++c) {
-        out << "    " << obj.strtable[c.name] << " " << obj.strtable[c.type] << " " << decode_value(obj.strtable[c.type], c.value) << "\n";
+    for (auto c = obj.export_constants.begin(); c != obj.export_constants.end(); ++c) {
+        out << "    " << obj.strtable[c->name] << " " << obj.strtable[c->type] << " " << decode_value(obj.strtable[c->type], c->value) << "\n";
     }
     out << "  Variables:\n";
-    for (auto v: obj.export_variables) {
-        out << "    " << obj.strtable[v.name] << " " << obj.strtable[v.type] << " " << v.index << "\n";
+    for (auto v = obj.export_variables.begin(); v != obj.export_variables.end(); ++v) {
+        out << "    " << obj.strtable[v->name] << " " << obj.strtable[v->type] << " " << v->index << "\n";
     }
     out << "  Functions:\n";
-    for (auto f: obj.export_functions) {
-        out << "    " << obj.strtable[f.name] << " " << obj.strtable[f.descriptor] << " " << f.entry << "\n";
+    for (auto f = obj.export_functions.begin(); f != obj.export_functions.end(); ++f) {
+        out << "    " << obj.strtable[f->name] << " " << obj.strtable[f->descriptor] << " " << f->entry << "\n";
     }
     out << "  Exceptions:\n";
-    for (auto e: obj.export_exceptions) {
-        out << "    " << obj.strtable[e.name] << "\n";
+    for (auto e = obj.export_exceptions.begin(); e != obj.export_exceptions.end(); ++e) {
+        out << "    " << obj.strtable[e->name] << "\n";
     }
 
     out << "Imports " << obj.imports.size() << ":\n";
-    for (auto i: obj.imports) {
-        out << "  " << obj.strtable[i.first] << "\n";
+    for (auto i = obj.imports.begin(); i != obj.imports.end(); ++i) {
+        out << "  " << obj.strtable[i->first] << "\n";
     }
 
     out << "Functions:\n";
-    for (auto f: obj.functions) {
-        out << "  " << obj.strtable[f.name] << " " << f.entry << "\n";
+    for (auto f = obj.functions.begin(); f != obj.functions.end(); ++f) {
+        out << "  " << obj.strtable[f->name] << " " << f->entry << "\n";
     }
 
     while (index < obj.code.size()) {
@@ -826,8 +826,8 @@ void Disassembler::disassemble()
     }
     if (not obj.exceptions.empty()) {
         out << "Exception table:\n";
-        for (auto e: obj.exceptions) {
-            out << "  " << e.start << "-" << e.end << " " << obj.strtable[e.excid] << " " << e.handler << "\n";
+        for (auto e = obj.exceptions.begin(); e != obj.exceptions.end(); ++e) {
+            out << "  " << e->start << "-" << e->end << " " << obj.strtable[e->excid] << " " << e->handler << "\n";
         }
     }
 }
