@@ -349,6 +349,7 @@ target_link_libraries(neondis   rt
                                 dl
                                 bid
                                 ffi
+                                hash-library
 )
 
 target_link_libraries(neonbind  rt

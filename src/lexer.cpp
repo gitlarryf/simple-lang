@@ -7,6 +7,7 @@
 #include <sha256.h>
 #include <utf8.h>
 
+#include <stdutl.h>
 #include "util.h"
 
 std::string Token::file() const
@@ -152,8 +153,8 @@ inline bool identifier_body(uint32_t c)
 
 inline bool all_upper(const std::string &s)
 {
-    for (auto c: s) {
-        if (not isupper(c)) {
+    for (auto c = s.begin(); c != s.end(); ++c) {
+        if (not isupper(*c)) {
             return false;
         }
     }
@@ -707,10 +708,10 @@ std::string expand_tabs(const std::string &s)
 {
     std::string r;
     int column = 0;
-    for (auto c: s) {
-        switch (c) {
+    for (auto c = s.begin(); c != s.end(); ++c) {
+        switch (*c) {
         case '\n':
-            r.push_back(c);
+            r.push_back(*c);
             column = 0;
             break;
         case '\t':
@@ -718,7 +719,7 @@ std::string expand_tabs(const std::string &s)
             column = (column + 8) - (column % 8);
             break;
         default:
-            r.push_back(c);
+            r.push_back(*c);
             break;
         }
     }

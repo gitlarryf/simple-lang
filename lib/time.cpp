@@ -12,12 +12,12 @@ namespace time {
 
 void sleep(Number seconds)
 {
-#if ((defined(__arm__) || defined(__VERSION__)) && (__VERSION__ <= 4.4 && defined(__arm__)))
+#if (defined(__arm__) && defined(__VERSION__)) 
 #if _POSIX_C_SOURCE >= 199309L
     struct timespec ts;
-    tv.tv_sec = number_to_uint64(number_subtract(number_trunc(seconds), seconds));
-    ts.tv_nsecs = number_to_uint64(number_subtract(number_multiply(seconds, number_from_uint32(1000000)), number_trunc(number_multiply(seconds, number_from_uint32(1000000))))); 
-    int ret = nanosleep(tv, NULL);
+    ts.tv_sec = number_to_uint64(number_subtract(number_trunc(seconds), seconds));
+    ts.tv_nsec = number_to_uint64(number_subtract(number_multiply(seconds, number_from_uint32(1000000)), number_trunc(number_multiply(seconds, number_from_uint32(1000000))))); 
+    int ret = nanosleep(&ts, NULL);
 #else
     struct timeval tv;
     tv.tv_usec = number_to_uint64(number_subtract(number_multiply(seconds, number_from_uint32(1000000)), number_trunc(number_multiply(seconds, number_from_uint32(1000000))))); 
