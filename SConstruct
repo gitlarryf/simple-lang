@@ -41,11 +41,9 @@ if sys.platform != "nt":
                         assert "\r\n" not in data, fn
 
 env = Environment()
-#SConscript("/home/larryf/projects/SConscript-LDM", exports='env')
 
 vars = Variables(["config.cache", "config.py"])
 vars.AddVariables(
-    BoolVariable("MINIMAL", "Set to 1 to build without most 3rd party libraries", False),
     BoolVariable("RELEASE", "Set to 1 to build for release", False),
 )
 vars.Update(env)
@@ -63,43 +61,38 @@ env["ENV"]["PROCESSOR_ARCHITEW6432"] = os.getenv("PROCESSOR_ARCHITEW6432")
 # Add path of Python itself to shell PATH.
 env["ENV"]["PATH"] = env["ENV"]["PATH"] + os.pathsep + os.path.dirname(sys.executable)
 
+# Find where javac.exe is and add it to our PATH.
+env["ENV"]["PATH"] = env["ENV"]["PATH"] + os.pathsep + os.pathsep.join(x for x in os.getenv("PATH").split(os.pathsep) if os.path.exists(os.path.join(x, "javac.exe")))
+
+env["ENV"]["PATH"] = env["ENV"]["PATH"] + os.pathsep + os.pathsep.join(x for x in os.getenv("PATH").split(os.pathsep) if os.path.exists(os.path.join(x, "node")) or os.path.exists(os.path.join(x, "node.exe")))
+use_node = os.system("node --version") == 0
+
 def add_external(target):
     env.Depends("external", target)
     return target
 
-use_curses = not env["MINIMAL"]
-use_pcre = not env["MINIMAL"]
-use_curl = not env["MINIMAL"]
-use_easysid = not env["MINIMAL"]
-#use_sqlite = not env["MINIMAL"] or True # Need this for embedded sql
-use_sqlite = False
-use_bz2 = not env["MINIMAL"]
-use_lzma = not env["MINIMAL"]
-use_sdl = not env["MINIMAL"]
-use_sodium = not env["MINIMAL"]
-use_ssl = not env["MINIMAL"]
 use_posix = os.name == "posix"
 
 add_external(SConscript("external/SConscript-libutf8", exports=["env"]))
 libbid = add_external(SConscript("external/SConscript-libbid", exports=["env"]))
 libffi = add_external(SConscript("external/SConscript-libffi", exports=["env"]))
-libs_curses = add_external(SConscript("external/SConscript-libcurses", exports=["env"])) if use_curses else None
-libpcre = add_external(SConscript("external/SConscript-libpcre", exports=["env"])) if use_pcre else None
-libcurl = add_external(SConscript("external/SConscript-libcurl", exports=["env"])) if use_curl else None
-libeasysid = add_external(SConscript("external/SConscript-libeasysid", exports=["env"])) if use_easysid else None
+libeasysid = add_external(SConscript("external/SConscript-libeasysid", exports=["env"]))
 libhash = add_external(SConscript("external/SConscript-libhash", exports=["env"]))
-libsqlite = add_external(SConscript("external/SConscript-libsqlite", exports=["env"])) if use_sqlite else None
+libsqlite = add_external(SConscript("external/SConscript-libsqlite", exports=["env"]))
 libz = add_external(SConscript("external/SConscript-libz", exports=["env"]))
-libbz2 = add_external(SConscript("external/SConscript-libbz2", exports=["env"])) if use_bz2 else None
-liblzma = add_external(SConscript("external/SConscript-liblzma", exports=["env"])) if use_lzma else None
 libminizip = add_external(SConscript("external/SConscript-libminizip", exports=["env"]))
-libsdl = add_external(SConscript("external/SConscript-libsdl", exports=["env"])) if use_sdl else None
-libsodium = add_external(SConscript("external/SConscript-libsodium", exports=["env"])) if use_sodium else None
-libssl = add_external(SConscript("external/SConscript-libssl", exports=["env"])) if use_ssl else None
 add_external(SConscript("external/SConscript-minijson", exports=["env"]))
 add_external(SConscript("external/SConscript-pyparsing", exports=["env"]))
 
-env.Depends(libcurl, libssl)
+SConscript("lib/compress/SConstruct")
+SConscript("lib/crypto/SConstruct")
+SConscript("lib/curses/SConstruct")
+SConscript("lib/extsample/SConstruct")
+SConscript("lib/hash/SConstruct")
+SConscript("lib/http/SConstruct")
+SConscript("lib/regex/SConstruct")
+SConscript("lib/sdl/SConstruct")
+SConscript("lib/sodium/SConstruct")
 
 SConscript("external/SConscript-naturaldocs")
 
@@ -118,16 +111,16 @@ if sys.platform == "win32":
             "/DEBUG",
         ])
         env.Append(CXXFLAGS=[
-            "/MTd",
+            "/MDd",
             "/Zi",
             "/Od",
         ])
     else:
         env.Append(CXXFLAGS=[
             "/Ox",
-            "/MT",
+            "/MD",
         ])
-    env.Append(LIBS=["wsock32"])
+    env.Append(LIBS=["user32", "wsock32"])
 else:
     env.Append(CXXFLAGS=[
         "-std=c++0x",
@@ -136,8 +129,6 @@ else:
         "-Weffc++",
         #"-Wold-style-cast",    # Enable this temporarily to check, but it breaks with gcc and #defines with C casts in standard headers.
         "-Werror",
-        #"-Dnullptr=NULL",
-        #"-Dalignof=sizeof",
     ])
     if not env["RELEASE"]:
         env.Append(CXXFLAGS=[
@@ -147,9 +138,7 @@ else:
         env.Append(CXXFLAGS=[
             "-O3",
         ])
-env.Prepend(LIBS=squeeze([libbid, libffi, libpcre, libcurl, libhash, libsqlite, libminizip, libz, libbz2, liblzma, libsdl, libsodium, libssl]))
-if libs_curses:
-    env.Append(LIBS=libs_curses)
+env.Prepend(LIBS=squeeze([libbid, libffi, libhash, libsqlite, libminizip, libz]))
 if os.name == "posix":
     env.Append(LIBS=["dl"])
 if sys.platform.startswith("linux"):
@@ -174,12 +163,15 @@ if coverage:
     env.Append(CXXFLAGS=[
         "--coverage", "-O0",
     ])
+    env.Append(CFLAGS=[
+        "-fprofile-arcs",
+        "-ftest-coverage",
+    ])
+    env.Append(LIBS=[
+        "gcov",
+    ])
 
-rtl_const = squeeze([
-    "lib/curses_const.cpp" if use_curses else None,
-    "lib/sdl_const.cpp" if use_sdl else None,
-    "lib/sodium_const.cpp" if use_sodium else None,
-])
+rtl_const = []
 
 if os.name == "posix":
     rtl_const.extend([
@@ -195,14 +187,10 @@ else:
 
 rtl_cpp = rtl_const + squeeze([
     "lib/binary.cpp",
-    "lib/compress.cpp" if use_bz2 and use_lzma else None,
-    "lib/curses.cpp" if use_curses else None,
     "lib/datetime.cpp",
     "lib/debugger.cpp",
     "lib/global.cpp",
     "lib/file.cpp",
-    "lib/hash.cpp",
-    "lib/http.cpp" if use_curl else None,
     "lib/io.cpp",
     "lib/math.cpp",
     "lib/net.cpp",
@@ -210,27 +198,18 @@ rtl_cpp = rtl_const + squeeze([
     "lib/posix.cpp" if use_posix else None,
     "lib/random.cpp",
     "lib/runtime.cpp",
-    "lib/regex.cpp" if use_pcre else None,
-    "lib/sdl.cpp" if use_sdl else None,
-    "lib/sodium.cpp" if use_sodium else None,
-    "lib/sqlite.cpp" if use_sqlite else None,
+    "lib/sqlite.cpp",
     "lib/string.cpp",
     "lib/sys.cpp",
     "lib/time.cpp",
 ])
 
-env.Depends("lib/http.cpp", libcurl)
-
 rtl_neon = squeeze([
     "lib/binary.neon",
-    "lib/compress.neon" if use_bz2 and use_lzma else None,
-    "lib/curses.neon" if use_curses else None,
     "lib/datetime.neon",
     "lib/debugger.neon",
     "lib/file.neon",
     "lib/global.neon",
-    "lib/hash.neon",
-    "lib/http.neon" if use_curl else None,
     "lib/io.neon",
     "lib/math.neon",
     "lib/mmap.neon",
@@ -240,14 +219,27 @@ rtl_neon = squeeze([
     "lib/process.neon",
     "lib/random.neon",
     "lib/runtime.neon",
-    "lib/regex.neon" if use_pcre else None,
-    "lib/sdl.neon" if use_sdl else None,
-    "lib/sodium.neon" if use_sodium else None,
-    "lib/sqlite.neon" if use_sqlite else None,
+    "lib/sqlite.neon",
     "lib/string.neon",
     "lib/sys.neon",
     "lib/time.neon",
 ])
+
+lib_neon = Glob("lib/*.neon")
+
+def build_rtl_inc(target, source, env):
+    with open("src/rtl.inc", "w") as f:
+        print >>f, "static struct {"
+        print >>f, "    const char *name;"
+        print >>f, "    const char *source;"
+        print >>f, "} rtl_sources[] = {"
+        for fn in source:
+            print >>f, "    {{\"{}\",".format(fn.name.replace(".neon", ""))
+            f.write("        \"" + "\\n\"\n        \"".join(x.replace("\\", "\\\\").replace('"', '\\"') for x in open(fn.abspath).read().split("\n")))
+            print >>f, "\"},"
+        print >>f, "};"
+
+env.Command("src/rtl.inc", lib_neon, build_rtl_inc)
 
 if os.name == "posix":
     rtl_cpp.extend([
@@ -284,6 +276,59 @@ else:
 
 env.Command(["src/thunks.inc", "src/functions_compile.inc", "src/functions_exec.inc", "src/enums.inc", "src/exceptions.inc", "src/constants_compile.inc"], [rtl_neon, "scripts/make_thunks.py"], sys.executable + " scripts/make_thunks.py " + " ".join(rtl_neon))
 
+jvm_classes = env.Java("jvm", "jvm")
+
+neonc = env.Program("bin/neonc", [
+    "src/analyzer.cpp",
+    "src/ast.cpp",
+    "src/bytecode.cpp",
+    "src/compiler.cpp",
+    "src/compiler_cpp.cpp",
+    "src/compiler_js.cpp",
+    "src/compiler_jvm.cpp",
+    "src/debuginfo.cpp",
+    "src/disassembler.cpp",
+    "src/format.cpp",
+    "src/intrinsic.cpp",
+    "src/lexer.cpp",
+    "src/neonc.cpp",
+    "src/number.cpp",
+    "src/parser.cpp",
+    "src/pt_dump.cpp",
+    "src/rtl_compile.cpp",
+    rtl_const,
+    "src/sql.cpp",
+    "src/support.cpp",
+    "src/support_compiler.cpp",
+    "src/util.cpp",
+] + coverage_lib,
+)
+env.Depends(neonc, jvm_classes)
+
+def build_rtlx_inc(target, source, env):
+    with open("src/rtlx.inc", "w") as f:
+        for fn in source:
+            bytecode = open(fn.abspath, "rb").read()
+            print >>f, "static const unsigned char bytecode_{}[] = {{{}}};".format(
+                fn.name.replace(".neonx", ""),
+                ",".join("0x{:02x}".format(ord(x)) for x in bytecode)
+            )
+        print >>f, "static struct {"
+        print >>f, "    const char *name;"
+        print >>f, "    size_t length;"
+        print >>f, "    const unsigned char *bytecode;"
+        print >>f, "} rtl_bytecode[] = {"
+        for fn in source:
+            modname = fn.name.replace(".neonx", "")
+            bytecode = open(fn.abspath, "rb").read()
+            print >>f, "    {{\"{}\", {}, bytecode_{}}},".format(modname, len(bytecode), modname)
+        print >>f, "};"
+
+lib_neon_without_global = [x for x in lib_neon if x.name != "global.neon"]
+for fn in lib_neon_without_global:
+    env.Command(fn.abspath+"x", [fn, neonc], neonc[0].abspath + " $SOURCE")
+env.Command("src/rtlx.inc", [x.abspath+"x" for x in lib_neon_without_global], build_rtlx_inc)
+
 neon = env.Program("bin/neon", [
     "src/analyzer.cpp",
     "src/ast.cpp",
@@ -308,29 +353,7 @@ neon = env.Program("bin/neon", [
     "src/sql.cpp",
     "src/support.cpp",
     "src/support_compiler.cpp",
-    "src/util.cpp",
-] + coverage_lib,
-)
-
-neonc = env.Program("bin/neonc", [
-    "src/analyzer.cpp",
-    "src/ast.cpp",
-    "src/bytecode.cpp",
-    "src/compiler.cpp",
-    "src/debuginfo.cpp",
-    "src/disassembler.cpp",
-    "src/format.cpp",
-    "src/intrinsic.cpp",
-    "src/lexer.cpp",
-    "src/neonc.cpp",
-    "src/number.cpp",
-    "src/parser.cpp",
-    "src/pt_dump.cpp",
-    "src/rtl_compile.cpp",
-    rtl_const,
-    "src/sql.cpp",
-    "src/support.cpp",
-    "src/support_compiler.cpp",
+    "src/support_exec.cpp",
     "src/util.cpp",
 ] + coverage_lib,
 )
@@ -349,6 +372,7 @@ neonx = env.Program("bin/neonx", [
     rtl_cpp,
     rtl_platform,
     "src/support.cpp",
+    "src/support_exec.cpp",
 ] + coverage_lib,
 )
 
@@ -366,6 +390,7 @@ neonstub = env.Program("bin/neonstub", [
     rtl_cpp,
     rtl_platform,
     "src/support.cpp",
+    "src/support_exec.cpp",
 ] + coverage_lib,
 )
 
@@ -385,6 +410,7 @@ neonbind = env.Program("bin/neonbind", [
     "src/bytecode.cpp",
     "src/neonbind.cpp",
     "src/support.cpp",
+    "src/support_exec.cpp",
 ])
 
 env.Depends("src/number.h", libbid)
@@ -475,24 +501,15 @@ else:
 
 test_sources = []
 for f in Glob("t/*.neon"):
-    if not use_curses and f.name in ["sudoku-test.neon"]:
-        continue
-    if not use_pcre and f.name in ["forth-test.neon", "lisp-test.neon", "regex-test.neon"]:
-        continue
-    if not use_curl and f.name in ["debug-server.neon", "http-test.neon"]:
-        continue
-    if not use_sqlite and f.name in ["sqlite-test.neon"]:
-        continue
-    if not (use_bz2 and use_lzma) and f.name in ["compress-test.neon"]:
-        continue
-    if not use_sodium and f.name in ["sodium-test.neon"]:
-        continue
-    if not use_sqlite and f.name.startswith("sql-"):
-        continue
     test_sources.append(f)
 tests = env.Command("tests_normal", [neon, "scripts/run_test.py", test_sources], sys.executable + " scripts/run_test.py " + " ".join(x.path for x in test_sources))
-tests = env.Command("tests_helium", [neon, "scripts/run_test.py", test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " tools/helium.py\" t")
 env.Depends(tests, test_ffi)
+env.Command("tests_helium", [neon, "scripts/run_test.py", test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " tools/helium.py\" t")
+if use_node:
+    tests_js = env.Command("tests_js", [neonc, "scripts/run_test.py", test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " scripts/run_js.py\" t")
+tests_jvm = env.Command("tests_jvm", [neonc, "scripts/run_test.py", test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " scripts/run_jvm.py\" t")
+tests_cpp = env.Command("tests_cpp", [neonc, "scripts/run_test.py", "scripts/run_cpp.py", test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " scripts/run_cpp.py\" t")
+env.Depends(tests_jvm, jvm_classes)
 testenv = env.Clone()
 testenv["ENV"]["NEONPATH"] = "t/"
 testenv.Command("tests_error", [neon, "scripts/run_test.py", "src/errors.txt", Glob("t/errors/*")], sys.executable + " scripts/run_test.py --errors t/errors")
@@ -507,15 +524,7 @@ for path, dirs, files in os.walk("."):
     if all(x not in ["t", "tests"] for x in path.split(os.sep)):
         for f in files:
             if f.endswith(".neon") and f != "global.neon":
-                if not use_curses and f in ["curses.neon", "editor.neon", "hello-curses.neon", "othello.neon", "rain.neon", "sudoku.neon", "tetris.neon"]:
-                    continue
-                if not use_pcre and f in ["forth.neon", "httpd.neon", "lisp.neon"]:
-                    continue
-                if not use_curl and f in ["coverage.neon", "ndb.neon"]:
-                    continue
-                if not use_sdl and f in ["sdl.neon", "flappy.neon", "life.neon", "mandelbrot.neon", "spacedebris.neon"]:
-                    continue
-                if not use_sodium and f in ["bbs.neon", "sodium.neon"]:
+                if f in ["sdl.neon", "flappy.neon", "life.neon", "mandelbrot.neon", "spacedebris.neon"]:
                     continue
                 samples.append(os.path.join(path, f))
 for sample in samples:
@@ -545,7 +554,7 @@ env.Command("test_cal", cal_exe, cal_exe[0].path)
 # on Windows with the GitHub command prompt).
 perl = distutils.spawn.find_executable("perl")
 if perl:
-    env.Command("docs", None, perl + " external/NaturalDocs/NaturalDocs -i lib -o HTML gh-pages/html -p lib/nd.proj -ro")
+    env.Command("docs", None, perl + " external/NaturalDocs/NaturalDocs -i lib -o HTML gh-pages/html -p lib/nd.proj -ro -xi lib/compress/bzip2-1.0.6 -xi lib/compress/zlib-1.2.8 -xi lib/crypto/include -xi lib/crypto/libressl-2.2.4 -xi lib/hash/include -xi lib/hash/libressl-2.2.4 -xi lib/http/curl-7.41.0 -xi lib/http/libressl-2.2.4 -xi lib/http/zlib-1.2.8 -xi lib/http/include -xi lib/regex/pcre2-10.10 -xi lib/sdl/SDL2-2.0.3")
     env.Command("docs_samples", None, perl + " external/NaturalDocs/NaturalDocs -i samples -o HTML gh-pages/samples -p samples/nd.proj -ro")
 
 def compare(target, source, env):
@@ -582,3 +591,4 @@ if False: # This takes rather too long.
         comp1 = env.Command("tmp/"+fn.name+".dump.dummy1", [dump_cpp, dump_neon], compare)
         comp2 = env.Command("tmp/"+fn.name+".dump.dummy2", [dump_cpp, dump_helium], compare)
         env.Depends("test_compiler", [comp1, comp2])
+        

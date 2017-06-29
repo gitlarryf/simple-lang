@@ -8,11 +8,14 @@ compiler:
   # It seems that the clang compiler on travis doesn't correctly build its own headers.
   #- clang
 env:
-  - MINIMAL=1 RELEASE=0
-  - MINIMAL=1 RELEASE=1
-  - MINIMAL=0 RELEASE=0
-  - MINIMAL=0 RELEASE=1
+  - RELEASE=0
+  - RELEASE=1
 before_install:
   - which scons || brew install scons
-script: scons MINIMAL=$MINIMAL RELEASE=$RELEASE
+  - pip install --user cpp-coveralls
+script: 
+  - scons RELEASE=$RELEASE coverage=1
+after_success:
+  - coveralls --exclude lib --exclude tests --gcov-options '\-lp'
 sudo: false
+

@@ -30,8 +30,7 @@ To build Neon, the following are required:
 - [SCons](http://scons.org)
 - A C++11 compiler (a modern `gcc`, `clang`, or Visual Studio 2013 or later)
 
-Current master branch build status: [![Build Status](https://travis-ci.org/ghewgill/neon-lang.svg?branch=master)](https://travis-ci.org/ghewgill/neon-lang) [![Build Status](https://ci.appveyor.com/api/projects/status/github/ghewgill/neon-lang?branch=master&svg=true)](https://ci.appveyor.com/project/ghewgill/neon-lang)
-
+Current master branch build status: [![Build Status](https://travis-ci.org/gitlarryf/neon-lang.svg?branch=coveralls)](https://travis-ci.org/gitlarryf/neon-lang) [![Build Status](https://ci.appveyor.com/api/projects/status/github/gitlarryf/neon-lang?branch=coveralls&svg=true)](https://ci.appveyor.com/project/gitlarryf/neon-lang) [![Coverage Status](https://coveralls.io/repos/github/gitlarryf/neon-lang/badge.svg?branch=coveralls)](https://coveralls.io/github/gitlarryf/neon-lang?branch=coveralls)
 ## Tutorial
 
 See [Neon Tutorial](doc/tutorial.md) for an introduction to the features of Neon.

@@ -634,8 +634,15 @@ void Executor::exec_MULN()
 {
     ip++;
     Number b = stack.top().number(); stack.pop();
+    //fprintf(stderr, "Popped b:%d (%d) off stack.\n", b.x, number_to_double(b));
     Number a = stack.top().number(); stack.pop();
+    //fprintf(stderr, "Popped a:%d (%d) off stack.\n", a.x, number_to_double(a));
+    //fprintf(stderr, "a * b = %d (%f)\n", number_multiply(a, b).x, number_to_double(number_multiply(a, b)));
+
+    Number c = number_multiply(a, b);
+    //fprintf(stderr, "Pushing c:%d (%d) on stack.\n", c.x, number_to_double(c));
     stack.push(Cell(number_multiply(a, b)));
+    //fprintf(stderr, "Opcode MULN (%d) complete.\n", MULN);
 }
 
 void Executor::exec_DIVN()
@@ -1535,7 +1542,7 @@ void Executor::exec()
     exec_RET();
 
     while (not callstack.empty() && ip < module->object.code.size()) {
-        std::cerr << "mod " << module->name << " ip " << ip << " op " << (int)module->object.code[ip] << " st " << stack.depth() << "\n";
+        //std::cerr << "mod " << module->name << " ip " << ip << " op " << (int)module->object.code[ip] << " st " << stack.depth() << "\n";
         if (debug_server != nullptr) {
             switch (debugger_state) {
                 case DEBUGGER_STOPPED:
