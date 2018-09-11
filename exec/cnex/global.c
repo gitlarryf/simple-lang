@@ -55,6 +55,8 @@ TDispatch gfuncDispatch[] = {
 
     PDFUNC("number__toString",          number__toString),
 
+    PDFUNC("object__makeNumber",        object__makeNumber),
+
     PDFUNC("string__append",            string__append),
     PDFUNC("string__toBytes",           string__toBytes),
     PDFUNC("string__length",            string__length),
@@ -537,6 +539,14 @@ void number__toString(TExecutor *exec)
 {
     Number v = top(exec->stack)->number; pop(exec->stack);
     push(exec->stack, cell_fromCString(number_to_string(v)));
+}
+
+
+
+
+void object__makeNumber(TExecutor *exec)
+{
+
 }
 
 

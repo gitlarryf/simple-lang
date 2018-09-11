@@ -409,6 +409,11 @@ void exec_LOADP(TExecutor *self)
     push(self->stack, cell_fromCell(addr));
 }
 
+void exec_LOADJ(void)
+{
+    fatal_error("exec_LAODJ is unsupported.");
+}
+
 void exec_STOREB(TExecutor *self)
 {
     self->ip++;
@@ -456,6 +461,11 @@ void exec_STOREP(TExecutor *self)
     self->ip++;
     Cell *addr = top(self->stack)->address; pop(self->stack);
     cell_copyCell(addr, top(self->stack)); pop(self->stack);
+}
+
+void exec_STOREJ(void)
+{
+    fatal_error("exec_STOREJ is unsupported.");
 }
 
 void exec_NEGN(TExecutor *self)
@@ -1161,6 +1171,7 @@ void exec_loop(TExecutor *self)
             case LOADA:   exec_LOADA(self); break;
             case LOADD:   exec_LOADD(self); break;
             case LOADP:   exec_LOADP(self); break;
+            case LOADJ:   exec_LOADJ(); break;
             case STOREB:  exec_STOREB(self); break;
             case STOREN:  exec_STOREN(self); break;
             case STORES:  exec_STORES(self); break;
@@ -1168,6 +1179,7 @@ void exec_loop(TExecutor *self)
             case STOREA:  exec_STOREA(self); break;
             case STORED:  exec_STORED(self); break;
             case STOREP:  exec_STOREP(self); break;
+            case STOREJ:  exec_STOREJ(); break;
             case NEGN:    exec_NEGN(self); break;
             case ADDN:    exec_ADDN(self); break;
             case SUBN:    exec_SUBN(self); break;

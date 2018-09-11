@@ -53,6 +53,8 @@ void dictionary__keys(struct tagTExecutor *exec);
 
 void number__toString(struct tagTExecutor *exec);
 
+void object__makeNumber(struct tagTExecutor *exec);
+
 void string__append(struct tagTExecutor *exec);
 void string__toBytes(struct tagTExecutor *exec);
 void string__length(struct tagTExecutor *exec);
