@@ -12,6 +12,7 @@ typedef enum tagEType {
     cBoolean,
     cDictionary,
     cNumber,
+    cObject,
     cPointer,
     cString,
 } CellType;
