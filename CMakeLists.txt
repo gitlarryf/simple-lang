@@ -136,11 +136,14 @@ add_executable(cnex
     exec/cnex/global.c
     exec/cnex/nstring.c
     exec/cnex/number.c
+    exec/cnex/object.c
     exec/cnex/stack.c
     exec/cnex/util.c
 )
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set_target_properties(cnex PROPERTIES COMPILE_FLAGS "-std=c99 -Wall -Werror")
+else if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /W4 /WX /MDd /wd4996 /wd4324")
 endif ()
 target_link_libraries(cnex
     bid

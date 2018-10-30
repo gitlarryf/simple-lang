@@ -12,6 +12,7 @@
 #include "dictionary.h"
 #include "exec.h"
 #include "number.h"
+#include "object.h"
 #include "stack.h"
 #include "nstring.h"
 #include "util.h"
@@ -55,7 +56,19 @@ TDispatch gfuncDispatch[] = {
 
     PDFUNC("number__toString",          number__toString),
 
+    PDFUNC("object__getArray",          object__getArray),
+    PDFUNC("object__makeArray",         object__makeArray),
+    PDFUNC("object__getBoolean",        object__getBoolean),
+    PDFUNC("object__makeBoolean",       object__makeBoolean),
+    PDFUNC("object__getDictionary",     object__getDictionary),
+    PDFUNC("object__makeDictionary",    object__makeDictionary),
+    PDFUNC("object__getNumber",         object__getNumber),
     PDFUNC("object__makeNumber",        object__makeNumber),
+    PDFUNC("object__getString",         object__getString),
+    PDFUNC("object__makeString",        object__makeString),
+    PDFUNC("object__isNull",            object__isNull),
+    PDFUNC("object__subscript",         object__subscript),
+    PDFUNC("object__toString",          object__toString),
 
     PDFUNC("string__append",            string__append),
     PDFUNC("string__toBytes",           string__toBytes),
@@ -537,16 +550,129 @@ void dictionary__keys(TExecutor *exec)
 
 void number__toString(TExecutor *exec)
 {
-    Number v = top(exec->stack)->number; pop(exec->stack);
-    push(exec->stack, cell_fromCString(number_to_string(v)));
+    Cell *n = cell_fromCell(top(exec->stack)); pop(exec->stack);
+    push(exec->stack, cell_fromString(cell_toString(n)));
+    free(n);
+    //Number v = top(exec->stack)->number; pop(exec->stack);
+    //push(exec->stack, cell_fromCString(number_to_string(v)));
 }
 
 
 
 
+void object__getArray(TExecutor *exec)
+{
+    Array *a = (&((ObjectArray*)top(exec->stack)->object->pObject)->array); pop(exec->stack);
+    Cell *c = cell_createArrayCell(a->size);
+    c->array = array_copyArray(a);
+    push(exec->stack, cell_fromArray(c));
+}
+
+void object__makeArray(TExecutor *exec)
+{
+    Cell *c = cell_createArrayCell(0);
+    c->array = array_copyArray(top(exec->stack)->array); pop(exec->stack);
+    push(exec->stack, cell_fromArray(c));
+}
+
+void object__getBoolean(TExecutor *exec)
+{
+    BOOL b = ((ObjectBoolean*)top(exec->stack)->object->pObject)->boolean; pop(exec->stack);
+    push(exec->stack, cell_fromBoolean(b));
+}
+
+void object__getDictionary(TExecutor *exec)
+{
+    Dictionary *d = (&((ObjectDictionary*)top(exec->stack)->object->pObject)->dictionary); pop(exec->stack);
+    push(exec->stack, cell_fromDictionary(d));
+}
+
+void object__makeDictionary(TExecutor *exec)
+{
+    Dictionary *d = dictionary_copyDictionary(top(exec->stack)->dictionary); pop(exec->stack);
+    push(exec->stack, cell_fromObject(object_createDictionaryObject(d)));
+}
+
+void object__makeBoolean(TExecutor *exec)
+{
+    BOOL b = top(exec->stack)->boolean; pop(exec->stack);
+    push(exec->stack, cell_fromObject(object_createBooleanObject(b)));
+}
+
+void object__getNumber(TExecutor *exec)
+{
+    Number v = ((ObjectNumber*)top(exec->stack)->object->pObject)->number; pop(exec->stack);
+    push(exec->stack, cell_fromNumber(v));
+}
+
 void object__makeNumber(TExecutor *exec)
 {
+    Number v = top(exec->stack)->number; pop(exec->stack);
+    push(exec->stack, cell_fromObject(object_createNumberObject(v)));
+}
 
+void object__getString(TExecutor *exec)
+{
+    TString *s = string_fromString(&((ObjectString*)top(exec->stack)->object->pObject)->string); pop(exec->stack);
+    push(exec->stack, cell_fromStringLength(s->data, s->length));
+}
+
+void object__makeString(TExecutor *exec)
+{
+    TString *v = string_fromString(top(exec->stack)->string); pop(exec->stack);
+    push(exec->stack, cell_fromObject(object_createStringObject(v)));
+}
+
+void object__isNull(TExecutor *exec)
+{
+    BOOL r = FALSE;
+    Object *o = top(exec->stack)->object;
+
+    if (o == NULL || o->pObject == NULL) {
+        r = TRUE;
+    }
+    //pop(exec->stack);
+    push(exec->stack, cell_fromBoolean(r));
+}
+
+void object__subscript(struct tagTExecutor *exec)
+{
+    Object *o = object_copyObject(top(exec->stack)->object); pop(exec->stack);
+    Object *index = object_copyObject(top(exec->stack)->object); pop(exec->stack);
+    Cell *r = cell_newCell();
+
+    
+    if (((ObjectNumber*)index->pObject)->type != oNumber) {
+        exec->rtl_raise(exec, "DynamicConversionException", "to Number", BID_ZERO);
+    }
+    Number i = ((ObjectNumber*)index->pObject)->number;
+    uint64_t ii = number_to_uint64(i);
+    if (o->type == oArray) {
+        ObjectArray *a = ((ObjectArray*)o->pObject);
+        if (ii >= a->array.size) {
+            exec->rtl_raise(exec, "ArrayIndexException", number_to_string(i), BID_ZERO);
+        }
+        cell_copyCell(r, &a->array.data[ii]);
+    } else if (o->type == oDictionary) {
+        //
+        fatal_error("Not Implemented.");
+    }
+    push(exec->stack, r);
+}
+
+void object__toString(TExecutor *exec)
+{
+    Cell *c = cell_fromCell(top(exec->stack)); pop(exec->stack);
+
+    //Cell *tos = top(exec->stack);
+
+    //Object *o = object_createStringObject(c->string);
+    //TString *r = &((ObjectString*)o->pObject)->string;
+    push(exec->stack, cell_fromString(cell_toString(c)));
+    //string_freeString(s);
+    cell_freeCell(c);
+    //cell_freeCell(tos);
+    //return;
 }
 
 

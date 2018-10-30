@@ -1,9 +1,18 @@
+#ifdef __MS_HEAP_DBG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#endif
+
 #include <assert.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
+#ifndef __MS_HEAP_DBG
+#include <stdlib.h>
+#endif
 #include <string.h>
 
 #include "array.h"
@@ -107,7 +116,12 @@ char *getApplicationName(char *arg)
 int main(int argc, char* argv[])
 {
     gOptions.pszExecutableName = getApplicationName(argv[0]);
-
+#ifdef __MS_HEAP_DBG
+    /* ToDo: Remove this!  This is only for debugging. */
+    /* gOptions.ExecutorDebugStats = TRUE; */
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    _CrtSetBreakAlloc(215);
+#endif
     if (!ParseOptions(argc, argv)) {
         return 3;
     }
@@ -409,9 +423,11 @@ void exec_LOADP(TExecutor *self)
     push(self->stack, cell_fromCell(addr));
 }
 
-void exec_LOADJ(void)
+void exec_LOADJ(TExecutor *self)
 {
-    fatal_error("exec_LAODJ is unsupported.");
+    self->ip++;
+    Cell *addr = top(self->stack)->address; pop(self->stack);
+    push(self->stack, cell_fromCell(addr));
 }
 
 void exec_STOREB(TExecutor *self)
@@ -463,9 +479,11 @@ void exec_STOREP(TExecutor *self)
     cell_copyCell(addr, top(self->stack)); pop(self->stack);
 }
 
-void exec_STOREJ(void)
+void exec_STOREJ(TExecutor *self)
 {
-    fatal_error("exec_STOREJ is unsupported.");
+    self->ip++;
+    Cell *addr = top(self->stack)->address; pop(self->stack);
+    cell_copyCell(addr, top(self->stack)); pop(self->stack);
 }
 
 void exec_NEGN(TExecutor *self)
@@ -1171,7 +1189,7 @@ void exec_loop(TExecutor *self)
             case LOADA:   exec_LOADA(self); break;
             case LOADD:   exec_LOADD(self); break;
             case LOADP:   exec_LOADP(self); break;
-            case LOADJ:   exec_LOADJ(); break;
+            case LOADJ:   exec_LOADJ(self); break;
             case STOREB:  exec_STOREB(self); break;
             case STOREN:  exec_STOREN(self); break;
             case STORES:  exec_STORES(self); break;
@@ -1179,7 +1197,7 @@ void exec_loop(TExecutor *self)
             case STOREA:  exec_STOREA(self); break;
             case STORED:  exec_STORED(self); break;
             case STOREP:  exec_STOREP(self); break;
-            case STOREJ:  exec_STOREJ(); break;
+            case STOREJ:  exec_STOREJ(self); break;
             case NEGN:    exec_NEGN(self); break;
             case ADDN:    exec_ADDN(self); break;
             case SUBN:    exec_SUBN(self); break;
