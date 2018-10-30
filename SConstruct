@@ -429,6 +429,7 @@ if sys.platform == "win32":
         "/WX",
         "/MDd",
         "/wd4996", # CRT deprecation warnings
+        "/wd4324", # structure padding warnings
     ])
 else:
     envcnex.Append(CFLAGS=[
@@ -451,6 +452,7 @@ cnex = envcnex.Program("bin/cnex", [
     "exec/cnex/global.c",
     "exec/cnex/nstring.c",
     "exec/cnex/number.c",
+    "exec/cnex/object.c",
     "exec/cnex/stack.c",
     "exec/cnex/util.c",
 ],

@@ -48,3 +48,12 @@ void array_freeArray(Array *self)
     free(self);
 }
 
+Array *array_copyArray(Array *self)
+{
+    Array *a = array_createArrayFromSize(self->size);
+
+    for (size_t i = 0; i < a->size; i++) {
+        cell_copyCell(&a->data[i], &self->data[i]);
+    }
+    return a;
+}

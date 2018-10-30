@@ -9,6 +9,7 @@
 
 #include "array.h"
 #include "dictionary.h"
+#include "object.h"
 #include "nstring.h"
 #include "util.h"
 
@@ -41,11 +42,28 @@ Cell *cell_fromBoolean(BOOL b)
     return x;
 }
 
+Cell *cell_fromDictionary(Dictionary *d)
+{
+    Cell *x = cell_newCell();
+
+    x->type = cDictionary;
+    x->dictionary = dictionary_copyDictionary(d);
+    return x;
+}
+
 Cell *cell_fromNumber(Number n)
 {
     Cell *x = cell_newCell();
     x->type = cNumber;
     x->number = n;
+    return x;
+}
+
+Cell *cell_fromObject(Object *o)
+{
+    Cell *x = cell_newCell();
+    x->type = cObject;
+    x->object = o;
     return x;
 }
 
@@ -96,6 +114,14 @@ Cell *cell_fromCString(const char *s)
     return x;
 }
 
+Cell *cell_fromString(TString *s)
+{
+    Cell *x = cell_newCell();
+    x->type = cString;
+    x->string = string_fromString(s);
+    return x;
+}
+
 Cell *cell_fromCell(const Cell *c)
 {
     assert(c != NULL);
@@ -113,6 +139,7 @@ Cell *cell_fromCell(const Cell *c)
             }
             x->boolean = FALSE;
             x->number = bid128_from_uint32(0);
+            x->object = NULL;
             x->string = NULL;
             x->address = NULL;
             x->dictionary = NULL;
@@ -120,6 +147,7 @@ Cell *cell_fromCell(const Cell *c)
         case cBoolean:
             x->boolean = c->boolean;
             x->number = bid128_from_uint32(0);
+            x->object = NULL;
             x->string = NULL;
             x->address = NULL;
             x->array = NULL;
@@ -129,13 +157,24 @@ Cell *cell_fromCell(const Cell *c)
             x->dictionary = dictionary_copyDictionary(c->dictionary);
             x->boolean = c->boolean;
             x->number = bid128_from_uint32(0);
+            x->object = NULL;
+            x->string = NULL;
+            x->address = NULL;
+            x->array = NULL;
+            break;
+        case cObject:
+            x->object = object_copyObject(c->object);
+            x->boolean = c->boolean;
+            x->dictionary = NULL;
+            x->number = bid128_from_uint32(0);
             x->string = NULL;
             x->address = NULL;
             x->array = NULL;
             break;
         case cPointer:
             x->address = (void*)c;
-            x->number = bid128_from_uint32(0);;
+            x->number = bid128_from_uint32(0);
+            x->object = NULL;
             x->string = NULL;
             x->boolean = FALSE;
             x->array = NULL;
@@ -143,6 +182,7 @@ Cell *cell_fromCell(const Cell *c)
             break;
         case cNumber:
             x->number = c->number;
+            x->object = NULL;
             x->string = NULL;
             x->address = NULL;
             x->boolean = FALSE;
@@ -153,6 +193,7 @@ Cell *cell_fromCell(const Cell *c)
             x->string = string_copyString(c->string);
             x->address = NULL;
             x->number = bid128_from_uint32(0);
+            x->object = NULL;
             x->boolean = FALSE;
             x->array = NULL;
             x->dictionary = NULL;
@@ -162,6 +203,7 @@ Cell *cell_fromCell(const Cell *c)
             break;
         default:
             x->number = bid128_from_uint32(0);
+            x->object = NULL;
             x->string = NULL;
             x->address = NULL;
             x->boolean = FALSE;
@@ -408,6 +450,11 @@ void cell_copyCell(Cell *dest, const Cell *source)
     } else {
         dest->dictionary = NULL;
     }
+    if (source->type == cObject && source->object != NULL) {
+        dest->object = object_copyObject(source->object);
+    } else {
+        dest->object = NULL;
+    }
     dest->address = source->address;
     dest->boolean = source->boolean;
     dest->type = source->type;
@@ -428,6 +475,7 @@ int32_t cell_compareCell(const Cell * s, const Cell * d)
         case cDictionary:   return !dictionary_compareDictionary(s->dictionary, d->dictionary);
         case cNothing:      return s != d;
         case cNumber:       return !number_is_equal(s->number, d->number);
+        case cObject:       assert(FALSE); return 0;
         case cPointer:      return s->address != d->address;
         case cString:       return string_compareString(s->string, d->string);
     }
@@ -442,6 +490,7 @@ Cell *cell_newCell(void)
     }
 
     c->number = bid128_from_uint32(0);
+    c->object = NULL;
     c->string = NULL;
     c->address = NULL;
     c->boolean = FALSE;
@@ -462,6 +511,7 @@ Cell *cell_newCellType(CellType t)
 void cell_resetCell(Cell *c)
 {
     c->number = bid128_from_uint32(0);
+    c->object = NULL;
     c->string = NULL;
     c->array = NULL;
     c->address = NULL;
@@ -480,6 +530,8 @@ void cell_clearCell(Cell *c)
         array_freeArray(c->array);
     } else if (c->type == cDictionary) {
         dictionary_freeDictionary(c->dictionary);
+    } else if (c->type == cObject) {
+        object_freeObject(c->object);
     }
     cell_resetCell(c);
 }
