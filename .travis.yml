@@ -9,12 +9,15 @@ env:
   #- BUILDER=scons RELEASE=1 WITH_SUBMODULES=1
   - BUILDER=cmake WITH_SUBMODULES=0
 before_install:
-  - choco install python2 --params '"/InstallDir:C:\\python27\\"'
+  - choco install python2 --params '"/InstallDir:C:\\py\\"'
 before_script:
   - if [ "$WITH_SUBMODULES" == "1" ]; then git submodule update --init; fi
 script:
-  - python -c 'print(\"Hello Travis, from path!\");'
-  - C:\python27\python -c 'print(\"Hello Travis, from my home dir, of c:\\python27!\");'
+  - py -c 'print(\"Hello Travis, from path!\");'
+  - 'py -c 'print(\"Hello Travis, from path!\");''
+  - C:\py\python -c 'print(\"Hello Travis, from my home dir, of c:\\py!\");'
+  - python -V
+  - 'C:\py\python -v'
   - cmake .
   - make
   - ctest
