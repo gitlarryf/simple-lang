@@ -9,7 +9,7 @@ env:
   #- BUILDER=scons RELEASE=1 WITH_SUBMODULES=1
   - BUILDER=cmake WITH_SUBMODULES=0
 before_install:
-  - choco install python2 --params /InstallDir:C:\python27\
+  - choco install python2 --params '"/InstallDir:C:\python27\"'
 before_script:
   - if [ "$WITH_SUBMODULES" == "1" ]; then git submodule update --init; fi
 script:
