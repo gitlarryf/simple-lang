@@ -13,6 +13,8 @@ before_install:
 before_script:
   - if [ "$WITH_SUBMODULES" == "1" ]; then git submodule update --init; fi
 script:
+  - python -c 'print(\"Hello Travis, from path!\");'
+  - C:\python27\python -c 'print(\"Hello Travis, from my home dir, of c:\\python27!\");'
   - cmake .
   - make
   - ctest
