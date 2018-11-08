@@ -18,7 +18,7 @@ script:
   - C:\py\python -c 'print(\"Hello Travis, from my home dir, of c:\\py!\");'
   - python -V
   - 'C:\py\python -v'
-  - cmake .
+  - cmake --debug-output --trace-expand .
   - make
   - ctest
 sudo: false
