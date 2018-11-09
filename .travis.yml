@@ -14,11 +14,11 @@ before_script:
   - if [ "$WITH_SUBMODULES" == "1" ]; then git submodule update --init; fi
 script:
   - python -c 'print(\"Hello Travis, from path!\");'
-  - 'python -c 'print(\"Hello Travis, from path!\");''
+  - python -c 'print(\"Hello Travis, from path!\");'
   - C:\py\python -c 'print(\"Hello Travis, from my home dir, of c:\\py!\");'
   - python -V
   - 'C:\py\python -V'
   - cmake --debug-output --trace-expand .
   - make
   - ctest
-sudo: true
+sudo: false
