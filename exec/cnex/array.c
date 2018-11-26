@@ -48,12 +48,24 @@ void array_freeArray(Array *self)
     free(self);
 }
 
-Array *array_copyArray(Array *self)
+Array *array_copyArray(Array *a)
 {
-    Array *a = array_createArrayFromSize(self->size);
+    Array *r = array_createArrayFromSize(a->size);
 
-    for (size_t i = 0; i < a->size; i++) {
-        cell_copyCell(&a->data[i], &self->data[i]);
+    for (size_t i = 0; i < r->size; i++) {
+        cell_copyCell(&r->data[i], &a->data[i]);
     }
-    return a;
+    return r;
+}
+
+size_t array_addArrayElement(Array *a, Cell *element)
+{
+    a->size++;
+    a->data = realloc(a->data, sizeof(Cell) * a->size);
+    if (a->data == NULL) {
+        fatal_error("Could not allocate memory for appended array element, element num: %d", a->size);
+    }
+
+    cell_copyCell(&a->data[a->size-1], element);
+    return a->size;
 }

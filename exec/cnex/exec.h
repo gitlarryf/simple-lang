@@ -18,8 +18,10 @@ typedef struct tagTExecutor {
     unsigned int callstack[300];
     int32_t callstacktop;
     int32_t param_recursion_limit;
+    int32_t map_depth;
     struct tagTCell *globals;
     struct tagTFrameStack *framestack;
+    int exit_code;
     BOOL enable_assert;
     BOOL debug;
     BOOL disassemble;
@@ -35,7 +37,7 @@ typedef struct tagTExecutor {
     } diagnostics;
 } TExecutor;
 
-void exec_loop(struct tagTExecutor *self);
+int exec_loop(struct tagTExecutor *self, size_t min_callstack_depth);
 int exec_run(struct tagTExecutor *self, BOOL enable_assert);
 
 void exec_rtl_raiseException(struct tagTExecutor *self, const char *name, const char *info, Number code);

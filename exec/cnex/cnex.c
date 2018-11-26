@@ -184,7 +184,7 @@ int exec_run(TExecutor *self, BOOL enable_assert)
     self->diagnostics.callstack_max_height = self->callstacktop;
     self->enable_assert = enable_assert;
 
-    exec_loop(self);
+    exec_loop(self, 0);
     if (gOptions.ExecutorDebugStats) {
         assert(isEmpty(self->stack));
     }
@@ -205,6 +205,8 @@ TExecutor *exec_newExecutor(TBytecode *object)
     r->ip = 0;
     r->callstacktop = -1;
     r->param_recursion_limit = 1000;
+    r->map_depth = 0;
+    r->exit_code = 0;
     r->enable_assert = TRUE;
     r->debug = gOptions.ExecutorDebugStats;
     r->disassemble = gOptions.ExecutorDisassembly;
@@ -1104,7 +1106,7 @@ void exec_ALLOC(void)
 void exec_PUSHNIL(TExecutor *self)
 {
     self->ip++;
-    push(self->stack, NULL);
+    push(self->stack, cell_newCell());
 }
 
 void exec_JNASSERT(TExecutor *self)
@@ -1163,9 +1165,80 @@ void exec_PUSHCI(void)
     fatal_error("exec_PUSHCI not implemented");
 }
 
-void exec_loop(TExecutor *self)
+void exec_MAPA(TExecutor *self)
 {
-    while (self->ip < self->object->codelen) {
+    self->ip++;
+    uint32_t target = get_vint(self->object->code, self->object->codelen, &self->ip);
+    const unsigned int start = self->ip;
+    self->map_depth++;
+    Cell *a = cell_fromArray(top(self->stack)); pop(self->stack);
+
+    Cell *r = cell_createArrayCell(0);
+    for (size_t i = 0; i < a->array->size; i++) {
+        Cell *x = &a->array->data[i];
+        push(self->stack, cell_fromCell(x));
+        self->callstack[++self->callstacktop] = start;
+
+        /* ToDo: Implement exception handling */
+//        try {
+        int retval = exec_loop(self, self->callstacktop);
+        if (retval != 0) {
+            exit(retval);
+        }
+//        } catch (InternalException *x) {
+            //callstack.pop_back();
+            //map_depth--;
+            //raise_literal(x->name, x->info);
+            //delete x;
+            //return;
+//        }
+        Cell *tc = cell_fromCell(top(self->stack));
+        cell_arrayAppendElement(r, *tc); pop(self->stack);
+    }
+    push(self->stack, r);
+    self->map_depth--;
+    self->ip = target;
+}
+
+void exec_MAPD(TExecutor *self)
+{
+    self->ip++;
+    uint32_t target = get_vint(self->object->code, self->object->codelen, &self->ip);
+    const unsigned int start = self->ip;
+    self->map_depth++;
+    Cell *d = cell_fromDictionary(top(self->stack)->dictionary); pop(self->stack);
+
+    Cell *r = cell_createDictionaryCell();
+    for (int64_t i = 0; i < d->dictionary->len; i++) {
+        DictionaryEntry entry = d->dictionary->data[i];
+        push(self->stack, cell_fromCell(entry.value));
+        self->callstack[++self->callstacktop] = start;
+
+        /* ToDo: Implement exception handling */
+//      try {
+        int retval = exec_loop(self, self->callstacktop);
+        if (retval != 0) {
+            exit(retval);
+        }
+//        } catch (InternalException *x) {
+            //callstack.pop_back();
+            //map_depth--;
+            //raise_literal(x->name, x->info);
+            //delete x;
+            //return;
+//        }
+        //r[x.first] = stack.top(); stack.pop();
+        Cell *tc = cell_fromCell(top(self->stack));
+        cell_addDictionaryEntry(r, entry.key, tc); pop(self->stack);
+    }
+    push(self->stack, r);
+    self->map_depth--;
+    self->ip = target;
+}
+
+int exec_loop(TExecutor *self, size_t min_callstack_depth)
+{
+    while ((self->callstacktop+1) > min_callstack_depth && self->ip < self->object->codelen && self->exit_code == 0) {
         if (self->disassemble) { 
             fprintf(stderr, "mod:%s\tip: %d\top: %s\tst: %d\n", self->module->name, self->ip, sOpcode[self->object->code[self->ip]], self->stack->top); 
         }
@@ -1271,9 +1344,12 @@ void exec_loop(TExecutor *self)
             case PUSHM:   exec_PUSHM(); break;
             case CALLV:   exec_CALLV(); break;
             case PUSHCI:  exec_PUSHCI(); break;
+            case MAPA:    exec_MAPA(self); break;
+            case MAPD:    exec_MAPD(self); break;
             default:
                 fatal_error("exec: Unexpected opcode: %d\n", self->object->code[self->ip]);
         }
         self->diagnostics.total_opcodes++;
     }
+    return self->exit_code;
 }

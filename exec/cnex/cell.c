@@ -114,14 +114,6 @@ Cell *cell_fromCString(const char *s)
     return x;
 }
 
-Cell *cell_fromString(TString *s)
-{
-    Cell *x = cell_newCell();
-    x->type = cString;
-    x->string = string_fromString(s);
-    return x;
-}
-
 Cell *cell_fromCell(const Cell *c)
 {
     assert(c != NULL);
@@ -325,9 +317,27 @@ TString *cell_toString(Cell *c)
             r = string_appendCString(r, (c->boolean ? "TRUE" : "FALSE"));
             break;
         case cDictionary:
+        {
+            size_t x;
+            r = string_appendCString(r, "{");
+            Cell *keys = dictionary_getKeys(c->dictionary);
+            for (x = 0; x < keys->array->size; x++) {
+                if (r->length > 1) {
+                    r = string_appendCString(r, ", ");
+                }
+                r = string_appendCString(r, "\"");
+                r = string_appendString(r, keys->array->data[x].string);
+                r = string_appendCString(r, "\": ");
+                r = string_appendString(r, cell_toString(dictionary_findDictionaryEntry(c->dictionary, keys->array->data[x].string)));
+            }
+            r = string_appendCString(r, "}");
             break;
+        }
         case cNumber:
             r = string_appendCString(r, number_to_string(c->number));
+            break;
+        case cObject:
+            r = object_toString(c->object);
             break;
         case cPointer:
             break;
@@ -378,6 +388,15 @@ Cell *cell_createDictionaryCell(void)
     return c;
 }
 
+Cell * cell_createPointerCell(void *p)
+{
+    Cell *c = cell_newCell();
+
+    c->type = cPointer;
+    c->address = p;
+    return c;
+}
+
 Cell *cell_dictionaryIndexForWrite(Cell *c, struct tagTString *key)
 {
     if (c->type == cNothing) {
@@ -394,6 +413,18 @@ Cell *cell_dictionaryIndexForWrite(Cell *c, struct tagTString *key)
         string_freeString(key); // Since we aren't using the provided key, we need to destroy it.
     }
     return c->dictionary->data[idx].value;
+}
+
+int64_t cell_addDictionaryEntry(Cell *c, struct tagTString *key, Cell *value)
+{
+    if (c->type == cNothing) {
+        c->type = cDictionary;
+    }
+    assert(c->type == cDictionary);
+    if (c->dictionary == NULL) {
+        c->dictionary = dictionary_createDictionary();
+    }
+    return dictionary_addDictionaryEntry(c->dictionary, key, value);
 }
 
 Cell *cell_dictionaryIndexForRead(Cell *c, TString *key)

@@ -12,6 +12,7 @@ Array *array_createArrayFromSize(size_t iElements);
 
 void array_freeArray(Array *self);
 
-Array *array_copyArray(Array *self);
+Array *array_copyArray(Array *a);
 
+size_t array_addArrayElement(Array *a, struct tagTCell *element);
 #endif
