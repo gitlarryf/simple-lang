@@ -31,6 +31,7 @@ typedef struct tagTCell {
 Cell *cell_createAddressCell(Cell *a);
 Cell *cell_createArrayCell(size_t elements);
 Cell *cell_createDictionaryCell(void);
+Cell *cell_createPointerCell(void *p);
 Cell *cell_createStringCell(size_t size);
 
 Cell *cell_newCell(void);
@@ -72,5 +73,6 @@ BOOL cell_arrayElementExists(const Cell *a, const Cell *e);
 
 Cell *cell_dictionaryIndexForWrite(Cell *c, struct tagTString *key);
 Cell *cell_dictionaryIndexForRead(Cell *c, struct tagTString *key);
+int64_t cell_addDictionaryEntry(Cell *c, struct tagTString *key, Cell *value);
 
 #endif
