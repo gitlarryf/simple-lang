@@ -187,6 +187,7 @@ void io_fprint(TExecutor *exec)
 
 
 
+
 void sys_exit(TExecutor *exec)
 {
     char ex[64];
@@ -568,9 +569,9 @@ void dictionary__keys(TExecutor *exec)
 
 void number__toString(TExecutor *exec)
 {
-    Cell *n = cell_fromCell(top(exec->stack)); pop(exec->stack);
-    push(exec->stack, cell_fromString(cell_toString(n)));
-    cell_freeCell(n);
+    TString *s = cell_toString(top(exec->stack)); pop(exec->stack);
+    push(exec->stack, cell_fromString(s));
+    string_freeString(s);
 }
 
 
