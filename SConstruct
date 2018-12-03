@@ -36,6 +36,9 @@ coverage_lib = (["/Library/Developer/CommandLineTools/usr/lib/clang/6.0/lib/darw
 if os.name != "nt":
     for subdir in ["contrib", "exec", "gh-pages", "lib", "samples", "scripts", "src", "t", "tests", "tools"]:
         for path, dirs, files in os.walk(subdir):
+            if subdir == "lib":
+                # Do not check subdirectories of lib (extension modules).
+                dirs[:] = []
             for fn in files:
                 if fn.endswith((".cpp", ".c", ".h", ".neon", ".txt", ".java", ".py", ".md")):
                     with open(os.path.join(path, fn), "rb") as f:
@@ -67,9 +70,17 @@ env["ENV"]["PATH"] = env["ENV"]["PATH"] + os.pathsep + os.path.dirname(sys.execu
 
 # Find where javac.exe is and add it to our PATH.
 env["ENV"]["PATH"] = env["ENV"]["PATH"] + os.pathsep + os.pathsep.join(x for x in os.getenv("PATH").split(os.pathsep) if os.path.exists(os.path.join(x, "javac.exe")))
+try:
+    s = subprocess.check_output("javac -version", stderr=subprocess.STDOUT, shell=True)
+except subprocess.CalledProcessError:
+    s = None
+m = s and re.search(r"^javac (\d+)\.(\d+)", s, re.MULTILINE)
+use_java = m is not None and (int(m.group(1)), int(m.group(2))) >= (1, 8)
+print("use_java: {}".format(use_java or (False, repr(s))))
 
 env["ENV"]["PATH"] = env["ENV"]["PATH"] + os.pathsep + os.pathsep.join(x for x in os.getenv("PATH").split(os.pathsep) if os.path.exists(os.path.join(x, "node")) or os.path.exists(os.path.join(x, "node.exe")))
 use_node = os.system("node --version") == 0
+print("use_node: {}".format(use_node))
 
 def add_external(target):
     env.Depends("external", target)
@@ -79,6 +90,7 @@ use_posix = os.name == "posix"
 
 add_external(SConscript("external/SConscript-libutf8", exports=["env"]))
 libbid = add_external(SConscript("external/SConscript-libbid", exports=["env"]))
+libgmp = add_external(SConscript("external/SConscript-libgmp", exports=["env"]))
 libffi = add_external(SConscript("external/SConscript-libffi", exports=["env"]))
 libhash = add_external(SConscript("external/SConscript-libhash", exports=["env"]))
 libsqlite = add_external(SConscript("external/SConscript-libsqlite", exports=["env"]))
@@ -148,7 +160,7 @@ else:
         env.Append(CXXFLAGS=[
             "-O3",
         ])
-env.Prepend(LIBS=squeeze([libbid, libffi, libhash, libsqlite, libminizip, libz]))
+env.Prepend(LIBS=squeeze([libbid, libffi, libhash, libsqlite, libminizip, libz, libgmp]))
 if os.name == "posix":
     env.Append(LIBS=["dl"])
 if sys.platform.startswith("linux"):
@@ -281,8 +293,9 @@ else:
 
 env.Command(["src/thunks.inc", "src/functions_compile.inc", "src/functions_exec.inc", "src/enums.inc", "src/exceptions.inc"], [rtl_neon, "scripts/make_thunks.py"], sys.executable + " scripts/make_thunks.py " + " ".join(rtl_neon))
 
-jvm_classes = env.Java("jvm", "jvm")
-jnex_classes = env.Java("exec/jnex/src", "exec/jnex/src")
+if use_java:
+    jvm_classes = env.Java("jvm", "jvm")
+    jnex = SConscript("exec/jnex/SConstruct")
 
 neonc = env.Program("bin/neonc", [
     "src/analyzer.cpp",
@@ -309,7 +322,8 @@ neonc = env.Program("bin/neonc", [
     "src/util.cpp",
 ] + coverage_lib,
 )
-env.Depends(neonc, jvm_classes)
+if use_java:
+    env.Depends(neonc, jvm_classes)
 
 def build_rtlx_inc(target, source, env):
     with open("src/rtlx.inc", "w") as f:
@@ -348,7 +362,7 @@ neon = env.Program("bin/neon", [
     "src/httpserver.cpp",
     "src/intrinsic.cpp",
     "src/lexer.cpp",
-    "src/main.cpp",
+    "src/neon.cpp",
     "src/number.cpp",
     "src/parser.cpp",
     "src/pt_dump.cpp",
@@ -422,43 +436,10 @@ neonbind = env.Program("bin/neonbind", [
     "src/support_exec.cpp",
 ])
 
-envcnex = env.Clone()
-if sys.platform == "win32":
-    envcnex.Append(CFLAGS=[
-        "/W4",
-        "/WX",
-        "/MDd",
-        "/wd4996", # CRT deprecation warnings
-        "/wd4324", # structure padding warnings
-    ])
-else:
-    envcnex.Append(CFLAGS=[
-        "-std=c99",
-        "-Wall",
-        "-Werror",
-    ])
-    if not env["RELEASE"]:
-        envcnex.Append(CFLAGS=[
-            "-g",
-        ])
-
-cnex = envcnex.Program("bin/cnex", [
-    "exec/cnex/array.c",
-    "exec/cnex/bytecode.c",
-    "exec/cnex/cell.c",
-    "exec/cnex/cnex.c",
-    "exec/cnex/dictionary.c",
-    "exec/cnex/framestack.c",
-    "exec/cnex/global.c",
-    "exec/cnex/nstring.c",
-    "exec/cnex/number.c",
-    "exec/cnex/object.c",
-    "exec/cnex/stack.c",
-    "exec/cnex/util.c",
-],
-)
+cnex = SConscript("exec/cnex/SConstruct", exports=["env"])
 
 env.Depends("src/number.h", libbid)
+env.Depends("src/number.h", libgmp)
 env.Depends("src/exec.cpp", libffi)
 
 def UnitTest(env, target, source, **kwargs):
@@ -555,12 +536,14 @@ env.Depends(tests, test_ffi)
 env.Command("tests_helium", [neon, "scripts/run_test.py", test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " tools/helium.py\" " + " ".join(x.path for x in test_sources))
 if use_node:
     tests_js = env.Command("tests_js", [neonc, "scripts/run_test.py", test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " scripts/run_js.py\" " + " ".join(x.path for x in test_sources))
-tests_jvm = env.Command("tests_jvm", [neonc, "scripts/run_test.py", test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " scripts/run_jvm.py\" " + " ".join(x.path for x in test_sources))
+if use_java:
+    tests_jvm = env.Command("tests_jvm", [neonc, "scripts/run_test.py", test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " scripts/run_jvm.py\" " + " ".join(x.path for x in test_sources))
+    env.Depends(tests_jvm, jvm_classes)
 tests_cpp = env.Command("tests_cpp", [neonc, "scripts/run_test.py", "scripts/run_cpp.py", test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " scripts/run_cpp.py\" " + " ".join(x.path for x in test_sources))
-tests_pynex = env.Command("tests_pynex", [neonc, "scripts/run_test.py", "scripts/run_pynex.py", test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " scripts/run_pynex.py\" " + " ".join(x.path for x in test_sources))
-tests_jnex = env.Command("tests_jnex", [neonc, "scripts/run_test.py", "scripts/run_jnex.py", jnex_classes, test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " scripts/run_jnex.py\" " + " ".join(x.path for x in test_sources))
-tests_cnex = env.Command("tests_cnex", [neonc, cnex, "scripts/run_test.py", "scripts/run_cnex.py", test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " scripts/run_cnex.py\" " + " ".join(x.path for x in test_sources))
-env.Depends(tests_jvm, jvm_classes)
+tests_pynex = env.Command("tests_pynex", [neonc, "scripts/run_test.py", "exec/pynex/run_test.py", test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " exec/pynex/run_test.py\" " + " ".join(x.path for x in test_sources))
+if use_java:
+    tests_jnex = env.Command("tests_jnex", [neonc, "scripts/run_test.py", "exec/jnex/run_test.py", jnex, test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " exec/jnex/run_test.py\" " + " ".join(x.path for x in test_sources))
+tests_cnex = env.Command("tests_cnex", [neonc, cnex, "scripts/run_test.py", "exec/cnex/run_test.py", test_sources], sys.executable + " scripts/run_test.py --runner \"" + sys.executable + " exec/cnex/run_test.py\" " + " ".join(x.path for x in test_sources))
 testenv = env.Clone()
 testenv["ENV"]["NEONPATH"] = "t/"
 testenv.Command("tests_error", [neon, "scripts/run_test.py", "src/errors.txt", Glob("t/errors/*")], sys.executable + " scripts/run_test.py --errors t/errors")
@@ -633,7 +616,7 @@ if False: # This takes rather too long.
     for fn in Glob("t/*.neon") + Glob("t/errors/*.neon"):
         if fn.name in ["N1000.neon"]:
             continue # Unicode issues
-        if fn.name in ["bigint-test.neon", "decimal.neon", "number-ceil.neon", "number-underscore.neon"]:
+        if fn.name in ["decimal.neon", "number-ceil.neon", "number-underscore.neon"]:
             continue # Python floats are not decimal floating point
         if fn.name in ["sodium-test.neon"]:
             continue # Just too big

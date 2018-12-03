@@ -12,6 +12,36 @@ enable_testing()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY bin)
 
+find_program(JAVAC javac)
+if (JAVAC)
+    execute_process(
+        COMMAND javac -version
+        OUTPUT_VARIABLE JAVAC_VERSION_OUT
+        ERROR_VARIABLE JAVAC_VERSION_ERR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_STRIP_TRAILING_WHITESPACE
+    )
+    if ("${JAVAC_VERSION_OUT}" MATCHES "javac ([0-9]+\\.[0-9]+)"
+     OR "${JAVAC_VERSION_ERR}" MATCHES "javac ([0-9]+\\.[0-9]+)")
+        if ("${CMAKE_MATCH_1}" VERSION_GREATER_EQUAL "1.8")
+            message("javac found: ${JAVAC}")
+        else ()
+            message("javac found, but version ${CMAKE_MATCH_1} is < 1.8")
+            set(JAVAC "JAVAC-NOTFOUND")
+        endif ()
+    else ()
+        message("javac not found")
+        set(JAVAC "JAVAC-NOTFOUND")
+    endif ()
+endif (JAVAC)
+
+find_program(NODEJS NAMES nodejs node)
+if (NODEJS)
+    message("nodejs found: ${NODEJS}")
+else (NODEJS)
+    message("nodejs not found")
+endif ()
+
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -72,82 +102,40 @@ set_source_files_properties(
     PROPERTIES OBJECT_DEPENDS src/unicodedata.inc
 )
 
-set(NEON_JVM
-    jvm/neon/Binary.java
-    jvm/neon/Datetime.java
-    jvm/neon/File.java
-    jvm/neon/Global.java
-    jvm/neon/Hash.java
-    jvm/neon/Io.java
-    jvm/neon/Math.java
-    jvm/neon/Os.java
-    jvm/neon/Sys.java
-    jvm/neon/Time.java
-    jvm/neon/type/Array.java
-    jvm/neon/type/NeonException.java
-    jvm/neon/type/Number.java
-)
-string(REPLACE ".java" ".class" NEON_JVM_CLASSES "${NEON_JVM}")
-foreach (java ${NEON_JVM})
-    string(REPLACE ".java" ".class" class ${java})
-    add_custom_command(
-        OUTPUT ${class}
-        COMMAND javac -cp jvm ${java}
-        DEPENDS ${java}
+if (JAVAC)
+    set(NEON_JVM
+        jvm/neon/Binary.java
+        jvm/neon/Datetime.java
+        jvm/neon/File.java
+        jvm/neon/Global.java
+        jvm/neon/Hash.java
+        jvm/neon/Io.java
+        jvm/neon/Math.java
+        jvm/neon/Os.java
+        jvm/neon/Sys.java
+        jvm/neon/Time.java
+        jvm/neon/type/Array.java
+        jvm/neon/type/NeonException.java
+        jvm/neon/type/Number.java
     )
-endforeach ()
-add_custom_target(neon_jvm ALL
-    DEPENDS ${NEON_JVM_CLASSES}
-)
-
-set(JNEX
-    exec/jnex/src/org/nevec/rjm/BigIntegerMath.java
-    exec/jnex/src/org/nevec/rjm/BigComplex.java
-    exec/jnex/src/org/nevec/rjm/Ifactor.java
-    exec/jnex/src/org/nevec/rjm/Rational.java
-    exec/jnex/src/org/nevec/rjm/Factorial.java
-    exec/jnex/src/org/nevec/rjm/Prime.java
-    exec/jnex/src/org/nevec/rjm/Bernoulli.java
-    exec/jnex/src/org/nevec/rjm/BigDecimalMath.java
-    exec/jnex/src/org/neon_lang/jnex/Bytecode.java
-    exec/jnex/src/org/neon_lang/jnex/Cell.java
-    exec/jnex/src/org/neon_lang/jnex/Executor.java
-)
-string(REPLACE ".java" ".class" JNEX_CLASSES "${JNEX}")
-foreach (java ${JNEX})
-    string(REPLACE ".java" ".class" class ${java})
-    add_custom_command(
-        OUTPUT ${class}
-        COMMAND javac -cp exec/jnex/src ${java}
-        DEPENDS ${java}
+    string(REPLACE ".java" ".class" NEON_JVM_CLASSES "${NEON_JVM}")
+    foreach (java ${NEON_JVM})
+        string(REPLACE ".java" ".class" class ${java})
+        add_custom_command(
+            OUTPUT ${class}
+            COMMAND javac -cp jvm ${java}
+            DEPENDS ${java}
+        )
+    endforeach ()
+    add_custom_target(neon_jvm ALL
+        DEPENDS ${NEON_JVM_CLASSES}
     )
-endforeach ()
-add_custom_target(jnex ALL
-    DEPENDS ${JNEX_CLASSES}
-)
+endif (JAVAC)
 
-add_executable(cnex
-    exec/cnex/array.c
-    exec/cnex/bytecode.c
-    exec/cnex/cell.c
-    exec/cnex/cnex.c
-    exec/cnex/dictionary.c
-    exec/cnex/framestack.c
-    exec/cnex/global.c
-    exec/cnex/nstring.c
-    exec/cnex/number.c
-    exec/cnex/object.c
-    exec/cnex/stack.c
-    exec/cnex/util.c
-)
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set_target_properties(cnex PROPERTIES COMPILE_FLAGS "-std=c99 -Wall -Werror")
-else if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /W4 /WX /MDd /wd4996 /wd4324")
-endif ()
-target_link_libraries(cnex
-    bid
-)
+if (JAVAC)
+    add_subdirectory("exec/jnex")
+endif (JAVAC)
+add_subdirectory("exec/cnex")
 
 add_library(common OBJECT
     src/bytecode.cpp
@@ -159,6 +147,7 @@ add_library(common OBJECT
 target_include_directories(common
     PUBLIC external/IntelRDFPMathLib20U1/LIBRARY/src
     PRIVATE external/utfcpp-master/source
+    PRIVATE external/gmp-6.1.2
 )
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
@@ -208,6 +197,7 @@ target_include_directories(compiler
     PRIVATE external/hash-library
     PRIVATE external/minijson_writer-master
     PRIVATE external/utfcpp-master/source
+    PRIVATE external/gmp-6.1.2
 )
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
@@ -301,6 +291,7 @@ target_include_directories(executor
     PRIVATE external/minijson_writer-master
     PRIVATE external/sqlite-amalgamation-3080803
     PRIVATE external/utfcpp-master/source
+    PRIVATE external/gmp-6.1.2
 )
 
 add_executable(neonc
@@ -312,10 +303,14 @@ target_include_directories(neonc
     PRIVATE external/minijson_writer-master
     PRIVATE external/utfcpp-master/source
 )
-target_link_libraries(neonc bid hash-library)
+target_link_libraries(neonc
+    bid
+    gmp
+    hash-library
+)
 
 add_executable(neon
-    src/main.cpp
+    src/neon.cpp
     src/repl.cpp
     $<TARGET_OBJECTS:common>
     $<TARGET_OBJECTS:compiler>
@@ -337,6 +332,7 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
 endif ()
 target_link_libraries(neon
     bid
+    gmp
     ${ffi}
     hash-library
     sqlite3
@@ -356,6 +352,7 @@ target_include_directories(neonx PRIVATE
 )
 target_link_libraries(neonx
     bid
+    gmp
     ${ffi}
     hash-library
     minizip
@@ -385,6 +382,7 @@ target_include_directories(neonstub PRIVATE
 )
 target_link_libraries(neonstub
     bid
+    gmp
     ${ffi}
     hash-library
     minizip
@@ -415,6 +413,7 @@ target_include_directories(neondis PRIVATE
 )
 target_link_libraries(neondis
     bid
+    gmp
     hash-library
 )
 
@@ -443,6 +442,7 @@ target_include_directories(test_lexer PRIVATE
 )
 target_link_libraries(test_lexer
     bid
+    gmp
     hash-library
 )
 add_test(
@@ -465,6 +465,7 @@ target_include_directories(test_parser PRIVATE
 )
 target_link_libraries(test_parser
     bid
+    gmp
     hash-library
 )
 add_test(
@@ -481,7 +482,10 @@ target_include_directories(test_format PRIVATE
     src
     external/utfcpp-master/source
 )
-target_link_libraries(test_format bid)
+target_link_libraries(test_format
+    bid
+    gmp
+)
 add_test(
     NAME test_format
     COMMAND test_format
@@ -494,7 +498,10 @@ add_executable(test_number_to_string
 target_include_directories(test_number_to_string PRIVATE
     src
 )
-target_link_libraries(test_number_to_string bid)
+target_link_libraries(test_number_to_string
+    bid
+    gmp
+)
 add_test(
     NAME test_number_to_string
     COMMAND test_number_to_string
@@ -545,25 +552,31 @@ foreach (TEST ${TESTS})
         NAME "cpp:${T}"
         COMMAND python scripts/run_test.py --runner "python scripts/run_cpp.py" t/${T}
     )
-    add_test(
-        NAME "js:${T}"
-        COMMAND python scripts/run_test.py --runner "python scripts/run_js.py" t/${T}
-    )
-    add_test(
-        NAME "jvm:${T}"
-        COMMAND python scripts/run_test.py --runner "python scripts/run_jvm.py" t/${T}
-    )
+    if (NODEJS)
+        add_test(
+            NAME "js:${T}"
+            COMMAND python scripts/run_test.py --runner "python scripts/run_js.py" t/${T}
+        )
+    endif ()
+    if (JAVAC)
+        add_test(
+            NAME "jvm:${T}"
+            COMMAND python scripts/run_test.py --runner "python scripts/run_jvm.py" t/${T}
+        )
+    endif ()
     add_test(
         NAME "pynex:${T}"
-        COMMAND python scripts/run_test.py --runner "python scripts/run_pynex.py" t/${T}
+        COMMAND python scripts/run_test.py --runner "python exec/pynex/run_test.py" t/${T}
     )
-    add_test(
-        NAME "jnex:${T}"
-        COMMAND python scripts/run_test.py --runner "python scripts/run_jnex.py" t/${T}
-    )
+    if (JAVAC)
+        add_test(
+            NAME "jnex:${T}"
+            COMMAND python scripts/run_test.py --runner "python exec/jnex/run_test.py" t/${T}
+        )
+    endif (JAVAC)
     add_test(
         NAME "cnex:${T}"
-        COMMAND python scripts/run_test.py --runner "python scripts/run_cnex.py" t/${T}
+        COMMAND python scripts/run_test.py --runner "python exec/cnex/run_test.py" t/${T}
     )
 endforeach ()
 

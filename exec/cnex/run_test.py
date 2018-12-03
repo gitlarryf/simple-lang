@@ -5,8 +5,8 @@ import sys
 ExcludeTests = [
     "t/array-tostring.neon",        # array__toString__string
     "t/assignment.neon",            # dictionary / classes
-    "t/bigint-test.neon",           # module
     "t/binary-test.neon",           # module
+    "t/bigint.neon",                # assert
     "t/cal-test.neon",              # os.system
     "t/case-overlap.neon",          # JUMPTBL
     "t/cformat-test.neon",          # module
@@ -136,4 +136,4 @@ if fullname.replace("\\", "/") in ExcludeTests:
     sys.exit(99)
 
 subprocess.check_call([os.path.join("bin", "neonc"), "-q", fullname])
-subprocess.check_call(["bin/cnex", fullname + "x"])
+subprocess.check_call(["exec/cnex/cnex", fullname + "x"])
