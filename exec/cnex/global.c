@@ -586,6 +586,12 @@ void object__getArray(TExecutor *exec)
     push(exec->stack, cell_fromCell(a));
 }
 
+void object__makeArray(TExecutor *exec)
+{
+    Array *a = array_copyArray(top(exec->stack)->array); pop(exec->stack);
+    push(exec->stack, cell_fromObject(object_createArrayObject(a)));
+}
+
 void object__getBoolean(TExecutor *exec)
 {
     BOOL b = top(exec->stack)->object->pCell->boolean; pop(exec->stack);
@@ -641,6 +647,12 @@ void object__makeNumber(TExecutor *exec)
 {
     Number v = top(exec->stack)->number; pop(exec->stack);
     push(exec->stack, cell_fromObject(object_createNumberObject(v)));
+}
+
+void object__getString(TExecutor *exec)
+{
+    TString *s = string_fromString(&((ObjectString*)top(exec->stack)->object->pObject)->string); pop(exec->stack);
+    push(exec->stack, cell_fromStringLength(s->data, s->length));
 }
 
 void object__makeString(TExecutor *exec)
