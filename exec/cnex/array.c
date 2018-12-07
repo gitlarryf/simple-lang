@@ -66,6 +66,7 @@ size_t array_addArrayElement(Array *a, Cell *element)
         fatal_error("Could not allocate memory for appended array element, element num: %d", a->size);
     }
 
+    cell_resetCell(&a->data[a->size-1]);
     cell_copyCell(&a->data[a->size-1], element);
     return a->size;
 }

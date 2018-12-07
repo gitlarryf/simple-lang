@@ -10,6 +10,13 @@ typedef struct tagTModule {
     char *name;
 } TModule;
 
+typedef struct tagTExceptionInfo {
+    struct tagTString **info;
+    struct tagTString *name;
+    size_t size;
+    Number code;
+} ExceptionInfo;
+
 typedef struct tagTExecutor {
     struct tagTBytecode *object;
     unsigned int ip;
@@ -26,6 +33,7 @@ typedef struct tagTExecutor {
     BOOL debug;
     BOOL disassemble;
     void (*rtl_raise)(struct tagTExecutor *, const char *, const char *, Number);
+    struct tagTExceptionInfo *exception;
     struct tagTModule *module;
 
     /* Debug / Diagnostic fields */

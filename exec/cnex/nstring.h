@@ -39,6 +39,9 @@ TString *string_fromString(TString *s);
 TString *string_appendString(TString *s, TString *ns);
 TString *string_appendCString(TString *s, const char *ns);
 
+TString *string_prependString(TString *s, TString *ns);
+TString *string_prependCString(TString *s, const char *ns);
+
 void string_resizeString(TString *s, size_t n);
 
 char *string_asCString(TString *s);

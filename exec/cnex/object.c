@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -10,30 +11,35 @@
 
 #include "object.h"
 
-TString *object_toString(Object *obj)
+Cell *object_toString(Object *obj)
 {
     if (obj->type == oArray) {
+        Cell *cell = cell_newCell();
         TString *r = string_createString(0);
         size_t x;
-        Array *a = &((ObjectArray*)obj->pObject)->array;
+        Array *a = obj->pCell->array;
         r = string_appendCString(r, "[");
         for (x = 0; x < a->size; x++) {
             if (r->length > 1) {
                 r = string_appendCString(r, ", ");
             }
-            r = string_appendString(r, cell_toString(&a->data[x]));
+            TString *es = cell_toString(a->data[x].object->pCell);
+            r = string_appendString(r, es);
+            string_freeString(es);
         }
         r = string_appendCString(r, "]");
-        return r;
+        cell_setString(cell, r);
+        return cell;
     } else if (obj->type == oBoolean) {
-        if (((ObjectBoolean*)obj->pObject)->boolean == TRUE) {
-            return string_createCString("TRUE");
+        if (obj->pCell->boolean == TRUE) {
+            return cell_fromCString("TRUE");
         }
-        return string_createCString("FALSE");
+        return cell_fromCString("FALSE");
     } else if(obj->type == oBytes) {
+        Cell *cell = cell_newCell();
         BOOL first = TRUE;
         TString *r = string_createCString("HEXBYTES \"");
-        TString *bytes = &((ObjectString*)obj->pObject)->string;
+        TString *bytes = obj->pCell->string;
         for (size_t x = 0; x < bytes->length; x++) {
             if (first) {
                 first = FALSE;
@@ -45,11 +51,13 @@ TString *object_toString(Object *obj)
             r = string_appendCString(r, buf);
         }
         r = string_appendCString(r, "\"");
-        return r;
+        cell_setString(cell, r);
+        return cell;
     } else if(obj->type == oDictionary) {
+        Cell *cell = cell_newCell();
         TString *r = string_createString(0);
         size_t x;
-        Dictionary *d = &((ObjectDictionary*)obj->pObject)->dictionary;
+        Dictionary *d = obj->pCell->dictionary;
         r = string_appendCString(r, "{");
         Cell *keys = dictionary_getKeys(d);
         for (x = 0; x < keys->array->size; x++) {
@@ -59,19 +67,23 @@ TString *object_toString(Object *obj)
             r = string_appendCString(r, "\"");
             r = string_appendString(r, keys->array->data[x].string);
             r = string_appendCString(r, "\": ");
-            r = string_appendString(r, cell_toString(dictionary_findDictionaryEntry(d, keys->array->data[x].string)));
+            TString *de = cell_toString(dictionary_findDictionaryEntry(d, keys->array->data[x].string)->object->pCell);
+            r = string_appendString(r, de);
+            string_freeString(de);
         }
         r = string_appendCString(r, "}");
-        return r;
+        cell_freeCell(keys);
+        cell_setString(cell, r);
+        return cell;
     } else if(obj->type == oNumber) {
-        return string_createCString(number_to_string(((ObjectNumber*)obj->pObject)->number));
+        return cell_fromCString(number_to_string(obj->pCell->number));
     } else if(obj->type == oString) {
-        TString *r = string_createCString("\"");
-        r = string_appendString(r, &((ObjectString*)obj->pObject)->string);
-        r = string_appendCString(r, "\"");
-        return r;
+        Cell *cell = cell_fromCString("\"");
+        cell->string = string_appendString(cell->string, obj->pCell->string);
+        cell->string = string_appendCString(cell->string, "\"");
+        return cell;
     }
-    return string_createCString("Invalid Type Conversion");
+    return NULL;
 }
 
 Object *object_createObject()
@@ -82,92 +94,26 @@ Object *object_createObject()
     }
 
     o->type = oNone;
-    o->pObject = NULL;
+    o->iRefCount = 1;
+    o->pCell = NULL;
     return o;
 }
 
 void object_freeObject(Object *o)
 {
     if (o != NULL) {
-        if (o->pObject != NULL) {
-            free(o->pObject);
+        assert(o->iRefCount > 0);
+        o->iRefCount--;
+
+        if (o->iRefCount <= 0) {
+            if (o->pCell != NULL) {
+                cell_freeCell(o->pCell);
+            }
+            free(o);
         }
-        free (o);
     }
 }
 
-Object *object_copyObject(Object *o)
-{
-    Object *r = object_createObject();
-
-    switch (o->type) {
-        case oArray:
-            r->pObject = malloc(sizeof(ObjectArray));
-            if (r->pObject == NULL) {
-                fatal_error("Could not create copy of array object.");
-            }
-            r->type = o->type;
-            memcpy(r->pObject, o->pObject, sizeof(ObjectArray));
-            break;
-        case oBoolean:
-            r->pObject = malloc(sizeof(ObjectBoolean));
-            if (r->pObject == NULL) {
-                fatal_error("Could not create copy of boolean object.");
-            }
-            r->type = o->type;
-            memcpy(r->pObject, o->pObject, sizeof(ObjectBoolean));
-            break;
-        case oDictionary:
-            r->pObject = malloc(sizeof(ObjectDictionary));
-            if (r->pObject == NULL) {
-                fatal_error("Could not create copy of dictionary object.");
-            }
-            r->type = o->type;
-            r->type = o->type;
-            Dictionary *pDic = &((ObjectDictionary*)o->pObject)->dictionary;
-            Dictionary *pr = &((ObjectDictionary*)r->pObject)->dictionary;
-            pr->len = 0;
-            pr->max = 8;
-            pr->data = malloc(pr->max * sizeof(DictionaryEntry));
-            for (int64_t i = 0; i < pDic->len; i++) {
-                dictionary_addDictionaryEntry(pr, string_copyString(pDic->data[i].key), cell_fromCell(pDic->data[i].value));
-            }
-            break;
-        case oNumber:
-            r->pObject = malloc(sizeof(ObjectNumber));
-            if (r->pObject == NULL) {
-                fatal_error("Could not create copy of number object.");
-            }
-            r->type = o->type;
-            memcpy(r->pObject, o->pObject, sizeof(ObjectNumber));
-            break;
-        case oPointer:
-            r->pObject = malloc(sizeof(ObjectPointer));
-            if (r->pObject == NULL) {
-                fatal_error("Could not create copy of pointer objet.");
-            }
-            r->type = o->type;
-            memcpy(r->pObject, o->pObject, sizeof(ObjectPointer));
-            break;
-        case oString:
-            r->pObject = malloc(sizeof(ObjectString));
-            if (r->pObject == NULL) {
-                fatal_error("Could not create copy of string object.");
-            }
-            r->type = o->type;
-            memcpy(r->pObject, o->pObject, sizeof(ObjectString));
-            break;
-        case oNone:
-            r->pObject = NULL;
-            r->type = oNone;
-            break;
-        default:
-            fatal_error("Unknown object type: %d\n", o->type);
-            break;
-    }
-
-    return r;
-}
 
 Object *object_createArrayObject(Array *a)
 {
@@ -176,20 +122,12 @@ Object *object_createArrayObject(Array *a)
         fatal_error("failed to allocate Object container for array object.");
     }
 
-    o->pObject = malloc(sizeof(ObjectArray));
-    if (o->pObject == NULL) {
-        fatal_error("Could not create object array object.");
-    }
-
     o->type = oArray;
-    ((ObjectArray*)o->pObject)->type = o->type;
-    ((ObjectArray*)o->pObject)->array.size = 0;
-    ((ObjectArray*)o->pObject)->array.data = NULL;
-    Array *pArr = &((ObjectArray*)o->pObject)->array;
+    o->pCell = cell_newCell();
+    o->pCell->array = array_copyArray(a);
+    o->pCell->type = cArray;
+    o->iRefCount = 1;
 
-    for (size_t i = 0; i < a->size; i++) {
-        array_addArrayElement(pArr, &a->data[i]);
-    }
     return o;
 }
 
@@ -201,14 +139,9 @@ Object *object_createBooleanObject(BOOL b)
         fatal_error("failed to allocate Object container for boolean object.");
     }
 
-    o->pObject = malloc(sizeof(ObjectBoolean));
-    if (o->pObject == NULL) {
-        fatal_error("Could not create object boolean object.");
-    }
-
     o->type = oBoolean;
-    ((ObjectBoolean*)o->pObject)->type = o->type;
-    ((ObjectBoolean*)o->pObject)->boolean = b;
+    o->pCell = cell_fromBoolean(b);
+    o->iRefCount = 1;
 
     return o;
 }
@@ -220,20 +153,9 @@ Object *object_createDictionaryObject(Dictionary *d)
         fatal_error("failed to allocate Object container for dictionary object.");
     }
 
-    o->pObject = malloc(sizeof(ObjectDictionary));
-    if (o->pObject == NULL) {
-        fatal_error("Could not create object dictionary object.");
-    }
-
     o->type = oDictionary;
-    ((ObjectDictionary*)o->pObject)->type = o->type;
-    Dictionary *pDic = &((ObjectDictionary*)o->pObject)->dictionary;
-    pDic->len = 0;
-    pDic->max = 8;
-    pDic->data = malloc(pDic->max * sizeof(DictionaryEntry));
-    for (int64_t i = 0; i < d->len; i++) {
-        dictionary_addDictionaryEntry(pDic, string_copyString(d->data[i].key), cell_fromCell(d->data[i].value));
-    }
+    o->pCell = cell_fromDictionary(d);
+    o->iRefCount = 1;
 
     return o;
 }
@@ -245,33 +167,23 @@ Object *object_createNumberObject(Number val)
         fatal_error("failed to allocate Object container for number object.");
     }
 
-    o->pObject = malloc(sizeof(ObjectNumber));
-    if (o->pObject == NULL) {
-        fatal_error("Could not create object number object.");
-    }
-
     o->type = oNumber;
-    ((ObjectNumber*)o->pObject)->type = oNumber;
-    ((ObjectNumber*)o->pObject)->number = val;
+    o->pCell = cell_fromNumber(val);
+    o->iRefCount = 1;
 
     return o;
 }
 
-Object * object_createPointerObject(void * p)
+Object * object_createPointerObject(void *p)
 {
     Object *o = malloc(sizeof(Object));
     if (o == NULL) {
         fatal_error("failed to allocate Object container for pointer object.");
     }
 
-    o->pObject = malloc(sizeof(ObjectPointer));
-    if (o->pObject == NULL) {
-        fatal_error("Could not create object pointer object.");
-    }
-
     o->type = oPointer;
-    ((ObjectPointer*)o->pObject)->type = oPointer;
-    ((ObjectPointer*)o->pObject)->pointer = p;
+    o->pCell = cell_fromPointer(p);
+    o->iRefCount = 1;
 
     return o;
 }
@@ -283,29 +195,38 @@ Object *object_createStringObject(TString *s)
         fatal_error("failed to allocate Object container for string object.");
     }
 
-    o->pObject = malloc(sizeof(ObjectString));
-    if (o->pObject == NULL) {
-        fatal_error("Could not create object string object.");
-    }
-
     o->type = oString;
-
-    ((ObjectString*)o->pObject)->type = oString;
-    ((ObjectString*)o->pObject)->string.length = s->length;
-    ((ObjectString*)o->pObject)->string.data = malloc(s->length);
-    if (((ObjectString*)o->pObject)->string.data == NULL) {
-        fatal_error("Could not allocate storage for string object. (len=%d)", s->length);
-    }
-    memcpy(((ObjectString*)o->pObject)->string.data, s->data, s->length);
+    o->pCell = cell_fromString(s);
+    o->iRefCount = 1;
 
     return o;
 }
 
-Number *object_getNumberObject(Object *o)
+Object *object_fromCell(Cell *c)
 {
-    if (((ObjectNumber*)o->pObject)->type == oNumber) {
-        return &((ObjectNumber*)o->pObject)->number;
+    // Construct an Object from an existing Cell pointer.  There is no need to create a copy of the cell
+    // since it is reference counted.
+    Object *o = malloc(sizeof(Object));
+    if (o == NULL) {
+        fatal_error("failed to allocate Object container for cell object type %d.", c->type);
     }
-    return NULL;
-}
+    if (c->type == cArray) {
+        o->type = oArray;
+    } else if (c->type == cBoolean) {
+        o->type = oBoolean;
+    //} else if (c->type == cBytes) {  // ToDo: Implement ObjectBytes
+    //    o->type = oBytes;
+    } else if (c->type == cDictionary) {
+        o->type = oDictionary;
+    } else if (c->type == cNumber) {
+        o->type = oNumber;
+    } else if (c->type == cPointer) {
+        o->type = oPointer;
+    } else if (c->type == cString) {
+        o->type = oString;
+    }
+    o->pCell = c;
+    o->iRefCount = 1;
 
+    return o;
+}

@@ -124,6 +124,21 @@ BOOL string_isEmpty(TString *s)
     return TRUE;
 }
 
+TString *string_prependCString(TString *s, const char *ns)
+{
+    size_t nlen = strlen(ns);
+
+    s->data = realloc(s->data, s->length + nlen);
+    if (s->data == NULL) {
+        fatal_error("Could not allocate prepended C string data.");
+    }
+
+    memmove(&s->data[nlen], &s->data[nlen-1], nlen);
+    memcpy(s->data, ns, nlen);
+    s->length += nlen;
+    return s;
+}
+
 TString *string_appendCString(TString *s, const char *ns)
 {
     s->data = realloc(s->data, s->length + strlen(ns));
@@ -143,6 +158,19 @@ void string_resizeString(TString *s, size_t n)
         fatal_error("Could not resize string to new count of %ld", n);
     }
     s->length = n;
+}
+
+TString *string_prependString(TString *s, TString *ns)
+{
+    s->data = realloc(s->data, s->length + ns->length);
+    if (s->data == NULL) {
+        fatal_error("Could not allocate prepended TString data.");
+    }
+
+    memmove(&s->data[ns->length], &s->data[ns->length - 1], ns->length);
+    memcpy(s->data, ns->data, ns->length);
+    s->length += ns->length;
+    return s;
 }
 
 TString *string_appendString(TString *s, TString *ns)

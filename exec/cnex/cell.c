@@ -21,19 +21,6 @@ Cell *cell_fromAddress(Cell *c)
     return x;
 }
 
-Cell * cell_fromArray(Cell *c)
-{
-    Cell *a = cell_newCell();
-
-    a->type = cArray;
-    a->array = array_createArrayFromSize(c->array->size);
-
-    for (size_t i = 0; i < c->array->size; i++) {
-        cell_copyCell(&a->array->data[i], &c->array->data[i]);
-    }
-    return a;
-}
-
 Cell *cell_fromBoolean(BOOL b)
 {
     Cell *x = cell_newCell();
@@ -155,7 +142,8 @@ Cell *cell_fromCell(const Cell *c)
             x->array = NULL;
             break;
         case cObject:
-            x->object = object_copyObject(c->object);
+            x->object = c->object;
+            x->object->iRefCount++;
             x->boolean = c->boolean;
             x->dictionary = NULL;
             x->number = bid128_from_uint32(0);
@@ -337,12 +325,14 @@ TString *cell_toString(Cell *c)
             r = string_appendCString(r, number_to_string(c->number));
             break;
         case cObject:
-            r = object_toString(c->object);
+        {
+            assert(FALSE);
             break;
+        }
         case cPointer:
             break;
         case cString:
-            r = string_fromString(c->string);
+            r = string_appendString(r, c->string);
             break;
         default:
             fatal_error("Unhandled cell type: %d", c->type);
@@ -482,7 +472,8 @@ void cell_copyCell(Cell *dest, const Cell *source)
         dest->dictionary = NULL;
     }
     if (source->type == cObject && source->object != NULL) {
-        dest->object = object_copyObject(source->object);
+        dest->object = source->object;
+        dest->object->iRefCount++;
     } else {
         dest->object = NULL;
     }

@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <setjmp.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -229,12 +230,6 @@ TExecutor *exec_newExecutor(TBytecode *object)
     r->diagnostics.callstack_max_height = 0;
     return r;
 }
-
-typedef struct tagTExceptionInfo {
-    TString **info;
-    size_t size;
-    Number code;
-} ExceptionInfo;
 
 void exec_raiseLiteral(TExecutor *self, TString *name, TString *info, Number code)
 {
@@ -893,7 +888,6 @@ void exec_INDEXDW(TExecutor *self)
     TString *index = string_fromString(top(self->stack)->string); pop(self->stack);
     Cell *addr = top(self->stack)->address; pop(self->stack);
     push(self->stack, cell_fromAddress(cell_dictionaryIndexForWrite(addr, index)));
-    //string_freeString(index);
 }
 
 void exec_INDEXDV(TExecutor *self)
@@ -1171,31 +1165,34 @@ void exec_MAPA(TExecutor *self)
     uint32_t target = get_vint(self->object->code, self->object->codelen, &self->ip);
     const unsigned int start = self->ip;
     self->map_depth++;
-    Cell *a = cell_fromArray(top(self->stack)); pop(self->stack);
+    Cell *a = cell_fromCell(top(self->stack)); pop(self->stack);
 
     Cell *r = cell_createArrayCell(0);
     for (size_t i = 0; i < a->array->size; i++) {
-        Cell *x = &a->array->data[i];
-        push(self->stack, cell_fromCell(x));
+        push(self->stack, cell_fromCell(&a->array->data[i]));
         self->callstack[++self->callstacktop] = start;
 
-        /* ToDo: Implement exception handling */
-//        try {
-        int retval = exec_loop(self, self->callstacktop);
-        if (retval != 0) {
-            exit(retval);
-        }
-//        } catch (InternalException *x) {
-            //callstack.pop_back();
-            //map_depth--;
-            //raise_literal(x->name, x->info);
-            //delete x;
-            //return;
-//        }
-        Cell *tc = cell_fromCell(top(self->stack));
-        cell_arrayAppendElement(r, *tc); pop(self->stack);
+        /* ToDo: Finish C exception handling routine */
+        do { 
+            jmp_buf x;
+            if (!setjmp(x)) {
+                int retval = exec_loop(self, self->callstacktop);
+                if (retval != 0) {
+                    exit(retval);
+                }
+            } else {
+                --self->callstacktop;
+                self->map_depth--;
+                self->rtl_raise(self, string_asCString(self->exception->name), string_asCString(*self->exception->info), self->exception->code);
+                // ToDo: Implement Exception free routine.
+                free(self->exception);
+                return;
+            }
+        } while (0);
+        cell_arrayAppendElement(r, *top(self->stack)); pop(self->stack);
     }
     push(self->stack, r);
+    cell_freeCell(a);
     self->map_depth--;
     self->ip = target;
 }
@@ -1221,17 +1218,16 @@ void exec_MAPD(TExecutor *self)
             exit(retval);
         }
 //        } catch (InternalException *x) {
-            //callstack.pop_back();
-            //map_depth--;
-            //raise_literal(x->name, x->info);
-            //delete x;
+            //--self->callstacktop;
+            //self->map_depth--;
+            //self->rtl_raise(self, self->exception->name, self->exception->info);
+            //free(self->exception);
             //return;
 //        }
-        //r[x.first] = stack.top(); stack.pop();
-        Cell *tc = cell_fromCell(top(self->stack));
-        cell_addDictionaryEntry(r, entry.key, tc); pop(self->stack);
+        cell_addDictionaryEntry(r, string_fromString(entry.key), cell_fromCell(top(self->stack))); pop(self->stack);
     }
     push(self->stack, r);
+    cell_freeCell(d);
     self->map_depth--;
     self->ip = target;
 }
