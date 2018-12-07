@@ -1173,7 +1173,7 @@ void exec_MAPA(TExecutor *self)
         self->callstack[++self->callstacktop] = start;
 
         /* ToDo: Finish C exception handling routine */
-        do { 
+        do {
             jmp_buf x;
             if (!setjmp(x)) {
                 int retval = exec_loop(self, self->callstacktop);

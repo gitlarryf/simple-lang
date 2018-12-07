@@ -10,6 +10,7 @@ add_executable(cnex
     global.c
     nstring.c
     number.c
+    object.c
     stack.c
     util.c
 )
