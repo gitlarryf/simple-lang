@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
     /* ToDo: Remove this!  This is only for debugging. */
     /* gOptions.ExecutorDebugStats = TRUE; */
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-    _CrtSetBreakAlloc(215);
+    _CrtSetBreakAlloc(796);
 #endif
     if (!ParseOptions(argc, argv)) {
         return 3;
