@@ -583,7 +583,7 @@ void number__toString(TExecutor *exec)
 void object__getArray(TExecutor *exec)
 {
     Cell *a = top(exec->stack)->object->pCell; pop(exec->stack);
-    if (a->type != cNumber) {
+    if (a->type != cArray) {
         exec_rtl_raiseException(exec, "DynamicConversionException", "to Array", BID_ZERO);
     }
     push(exec->stack, cell_fromCell(a));
