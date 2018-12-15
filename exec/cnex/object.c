@@ -23,9 +23,9 @@ Cell *object_toString(Object *obj)
             if (r->length > 1) {
                 r = string_appendCString(r, ", ");
             }
-            TString *es = cell_toString(a->data[x].object->pCell);
-            r = string_appendString(r, es);
-            string_freeString(es);
+            Cell *es = object_toString(a->data[x].object);
+            r = string_appendString(r, es->string);
+            cell_freeCell(es);
         }
         r = string_appendCString(r, "]");
         cell_setString(cell, r);
@@ -67,9 +67,9 @@ Cell *object_toString(Object *obj)
             r = string_appendCString(r, "\"");
             r = string_appendString(r, keys->array->data[x].string);
             r = string_appendCString(r, "\": ");
-            TString *de = cell_toString(dictionary_findDictionaryEntry(d, keys->array->data[x].string)->object->pCell);
-            r = string_appendString(r, de);
-            string_freeString(de);
+            Cell *de = object_toString(dictionary_findDictionaryEntry(d, keys->array->data[x].string)->object);
+            r = string_appendString(r, de->string);
+            cell_freeCell(de);
         }
         r = string_appendCString(r, "}");
         cell_freeCell(keys);
