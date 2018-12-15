@@ -47,7 +47,7 @@ Cell *object_toString(Object *obj)
                 r = string_appendCString(r, " ");
             }
             char buf[3];
-            snprintf(buf, sizeof(buf), "%02x", bytes->data[x]);
+            snprintf(buf, sizeof(buf), "%02x", (unsigned char)bytes->data[x]);
             r = string_appendCString(r, buf);
         }
         r = string_appendCString(r, "\"");
@@ -131,7 +131,6 @@ Object *object_createArrayObject(Array *a)
     return o;
 }
 
-
 Object *object_createBooleanObject(BOOL b)
 {
     Object *o = malloc(sizeof(Object));
@@ -141,6 +140,20 @@ Object *object_createBooleanObject(BOOL b)
 
     o->type = oBoolean;
     o->pCell = cell_fromBoolean(b);
+    o->iRefCount = 1;
+
+    return o;
+}
+
+Object *object_createBytesObject(TString *b)
+{
+    Object *o = malloc(sizeof(Object));
+    if (o == NULL) {
+        fatal_error("failed to allocate Object container for bytes object.");
+    }
+
+    o->type = oBytes;
+    o->pCell = cell_fromBytes(b);
     o->iRefCount = 1;
 
     return o;
@@ -214,8 +227,8 @@ Object *object_fromCell(Cell *c)
         o->type = oArray;
     } else if (c->type == cBoolean) {
         o->type = oBoolean;
-    //} else if (c->type == cBytes) {  // ToDo: Implement ObjectBytes
-    //    o->type = oBytes;
+    } else if (c->type == cBytes) {
+        o->type = oBytes;
     } else if (c->type == cDictionary) {
         o->type = oDictionary;
     } else if (c->type == cNumber) {

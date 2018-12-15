@@ -325,7 +325,7 @@ void exec_PUSHT(TExecutor *self)
 {
     self->ip++;
     unsigned int val = exec_getOperand(self);
-    push(self->stack, cell_fromStringLength(self->object->strings[val]->data, self->object->strings[val]->length));
+    push(self->stack, cell_fromBytes(self->object->strings[val]));
 }
 
 void exec_PUSHPG(TExecutor *self)

@@ -29,6 +29,15 @@ Cell *cell_fromBoolean(BOOL b)
     return x;
 }
 
+Cell *cell_fromBytes(struct tagTString *b)
+{
+    // ToDo: Differ this from Strings, as strings could be UTF8.
+    Cell *x = cell_newCell();
+    x->type = cBytes;
+    x->string = string_fromString(b);
+    return x;
+}
+
 Cell *cell_fromDictionary(Dictionary *d)
 {
     Cell *x = cell_newCell();
@@ -128,6 +137,15 @@ Cell *cell_fromCell(const Cell *c)
             x->number = bid128_from_uint32(0);
             x->object = NULL;
             x->string = NULL;
+            x->address = NULL;
+            x->array = NULL;
+            x->dictionary = NULL;
+            break;
+        case cBytes:
+            x->string = string_copyString(c->string);
+            x->boolean = FALSE;
+            x->number = bid128_from_uint32(0);
+            x->object = NULL;
             x->address = NULL;
             x->array = NULL;
             x->dictionary = NULL;
@@ -452,7 +470,8 @@ void cell_copyCell(Cell *dest, const Cell *source)
     cell_clearCell(dest);
 
     dest->number = source->number;
-    if (source->type == cString && source->string != NULL) {
+    // ToDo: Split strings and bytes into separate entities; once we implement actual UTF8 strings.
+    if ((source->type == cString || source->type == cBytes) && source->string != NULL) {
         dest->string = string_copyString(source->string);
     } else {
         dest->string = NULL;
@@ -466,6 +485,12 @@ void cell_copyCell(Cell *dest, const Cell *source)
     } else {
         dest->array = NULL;
     }
+    // ToDo: Implement unique Bytes container, perhaps.
+    //if (source->type == cBytes && source->string != NULL) {
+    //    dest->string = string_copyString(source->string);
+    //} else {
+    //    dest->string = NULL;
+    //}
     if (source->type == cDictionary && source->dictionary != NULL) {
         dest->dictionary = dictionary_copyDictionary(source->dictionary);
     } else {
@@ -494,6 +519,7 @@ int32_t cell_compareCell(const Cell * s, const Cell * d)
         case cAddress:      return s->address != d->address;
         case cArray:        return s->array->size != d->array->size;
         case cBoolean:      return s->boolean != d->boolean;
+        case cBytes:        return string_compareString(s->string, d->string);
         case cDictionary:   return !dictionary_compareDictionary(s->dictionary, d->dictionary);
         case cNothing:      return s != d;
         case cNumber:       return !number_is_equal(s->number, d->number);
@@ -554,6 +580,8 @@ void cell_clearCell(Cell *c)
         dictionary_freeDictionary(c->dictionary);
     } else if (c->type == cObject) {
         object_freeObject(c->object);
+    } else if (c->type == cBytes) {
+        string_freeString(c->string);
     }
     cell_resetCell(c);
 }

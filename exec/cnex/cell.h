@@ -10,6 +10,7 @@ typedef enum tagEType {
     cAddress,
     cArray,
     cBoolean,
+    cBytes,
     cDictionary,
     cNumber,
     cObject,
@@ -43,6 +44,7 @@ void cell_resetCell(Cell *c);
 
 Cell *cell_fromAddress(Cell *c);
 Cell *cell_fromBoolean(BOOL b);
+Cell *cell_fromBytes(struct tagTString *b);
 Cell *cell_fromDictionary(struct tagTDictionary *d);
 Cell *cell_fromPointer(void *p);
 Cell *cell_fromNumber(Number n);

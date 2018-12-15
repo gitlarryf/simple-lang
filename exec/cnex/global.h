@@ -58,6 +58,7 @@ void object__getArray(struct tagTExecutor *exec);
 void object__makeArray(struct tagTExecutor *exec);
 void object__getBoolean(struct tagTExecutor *exec);
 void object__makeBoolean(struct tagTExecutor *exec);
+void object__makeBytes(struct tagTExecutor *exec);
 void object__getDictionary(struct tagTExecutor *exec);
 void object__makeDictionary(struct tagTExecutor *exec);
 void object__makeNull(struct tagTExecutor *exec);

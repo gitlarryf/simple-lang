@@ -61,6 +61,7 @@ TDispatch gfuncDispatch[] = {
     PDFUNC("object__makeArray",         object__makeArray),
     PDFUNC("object__getBoolean",        object__getBoolean),
     PDFUNC("object__makeBoolean",       object__makeBoolean),
+    PDFUNC("object__makeBytes",         object__makeBytes),
     PDFUNC("object__getDictionary",     object__getDictionary),
     PDFUNC("object__makeDictionary",    object__makeDictionary),
     PDFUNC("object__makeNull",          object__makeNull),
@@ -592,7 +593,6 @@ void object__getArray(TExecutor *exec)
 void object__getBoolean(TExecutor *exec)
 {
     Cell *b = top(exec->stack)->object->pCell; pop(exec->stack);
-    //BOOL b = top(exec->stack)->object->pCell->boolean; pop(exec->stack);
     if (b->type != cBoolean) {
         exec_rtl_raiseException(exec, "DynamicConversionException", "to Boolean", BID_ZERO);
     }
@@ -611,7 +611,6 @@ void object__getDictionary(TExecutor *exec)
 void object__getNumber(TExecutor *exec)
 {
     Cell *v = top(exec->stack)->object->pCell; pop(exec->stack);
-    //Number v = top(exec->stack)->object->pCell->number; pop(exec->stack);
     if (v->type != cNumber) {
         exec_rtl_raiseException(exec, "DynamicConversionException", "to Number", BID_ZERO);
     }
@@ -638,6 +637,12 @@ void object__makeBoolean(TExecutor *exec)
 {
     BOOL b = top(exec->stack)->boolean; pop(exec->stack);
     push(exec->stack, cell_fromObject(object_createBooleanObject(b)));
+}
+
+void object__makeBytes(TExecutor *exec)
+{
+    Cell *s = cell_fromCell(top(exec->stack)); pop(exec->stack);
+    push(exec->stack, cell_fromObject(object_fromCell(s)));
 }
 
 void object__makeDictionary(TExecutor *exec)

@@ -33,6 +33,7 @@ Cell *object_toString(Object *s);
 
 Object *object_createArrayObject(Array *a);
 Object *object_createBooleanObject(BOOL b);
+Object *object_createBytesObject(TString *b);
 Object *object_createDictionaryObject(Dictionary *d);
 Object *object_createNumberObject(Number n);
 Object *object_createPointerObject(void *p);
