@@ -61,6 +61,7 @@ TDispatch gfuncDispatch[] = {
     PDFUNC("object__makeArray",         object__makeArray),
     PDFUNC("object__getBoolean",        object__getBoolean),
     PDFUNC("object__makeBoolean",       object__makeBoolean),
+    PDFUNC("object__getBytes",          object__getBytes),
     PDFUNC("object__makeBytes",         object__makeBytes),
     PDFUNC("object__getDictionary",     object__getDictionary),
     PDFUNC("object__makeDictionary",    object__makeDictionary),
@@ -583,47 +584,56 @@ void number__toString(TExecutor *exec)
 
 void object__getArray(TExecutor *exec)
 {
-    Cell *a = top(exec->stack)->object->pCell; pop(exec->stack);
+    Cell *a = cell_fromCell(top(exec->stack)->object->pCell); pop(exec->stack);
     if (a->type != cArray) {
         exec_rtl_raiseException(exec, "DynamicConversionException", "to Array", BID_ZERO);
     }
-    push(exec->stack, cell_fromCell(a));
+    push(exec->stack, a);
 }
 
 void object__getBoolean(TExecutor *exec)
 {
-    Cell *b = top(exec->stack)->object->pCell; pop(exec->stack);
+    Cell *b = cell_fromCell(top(exec->stack)->object->pCell); pop(exec->stack);
     if (b->type != cBoolean) {
         exec_rtl_raiseException(exec, "DynamicConversionException", "to Boolean", BID_ZERO);
     }
-    push(exec->stack, cell_fromCell(b));
+    push(exec->stack, b);
+}
+
+void object__getBytes(TExecutor *exec)
+{
+    Cell *b = cell_fromCell(top(exec->stack)->object->pCell); pop(exec->stack);
+    if (b->type != cBytes) {
+        exec_rtl_raiseException(exec, "DynamicConversionException", "to Bytes", BID_ZERO);
+    }
+    push(exec->stack, b);
 }
 
 void object__getDictionary(TExecutor *exec)
 {
-    Cell *d = top(exec->stack)->object->pCell; pop(exec->stack);
+    Cell *d = cell_fromCell(top(exec->stack)->object->pCell); pop(exec->stack);
     if (d->type != cDictionary) {
         exec_rtl_raiseException(exec, "DynamicConversionException", "to Dictionary", BID_ZERO);
     }
-    push(exec->stack, cell_fromCell(d));
+    push(exec->stack, d);
 }
 
 void object__getNumber(TExecutor *exec)
 {
-    Cell *v = top(exec->stack)->object->pCell; pop(exec->stack);
+    Cell *v = cell_fromCell(top(exec->stack)->object->pCell); pop(exec->stack);
     if (v->type != cNumber) {
         exec_rtl_raiseException(exec, "DynamicConversionException", "to Number", BID_ZERO);
     }
-    push(exec->stack, cell_fromCell(v));
+    push(exec->stack, v);
 }
 
 void object__getString(TExecutor *exec)
 {
-    Cell *s = top(exec->stack)->object->pCell; pop(exec->stack);
+    Cell *s = cell_fromCell(top(exec->stack)->object->pCell); pop(exec->stack);
     if (s->type != cString) {
         exec_rtl_raiseException(exec, "DynamicConversionException", "to String", BID_ZERO);
     }
-    push(exec->stack, cell_fromCell(s));
+    push(exec->stack, s);
 }
 
 // ToDo: Implement exception handling in object_make() routines.
