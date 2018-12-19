@@ -2,14 +2,34 @@
 #define GLOBAL_H
 #include <stdint.h>
 
+#include "cell.h"
+
 struct tagTExecutor;
+
+static struct tagTCell VAR_stdin;
+static struct tagTCell VAR_stdout;
+static struct tagTCell VAR_stderr;
+static struct tagTCell VAR_args;
+
+static struct {
+    const char *name;
+    struct tagTCell *value;
+} BuiltinVariables[] = {
+    { "io$stdout",  &VAR_stdout },
+    { "io$stderr",  &VAR_stderr },
+    { "sys$args",   &VAR_args   },
+    { "io$stdin",   &VAR_stdin  },
+    { 0 },
+};
 
 typedef struct tagTDispatch {
     char *name;
     void (*func)(struct tagTExecutor *s);
 } TDispatch;
 
-void global_callFunction(const char *pszFunc, struct tagTExecutor *exec);
+int global_callFunction(const char *pszFunc, struct tagTExecutor *exec);
+void global_initVariables(char *argv[]);
+Cell *global_getVariable(const char *pszVar);
 
 void print(struct tagTExecutor *exec);
 void concat(struct tagTExecutor *exec);
@@ -18,12 +38,6 @@ void print(struct tagTExecutor *exec);
 void str(struct tagTExecutor *exec);
 void strb(struct tagTExecutor *exec);
 void ord(struct tagTExecutor *exec);
-
-
-
-/* io.neon functions */
-void io_fprint(struct tagTExecutor *exec);
-
 
 
 /* sys.neon functions */
@@ -58,6 +72,7 @@ void object__getArray(struct tagTExecutor *exec);
 void object__makeArray(struct tagTExecutor *exec);
 void object__getBoolean(struct tagTExecutor *exec);
 void object__makeBoolean(struct tagTExecutor *exec);
+void object__getBytes(struct tagTExecutor *exec);
 void object__makeBytes(struct tagTExecutor *exec);
 void object__getDictionary(struct tagTExecutor *exec);
 void object__makeDictionary(struct tagTExecutor *exec);

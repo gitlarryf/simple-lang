@@ -121,6 +121,16 @@ uint64_t number_to_uint64(Number x)
  * Number FROM functions
  */
 
+Number number_from_sint32(int32_t x)
+{
+    return bid128_from_int32(x);
+}
+
+Number number_from_uint32(uint32_t x)
+{
+    return bid128_from_uint32(x);
+}
+
 Number number_from_uint64(uint64_t x)
 {
     return bid128_from_uint64(x);
@@ -140,6 +150,17 @@ BOOL number_is_equal(Number x, Number y)
 {
     return bid128_quiet_equal(x, y);
 }
+
+BOOL number_is_less(Number x, Number y)
+{
+    return bid128_quiet_less(x, y);
+}
+
+BOOL number_is_greater(Number x, Number y)
+{
+    return bid128_quiet_greater(x, y);
+}
+
 
 //#define __NUMBER_TESTS
 #ifdef __NUMBER_TESTS

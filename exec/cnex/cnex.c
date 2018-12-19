@@ -145,6 +145,7 @@ int main(int argc, char* argv[])
     bytecode_loadBytecode(pModule, bytecode, bytes_read);
 
     TExecutor *exec = exec_newExecutor(pModule);
+    global_initVariables(argv);
 
     exec->diagnostics.time_start = clock();
     exec_run(exec, gOptions.EnableAssertions);
@@ -339,13 +340,11 @@ void exec_PUSHPG(TExecutor *self)
 /* push pointer to predefined global */
 void exec_PUSHPPG(TExecutor *self)
 {
-    /* ToDo: Reimplement PUSHPPG opcode correctly. */
     self->ip++;
-    fatal_error("PUSHPPG not implemented");
-    //unsigned int addr = exec_getOperand(self);
-    //addr=addr;
-    /* assert(addr < self->object->global_variables->size); */
-    //push(self->stack, cell_fromAddress(cell_newCell()));
+    unsigned int addr = exec_getOperand(self);
+    const char *var = self->object->strings[addr]->data;
+
+    push(self->stack, cell_fromAddress(global_getVariable(var)));
 }
 
 void exec_PUSHPMG(void)
@@ -943,7 +942,9 @@ void exec_CALLP(TExecutor *self)
     unsigned int val = exec_getOperand(self);
     const char *func = self->object->strings[val]->data;
 
-    global_callFunction(func, self);
+    if (global_callFunction(func, self) == 0) {
+        fatal_error("exec_CALLP() %s - invalid or unsupported predefined function call.", func);
+    }
 }
 
 void exec_CALLF(TExecutor *self)

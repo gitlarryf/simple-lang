@@ -8,6 +8,8 @@
 #include <string.h>
 
 #include "array.h"
+#include "lib/binary.h"
+#include "lib/io.h"
 #include "cell.h"
 #include "dictionary.h"
 #include "exec.h"
@@ -21,6 +23,7 @@
 #define PDFUNC(name, func)      { name, (void (*)(TExecutor *))(func) }
 
 TDispatch gfuncDispatch[] = {
+    // Intrinsic Functions
     PDFUNC("concat",                    concat),
     PDFUNC("concatBytes",               concatBytes),
     PDFUNC("print",                     print),
@@ -28,10 +31,46 @@ TDispatch gfuncDispatch[] = {
     PDFUNC("strb",                      strb),
     PDFUNC("ord",                       ord),
 
+
+    // Neon Library Modules:
+    // Binary - Bitwise operations
+    PDFUNC("binary$and32",              binary_and32),
+    PDFUNC("binary$and64",              binary_and64),
+    PDFUNC("binary$extract32",          binary_extract32),
+    PDFUNC("binary$extract64",          binary_extract64),
+    PDFUNC("binary$get32",              binary_get32),
+    PDFUNC("binary$get64",              binary_get64),
+    PDFUNC("binary$not32",              binary_not32),
+    PDFUNC("binary$not64",              binary_not64),
+    PDFUNC("binary$or32",               binary_or32),
+    PDFUNC("binary$or64",               binary_or64),
+    PDFUNC("binary$replace32",          binary_replace32),
+    PDFUNC("binary$replace64",          binary_replace64),
+    PDFUNC("binary$set32",              binary_set32),
+    PDFUNC("binary$set64",              binary_set64),
+    PDFUNC("binary$shiftLeft32",        binary_shift_left32),
+    PDFUNC("binary$shiftLeft64",        binary_shift_left64),
+    PDFUNC("binary$shiftRight32",       binary_shift_right32),
+    PDFUNC("binary$shiftRight64",       binary_shift_right64),
+    PDFUNC("binary$shiftRightSigned32", binary_shift_right_signed32),
+    PDFUNC("binary$shiftRightSigned64", binary_shift_right_signed64),
+    PDFUNC("binary$xor32",              binary_xor32),
+    PDFUNC("binary$xor64",              binary_xor64),
+    PDFUNC("binary$andBytes",           binary_andBytes),
+    PDFUNC("binary$notBytes",           binary_notBytes),
+    PDFUNC("binary$orBytes",            binary_orBytes),
+    PDFUNC("binary$xorBytes",           binary_xorBytes),
+
+
+    // io - InputOutput module
     PDFUNC("io$fprint",                 io_fprint),
 
+    // System - System level calls
     PDFUNC("sys$exit",                  sys_exit),
 
+
+    // Global Functions::
+    // Array functions
     PDFUNC("array__append",             array__append),
     PDFUNC("array__concat",             array__concat),
     PDFUNC("array__extend",             array__extend),
@@ -43,24 +82,25 @@ TDispatch gfuncDispatch[] = {
     PDFUNC("array__toString__number",   array__toString__number),
     PDFUNC("array__toString__object",   array__toString__object),
     PDFUNC("array__toString__string",   array__toString__string),
-
+    // Boolean Functions
     PDFUNC("boolean__toString",         boolean__toString),
-
+    // Bytes Functions
     PDFUNC("bytes__decodeToString",     bytes__decodeToString),
     PDFUNC("bytes__range",              bytes__range),
     PDFUNC("bytes__size",               bytes__size),
     PDFUNC("bytes__splice",             bytes__splice),
     PDFUNC("bytes__toArray",            bytes__toArray),
     PDFUNC("bytes__toString",           bytes__toString),
-
+    // Dictionary Functions
     PDFUNC("dictionary__keys",          dictionary__keys),
-
+    // Number Functions
     PDFUNC("number__toString",          number__toString),
-
+    // Object Functions
     PDFUNC("object__getArray",          object__getArray),
     PDFUNC("object__makeArray",         object__makeArray),
     PDFUNC("object__getBoolean",        object__getBoolean),
     PDFUNC("object__makeBoolean",       object__makeBoolean),
+    PDFUNC("object__getBytes",          object__getBytes),
     PDFUNC("object__makeBytes",         object__makeBytes),
     PDFUNC("object__getDictionary",     object__getDictionary),
     PDFUNC("object__makeDictionary",    object__makeDictionary),
@@ -72,7 +112,7 @@ TDispatch gfuncDispatch[] = {
     PDFUNC("object__isNull",            object__isNull),
     PDFUNC("object__subscript",         object__subscript),
     PDFUNC("object__toString",          object__toString),
-
+    // String Functions
     PDFUNC("string__append",            string__append),
     PDFUNC("string__toBytes",           string__toBytes),
     PDFUNC("string__length",            string__length),
@@ -82,17 +122,8 @@ TDispatch gfuncDispatch[] = {
     { 0 }
 };
 
-static FILE *check_file(TExecutor *exec, void *pf)
-{
-    FILE *f = (FILE *)(pf);
-    if (f == NULL) {
-        assert(f == NULL);
-        exec->rtl_raise(exec, "IoException_InvalidFile", "", BID_ZERO);
-    }
-    return f;
-}
 
-void global_callFunction(const char *pszFunc, struct tagTExecutor *exec)
+int global_callFunction(const char *pszFunc, struct tagTExecutor *exec)
 {
     uint32_t i;
 
@@ -100,11 +131,38 @@ void global_callFunction(const char *pszFunc, struct tagTExecutor *exec)
     while (gfuncDispatch[i].name) {
         if (strcmp(pszFunc, gfuncDispatch[i].name) == 0) {
             (*gfuncDispatch[i].func)(exec);
-            return;
+            return 1;
         }
         i++;
     }
-    fatal_error("global_callFunction(): \"%s\" - invalid or unsupported predefined function call.", pszFunc);
+    return 0;
+}
+
+void global_initVariables(char *argv[])
+{
+    VAR_args.address = (void*)argv;
+    VAR_args.type = cAddress;
+    VAR_stderr.address = (void*)stderr;
+    VAR_stderr.type = cAddress;
+    VAR_stdin.address = (void*)stdin;
+    VAR_stdin.type = cAddress;
+    VAR_stdout.address = (void*)stdout;
+    VAR_stdout.type = cAddress;
+}
+
+Cell *global_getVariable(const char *pszVar)
+{
+    uint32_t i;
+
+    i = 0;
+    while (BuiltinVariables[i].name) {
+        if (strcmp(pszVar, BuiltinVariables[i].name) == 0) {
+            return BuiltinVariables[i].value;
+        }
+        i++;
+    }
+    fatal_error("global_getVariable(): \"%s\" - invalid predifined variable.", pszVar);
+    return NULL; // To please the compiler...
 }
 
 void print(TExecutor *exec)
@@ -119,6 +177,7 @@ void concat(TExecutor *exec)
 {
     Cell *b = peek(exec->stack, 0);
     Cell *a = peek(exec->stack, 1);
+
     Cell *r = cell_createStringCell(b->string->length + a->string->length);
 
     memcpy(r->string->data, a->string->data, a->string->length);
@@ -167,23 +226,6 @@ void ord(TExecutor *exec)
     Number r = bid128_from_uint32((uint32_t)s->string->data[0]);
     pop(exec->stack);
     push(exec->stack, cell_fromNumber(r));
-}
-
-
-
-
-
-void io_fprint(TExecutor *exec)
-{
-    Cell *s = peek(exec->stack, 0);
-    Cell *pf = peek(exec->stack, 1);
-
-    FILE *f = check_file(exec, pf);
-    fwrite(s->string->data, 1, s->string->length, f);
-    fputs("\n", f);
-
-    pop(exec->stack);
-    pop(exec->stack);
 }
 
 
@@ -583,47 +625,56 @@ void number__toString(TExecutor *exec)
 
 void object__getArray(TExecutor *exec)
 {
-    Cell *a = top(exec->stack)->object->pCell; pop(exec->stack);
+    Cell *a = cell_fromCell(top(exec->stack)->object->pCell); pop(exec->stack);
     if (a->type != cArray) {
         exec_rtl_raiseException(exec, "DynamicConversionException", "to Array", BID_ZERO);
     }
-    push(exec->stack, cell_fromCell(a));
+    push(exec->stack, a);
 }
 
 void object__getBoolean(TExecutor *exec)
 {
-    Cell *b = top(exec->stack)->object->pCell; pop(exec->stack);
+    Cell *b = cell_fromCell(top(exec->stack)->object->pCell); pop(exec->stack);
     if (b->type != cBoolean) {
         exec_rtl_raiseException(exec, "DynamicConversionException", "to Boolean", BID_ZERO);
     }
-    push(exec->stack, cell_fromCell(b));
+    push(exec->stack, b);
+}
+
+void object__getBytes(TExecutor *exec)
+{
+    Cell *b = cell_fromCell(top(exec->stack)->object->pCell); pop(exec->stack);
+    if (b->type != cBytes) {
+        exec_rtl_raiseException(exec, "DynamicConversionException", "to Bytes", BID_ZERO);
+    }
+    push(exec->stack, b);
 }
 
 void object__getDictionary(TExecutor *exec)
 {
-    Cell *d = top(exec->stack)->object->pCell; pop(exec->stack);
+    Cell *d = cell_fromCell(top(exec->stack)->object->pCell); pop(exec->stack);
     if (d->type != cDictionary) {
         exec_rtl_raiseException(exec, "DynamicConversionException", "to Dictionary", BID_ZERO);
     }
-    push(exec->stack, cell_fromCell(d));
+    push(exec->stack, d);
 }
 
 void object__getNumber(TExecutor *exec)
 {
-    Cell *v = top(exec->stack)->object->pCell; pop(exec->stack);
+    Cell *v = cell_fromCell(top(exec->stack)->object->pCell); pop(exec->stack);
     if (v->type != cNumber) {
         exec_rtl_raiseException(exec, "DynamicConversionException", "to Number", BID_ZERO);
     }
-    push(exec->stack, cell_fromCell(v));
+    push(exec->stack, v);
 }
 
 void object__getString(TExecutor *exec)
 {
-    Cell *s = top(exec->stack)->object->pCell; pop(exec->stack);
+    Cell *s = cell_fromCell(top(exec->stack)->object->pCell); pop(exec->stack);
     if (s->type != cString) {
         exec_rtl_raiseException(exec, "DynamicConversionException", "to String", BID_ZERO);
     }
-    push(exec->stack, cell_fromCell(s));
+    push(exec->stack, s);
 }
 
 // ToDo: Implement exception handling in object_make() routines.
