@@ -32,6 +32,7 @@ void global_initVariables(char *argv[]);
 Cell *global_getVariable(const char *pszVar);
 
 void print(struct tagTExecutor *exec);
+void chr(struct tagTExecutor *exec);
 void concat(struct tagTExecutor *exec);
 void concatBytes(struct tagTExecutor *exec);
 void print(struct tagTExecutor *exec);

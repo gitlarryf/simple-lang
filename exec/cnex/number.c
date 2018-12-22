@@ -58,6 +58,49 @@ void number_toString(Number x, char *buf, size_t len)
         strcpy(buf, lead);
     }
 
+    //const int PRECISION = 34;
+
+    //char buf[50];
+    //bid128_to_string(buf, x.get_bid());
+    //std::string sbuf(buf);
+    //const std::string::size_type E = sbuf.find('E');
+    //if (E == std::string::npos) {
+    //    // Inf or NaN
+    //    return sbuf;
+    //}
+    //int exponent = std::stoi(sbuf.substr(E+1));
+    //sbuf = sbuf.substr(0, E);
+    //const std::string::size_type last_significant_digit = sbuf.find_last_not_of('0');
+    //if (last_significant_digit == 0) {
+    //    return "0";
+    //}
+    //const int trailing_zeros = static_cast<int>(sbuf.length() - (last_significant_digit + 1));
+    //exponent += trailing_zeros;
+    //sbuf = sbuf.substr(0, last_significant_digit + 1);
+    //if (exponent != 0) {
+    //    if (exponent > 0 && sbuf.length() + exponent <= PRECISION+1) {
+    //        sbuf.append(exponent, '0');
+    //    } else if (exponent < 0 && -exponent < static_cast<int>(sbuf.length()-1)) {
+    //        sbuf = sbuf.substr(0, sbuf.length()+exponent) + "." + sbuf.substr(sbuf.length()+exponent);
+    //    } else if (exponent < 0 && -exponent == static_cast<int>(sbuf.length()-1)) {
+    //        sbuf = sbuf.substr(0, 1) + "0." + sbuf.substr(1);
+    //    } else if (exponent < 0 && sbuf.length() - exponent <= PRECISION+2) {
+    //        sbuf.insert(1, "0." + std::string(-exponent-(sbuf.length()-1), '0'));
+    //    } else {
+    //        exponent += static_cast<int>(sbuf.length() - 2);
+    //        if (sbuf.length() >= 3) {
+    //            sbuf.insert(2, 1, '.');
+    //        }
+    //        sbuf.push_back('e');
+    //        sbuf.append(std::to_string(exponent));
+    //    }
+    //}
+    //if (sbuf.at(0) == '+') {
+    //    sbuf = sbuf.substr(1);
+    //}
+    //return sbuf;
+
+
     *E = '\0';
     strcat(buf, v);
 }
@@ -181,5 +224,8 @@ void main()
     assert(strcasecmp(number_to_string(number_from_string("123.45")),      number_to_string(number_from_string("123.45"))) == 0);
     assert(strcasecmp(number_to_string(number_from_string("12.345")),      number_to_string(number_from_string("123.45"))) != 0);
     assert(strcasecmp(number_to_string(number_from_string("1234567890")),  number_to_string(number_from_string("1234567890"))) == 0);
+
+    // +4294967290E+0
+    // +18446744073709551610E+0
 }
 #endif

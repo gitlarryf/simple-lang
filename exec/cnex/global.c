@@ -8,8 +8,6 @@
 #include <string.h>
 
 #include "array.h"
-#include "lib/binary.h"
-#include "lib/io.h"
 #include "cell.h"
 #include "dictionary.h"
 #include "exec.h"
@@ -19,17 +17,23 @@
 #include "nstring.h"
 #include "util.h"
 
+#include "lib/binary.h"
+#include "lib/io.h"
+#include "lib/random.h"
+
 
 #define PDFUNC(name, func)      { name, (void (*)(TExecutor *))(func) }
 
 TDispatch gfuncDispatch[] = {
     // Intrinsic Functions
+    PDFUNC("chr",                       chr),
     PDFUNC("concat",                    concat),
     PDFUNC("concatBytes",               concatBytes),
     PDFUNC("print",                     print),
     PDFUNC("str",                       str),
     PDFUNC("strb",                      strb),
     PDFUNC("ord",                       ord),
+
 
 
     // Neon Library Modules:
@@ -64,9 +68,22 @@ TDispatch gfuncDispatch[] = {
 
     // io - InputOutput module
     PDFUNC("io$fprint",                 io_fprint),
+    PDFUNC("io$close",                  io_close),
+    PDFUNC("io$open",                   io_open),
+    PDFUNC("io$readBytes",              io_readBytes),
+    PDFUNC("io$readLine",               io_readLine),
+    PDFUNC("io$seek",                   io_seek),
+    PDFUNC("io$tell",                   io_tell),
+    PDFUNC("io$truncate",               io_truncate),
+    PDFUNC("io$write",                  io_write),
+    PDFUNC("io$_writeBytes",            io_writeBytes),
+
+    // random - Random Number module
+    PDFUNC("random$uint32",             random_uint32),
 
     // System - System level calls
     PDFUNC("sys$exit",                  sys_exit),
+
 
 
     // Global Functions::
@@ -140,6 +157,10 @@ int global_callFunction(const char *pszFunc, struct tagTExecutor *exec)
 
 void global_initVariables(char *argv[])
 {
+    // Seed the random number generator for the RANDOM module.
+    // ToDo: Come up with a better seed value / scheme!
+    srand((unsigned int)time(NULL));
+
     VAR_args.address = (void*)argv;
     VAR_args.type = cAddress;
     VAR_stderr.address = (void*)stderr;
@@ -171,6 +192,19 @@ void print(TExecutor *exec)
     fwrite(s->string->data, 1, s->string->length, stdout);
     puts("");
     pop(exec->stack);
+}
+
+void chr(struct tagTExecutor *exec)
+{
+    Number x = top(exec->stack)->number; pop(exec->stack);
+    assert(number_is_integer(x));
+
+    Cell *r = cell_createStringCell(1);
+    // ToDo: Implement UTF8 strings here!!
+    char ch = (char)number_to_uint32(x);
+    string_appendChars(r->string, (char*)&ch, 1);
+
+    push(exec->stack, r);
 }
 
 void concat(TExecutor *exec)

@@ -151,6 +151,18 @@ TString *string_appendCString(TString *s, const char *ns)
     return s;
 }
 
+TString *string_appendChars(TString *s, char *c, size_t numChars)
+{
+    s->data = realloc(s->data, s->length + numChars);
+    if (s->data == NULL) {
+        fatal_error("Could not reallocate data for %d appended characters.", numChars);
+    }
+
+    memcpy(&s->data[s->length], c, numChars);
+    s->length += numChars;
+    return s;
+}
+
 void string_resizeString(TString *s, size_t n)
 {
     s->data = realloc(s->data, n);

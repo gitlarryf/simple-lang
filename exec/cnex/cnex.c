@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
     /* ToDo: Remove this!  This is only for debugging. */
     /* gOptions.ExecutorDebugStats = TRUE; */
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-    _CrtSetBreakAlloc(796);
+    _CrtSetBreakAlloc(134);
 #endif
     if (!ParseOptions(argc, argv)) {
         return 3;
@@ -537,9 +537,12 @@ void exec_EXPN(TExecutor *self)
     push(self->stack, cell_fromNumber(bid128_pow(a, b)));
 }
 
-void exec_EQB(void)
+void exec_EQB(TExecutor *self)
 {
-    fatal_error("exec_EQB not implemented");
+    self->ip++;
+    BOOL b = top(self->stack)->boolean; pop(self->stack);
+    BOOL a = top(self->stack)->boolean; pop(self->stack);
+    push(self->stack, cell_fromBoolean(a == b));
 }
 
 void exec_NEB(void)
@@ -597,17 +600,26 @@ void exec_GEN(TExecutor*self)
 
 void exec_EQS(TExecutor*self)
 {
+    // ToDo: Rewrite this to avoid unnecessary Cell constructions!
     self->ip++;
-    Cell *b = cell_fromCell(top(self->stack)); pop(self->stack);
-    Cell *a = cell_fromCell(top(self->stack)); pop(self->stack);
+    Cell *b = top(self->stack);
+    Cell *a = peek(self->stack, 1);
     Cell *r = cell_fromBoolean(string_compareString(a->string, b->string) == 0);
-    cell_freeCell(b);
-    cell_freeCell(a);
+    pop(self->stack);
+    pop(self->stack);
     push(self->stack, r);
+
+    //Cell *b = cell_fromCell(top(self->stack)); pop(self->stack);
+    //Cell *a = cell_fromCell(top(self->stack)); pop(self->stack);
+    //Cell *r = cell_fromBoolean(string_compareString(a->string, b->string) == 0);
+    //cell_freeCell(b);
+    //cell_freeCell(a);
+    //push(self->stack, r);
 }
 
 void exec_NES(TExecutor*self)
 {
+    // ToDo: Rewrite this to avoid unnecessary Cell constructions!
     self->ip++;
     Cell *b = cell_fromCell(top(self->stack)); pop(self->stack);
     Cell *a = cell_fromCell(top(self->stack)); pop(self->stack);
@@ -619,6 +631,7 @@ void exec_NES(TExecutor*self)
 
 void exec_LTS(TExecutor*self)
 {
+    // ToDo: Rewrite this to avoid unnecessary Cell constructions!
     self->ip++;
     Cell *b = cell_fromCell(top(self->stack)); pop(self->stack);
     Cell *a = cell_fromCell(top(self->stack)); pop(self->stack);
@@ -630,6 +643,7 @@ void exec_LTS(TExecutor*self)
 
 void exec_GTS(TExecutor*self)
 {
+    // ToDo: Rewrite this to avoid unnecessary Cell constructions!
     self->ip++;
     Cell *b = cell_fromCell(top(self->stack)); pop(self->stack);
     Cell *a = cell_fromCell(top(self->stack)); pop(self->stack);
@@ -641,6 +655,7 @@ void exec_GTS(TExecutor*self)
 
 void exec_LES(TExecutor*self)
 {
+    // ToDo: Rewrite this to avoid unnecessary Cell constructions!
     self->ip++;
     Cell *b = cell_fromCell(top(self->stack)); pop(self->stack);
     Cell *a = cell_fromCell(top(self->stack)); pop(self->stack);
@@ -652,6 +667,7 @@ void exec_LES(TExecutor*self)
 
 void exec_GES(TExecutor*self)
 {
+    // ToDo: Rewrite this to avoid unnecessary Cell constructions!
     self->ip++;
     Cell *b = cell_fromCell(top(self->stack)); pop(self->stack);
     Cell *a = cell_fromCell(top(self->stack)); pop(self->stack);
@@ -663,6 +679,7 @@ void exec_GES(TExecutor*self)
 
 void exec_EQT(TExecutor*self)
 {
+    // ToDo: Rewrite this to avoid unnecessary Cell constructions!
     self->ip++;
     Cell *b = cell_fromCell(top(self->stack)); pop(self->stack);
     Cell *a = cell_fromCell(top(self->stack)); pop(self->stack);
@@ -674,6 +691,7 @@ void exec_EQT(TExecutor*self)
 
 void exec_NET(TExecutor*self)
 {
+    // ToDo: Rewrite this to avoid unnecessary Cell constructions!
     self->ip++;
     Cell *b = cell_fromCell(top(self->stack)); pop(self->stack);
     Cell *a = cell_fromCell(top(self->stack)); pop(self->stack);
@@ -685,6 +703,7 @@ void exec_NET(TExecutor*self)
 
 void exec_LTT(TExecutor*self)
 {
+    // ToDo: Rewrite this to avoid unnecessary Cell constructions!
     self->ip++;
     Cell *b = cell_fromCell(top(self->stack)); pop(self->stack);
     Cell *a = cell_fromCell(top(self->stack)); pop(self->stack);
@@ -696,6 +715,7 @@ void exec_LTT(TExecutor*self)
 
 void exec_GTT(TExecutor*self)
 {
+    // ToDo: Rewrite this to avoid unnecessary Cell constructions!
     self->ip++;
     Cell *b = cell_fromCell(top(self->stack)); pop(self->stack);
     Cell *a = cell_fromCell(top(self->stack)); pop(self->stack);
@@ -707,6 +727,7 @@ void exec_GTT(TExecutor*self)
 
 void exec_LET(TExecutor*self)
 {
+    // ToDo: Rewrite this to avoid unnecessary Cell constructions!
     self->ip++;
     Cell *b = cell_fromCell(top(self->stack)); pop(self->stack);
     Cell *a = cell_fromCell(top(self->stack)); pop(self->stack);
@@ -718,6 +739,7 @@ void exec_LET(TExecutor*self)
 
 void exec_GET(TExecutor*self)
 {
+    // ToDo: Rewrite this to avoid unnecessary Cell constructions!
     self->ip++;
     Cell *b = cell_fromCell(top(self->stack)); pop(self->stack);
     Cell *a = cell_fromCell(top(self->stack)); pop(self->stack);
@@ -1275,7 +1297,7 @@ int exec_loop(TExecutor *self, size_t min_callstack_depth)
             case DIVN:    exec_DIVN(self); break;
             case MODN:    exec_MODN(self); break;
             case EXPN:    exec_EXPN(self); break;
-            case EQB:     exec_EQB(); break;
+            case EQB:     exec_EQB(self); break;
             case NEB:     exec_NEB(); break;
             case EQN:     exec_EQN(self); break;
             case NEN:     exec_NEN(self); break;
