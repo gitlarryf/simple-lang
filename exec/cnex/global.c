@@ -69,7 +69,7 @@ static FILE *check_file(TExecutor *exec, void *pf)
     FILE *f = (FILE *)(pf);
     if (f == NULL) {
         assert(f == NULL);
-        exec->rtl_raise(exec, "IoException_InvalidFile", "", BID_ZERO);
+        EXEC_RTL_EXCEPTION(exec, "IoException_InvalidFile", "", BID_ZERO, f);
     }
     return f;
 }
@@ -144,7 +144,7 @@ void ord(TExecutor *exec)
     Cell *s = top(exec->stack);
 
     if (s->string->length != 1) {
-        exec->rtl_raise(exec, "ArrayIndexException", "ord() requires string of length 1", BID_ZERO);
+        RTL_EXCEPTION("ArrayIndexException", "ord() requires string of length 1", BID_ZERO);
     }
     Number r = bid128_from_uint32((uint32_t)s->string->data[0]);
     pop(exec->stack);
@@ -177,14 +177,12 @@ void sys_exit(TExecutor *exec)
 
     if (!number_is_integer(x)) {
         sprintf(ex, "%s %s", "sys.exit invalid parameter:", number_to_string(x));
-        exec->rtl_raise(exec, "InvalidValueException", ex, BID_ZERO);
-        return;
+        EXEC_RTL_EXCEPTION(exec, "InvalidValueException", ex, BID_ZERO, );
     }
     int r = number_to_sint32(x);
     if (r < 0 || r > 255) {
         sprintf(ex, "%s %s", "sys.exit invalid parameter:", number_to_string(x));
-        exec->rtl_raise(exec, "InvalidValueException", ex, BID_ZERO);
-        return;
+        EXEC_RTL_EXCEPTION(exec, "InvalidValueException", ex, BID_ZERO,);
     }
     exit(r);
 }
@@ -237,7 +235,7 @@ void array__resize(TExecutor *exec)
     Cell *addr = top(exec->stack)->address; pop(exec->stack);
 
     if (!number_is_integer(new_size)) {
-        exec->rtl_raise(exec, "ArrayIndexException", number_to_string(new_size), BID_ZERO);
+        EXEC_RTL_EXCEPTION(exec, "ArrayIndexException", number_to_string(new_size), BID_ZERO,);
     }
 
     size_t array_size = addr->array->size;
@@ -356,7 +354,7 @@ void array__toBytes__number(TExecutor *exec)
     for (x = 0, i = 0; x < a->array->size; x++) {
         uint32_t b = bid128_to_uint32_int(a->array->data[x].number);
         if (b >= 256) {
-            exec->rtl_raise(exec, "ByteOutOfRangeException", TO_STRING(b), BID_ZERO);
+            EXEC_RTL_EXCEPTION(exec, "ByteOutOfRangeException", TO_STRING(b), BID_ZERO,);
         }
         r->string->data[i++] = (uint8_t)b;
     }

@@ -775,18 +775,15 @@ void exec_INDEXAR(TExecutor *self)
     Cell *addr = top(self->stack)->address; pop(self->stack);
 
     if (!number_is_integer(index)) {
-        self->rtl_raise(self, "ArrayIndexException", number_to_string(index), BID_ZERO);
-        return;
+        EXEC_RTL_EXCEPTION(self, "ArrayIndexException", number_to_string(index), BID_ZERO, );
     }
     int64_t i = number_to_sint64(index);
     if (i < 0) {
-        self->rtl_raise(self, "ArrayIndexException", number_to_string(number_from_sint64(i)), BID_ZERO);
-        return;
+        EXEC_RTL_EXCEPTION(self, "ArrayIndexException", number_to_string(number_from_sint64(i)), BID_ZERO, );
     }
     uint64_t j = (uint64_t)i;
     if (j >= addr->array->size) {
-        self->rtl_raise(self, "ArrayIndexException", number_to_string(number_from_uint64(j)), BID_ZERO);
-        return;
+        EXEC_RTL_EXCEPTION(self, "ArrayIndexException", number_to_string(number_from_uint64(j)), BID_ZERO, );
     }
     push(self->stack, cell_fromAddress(cell_arrayIndexForRead(addr, j)));
 }
@@ -798,13 +795,11 @@ void exec_INDEXAW(TExecutor *self)
     Cell *addr = top(self->stack)->address; pop(self->stack);
 
     if (!number_is_integer(index)) {
-        self->rtl_raise(self, "ArrayIndexException", number_to_string(index), BID_ZERO);
-        return;
+        EXEC_RTL_EXCEPTION(self, "ArrayIndexException", number_to_string(index), BID_ZERO, );
     }
     int64_t i = number_to_sint64(index);
     if (i < 0) {
-        self->rtl_raise(self, "ArrayIndexException", number_to_string(number_from_sint64(i)), BID_ZERO);
-        return;
+        EXEC_RTL_EXCEPTION(self, "ArrayIndexException", number_to_string(number_from_sint64(i)), BID_ZERO, );
     }
     uint64_t j = (uint64_t)i;
     push(self->stack, cell_fromAddress(cell_arrayIndexForWrite(addr, j)));
@@ -817,18 +812,15 @@ void exec_INDEXAV(TExecutor *self)
     Cell *array = top(self->stack);
 
     if (!number_is_integer(index)) {
-        self->rtl_raise(self, "ArrayIndexException", number_to_string(index), BID_ZERO);
-        return;
+        EXEC_RTL_EXCEPTION(self, "ArrayIndexException", number_to_string(index), BID_ZERO, );
     }
     int64_t i = number_to_sint64(index);
     if (i < 0) {
-        self->rtl_raise(self, "ArrayIndexException", number_to_string(number_from_sint64(i)), BID_ZERO);
-        return;
+        EXEC_RTL_EXCEPTION(self, "ArrayIndexException", number_to_string(number_from_sint64(i)), BID_ZERO, );
     }
     uint64_t j = (uint64_t)i;
     if (j >= array->array->size) {
-        self->rtl_raise(self, "ArrayIndexException", number_to_string(number_from_uint64(j)), BID_ZERO);
-        return;
+        EXEC_RTL_EXCEPTION(self, "ArrayIndexException", number_to_string(number_from_uint64(j)), BID_ZERO, );
     }
     assert(j < array->array->size);
     Cell *val = cell_fromCell(&array->array->data[j]);
@@ -843,13 +835,11 @@ void exec_INDEXAN(TExecutor *self)
     Cell *array = top(self->stack);
 
     if (!number_is_integer(index)) {
-        self->rtl_raise(self, "ArrayIndexException", number_to_string(index), BID_ZERO);
-        return;
+        EXEC_RTL_EXCEPTION(self, "ArrayIndexException", number_to_string(index), BID_ZERO, );
     }
     int64_t i = number_to_sint64(index);
     if (i < 0) {
-        self->rtl_raise(self, "ArrayIndexException", number_to_string(number_from_sint64(i)), BID_ZERO);
-        return;
+        EXEC_RTL_EXCEPTION(self, "ArrayIndexException", number_to_string(number_from_sint64(i)), BID_ZERO, );
     }
     uint64_t j = (uint64_t)i;
     /* ToDo: Debug this.  I think is following code is WRONG! */
@@ -945,8 +935,7 @@ void exec_CALLF(TExecutor *self)
     self->ip++;
     unsigned int val = exec_getOperand(self);
     if (self->callstacktop >= self->param_recursion_limit) {
-        self->rtl_raise(self, "StackOverflowException", "", BID_ZERO);
-        return;
+        EXEC_RTL_EXCEPTION(self, "StackOverflowException", "", BID_ZERO, );
     }
     self->callstack[++self->callstacktop] = self->ip;
     self->diagnostics.callstack_max_height = self->callstacktop;

@@ -6,6 +6,8 @@
 #include "number.h"
 #include "util.h"
 
+#define RTL_EXCEPTION(except, desc, val, ...)                        EXEC_RTL_EXCEPTION(##exec, except, desc, val, ##__VA_ARGS__)
+#define EXEC_RTL_EXCEPTION(obj, except, desc, val, retval)           do { obj->rtl_raise((obj), (except), (desc), (val)); return retval; } while(0)
 typedef struct tagTModule {
     char *name;
 } TModule;
