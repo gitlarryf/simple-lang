@@ -44,6 +44,7 @@ cnex = envcnex.Program("cnex", [
     "dictionary.c",
     "framestack.c",
     "global.c",
+    "module.c",
     "nstring.c",
     "number.c",
     "object.c",
