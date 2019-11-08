@@ -135,12 +135,6 @@ int main(int argc, char* argv[])
 {
     int ret = 0;
     gOptions.pszExecutableName = path_getFileNameOnly(argv[0]);
-#ifdef __MS_HEAP_DBG
-    /* ToDo: Remove this!  This is only for debugging. */
-    /* gOptions.ExecutorDebugStats = TRUE; */
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-    _CrtSetBreakAlloc(82);
-#endif
 
     if (!ParseOptions(argc, argv)) {
         return 3;
@@ -335,6 +329,7 @@ void exec_raiseLiteral(TExecutor *self, TString *name, TString *info, Number cod
         sp -= 1;
     }
     fprintf(stderr, "Unhandled exception %s (%s) (code %d)\n", TCSTR(name), TCSTR(info), number_to_sint32(code));
+    cell_freeCell(exceptionvar);
     // ToDo: Initiate a stack dump here...
 
     // Setting exit_code here will cause exec_loop to terminate and return this exit code.
