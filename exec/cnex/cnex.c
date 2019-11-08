@@ -135,6 +135,12 @@ int main(int argc, char* argv[])
 {
     int ret = 0;
     gOptions.pszExecutableName = path_getFileNameOnly(argv[0]);
+#ifdef __MS_HEAP_DBG
+    /* ToDo: Remove this!  This is only for debugging. */
+    /* gOptions.ExecutorDebugStats = TRUE; */
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    _CrtSetBreakAlloc(82);
+#endif
 
     if (!ParseOptions(argc, argv)) {
         return 3;
