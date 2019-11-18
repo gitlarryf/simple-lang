@@ -2,6 +2,7 @@
 
 #include "cell.h"
 #include "exec.h"
+#include "gc.h"
 #include "module.h"
 #include "nstring.h"
 #include "stack.h"
@@ -30,6 +31,16 @@ void runtime_isModuleImported(TExecutor *exec)
     }
     pop(exec->stack);
     push(exec->stack, cell_fromBoolean(r));
+}
+
+void runtime_garbageCollect(TExecutor *exec)
+{
+    heap_sweepHeap(exec, FALSE);
+}
+
+void runtime_getAllocatedObjectCount(TExecutor *exec)
+{
+    push(exec->stack, cell_fromNumber(number_from_uint64(heap_getObjectCount(exec))));
 }
 
 void runtime_moduleIsMain(TExecutor *exec)
