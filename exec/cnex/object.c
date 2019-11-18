@@ -208,3 +208,4 @@ Object *object_fromCell(Cell *c)
 
     return o;
 }
+

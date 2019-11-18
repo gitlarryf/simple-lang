@@ -261,11 +261,14 @@ TDispatch gfuncDispatch[] = {
     PDFUNC("random$uint32",             random_uint32),
 
     // runtime - runtime support services
-    PDFUNC("runtime$assertionsEnabled", runtime_assertionsEnabled),
-    PDFUNC("runtime$executorName",      runtime_executorName),
-    PDFUNC("runtime$isModuleImported",  runtime_isModuleImported),
-    PDFUNC("runtime$moduleIsMain",      runtime_moduleIsMain),
-    PDFUNC("runtime$setRecursionLimit", runtime_setRecursionLimit),
+    PDFUNC("runtime$assertionsEnabled",             runtime_assertionsEnabled),
+    PDFUNC("runtime$executorName",                  runtime_executorName),
+    PDFUNC("runtime$isModuleImported",              runtime_isModuleImported),
+	PDFUNC("runtime$garbageCollect",                runtime_garbageCollect),
+    PDFUNC("runtime$getAllocatedObjectCount",       runtime_getAllocatedObjectCount),
+    PDFUNC("runtime$moduleIsMain",                  runtime_moduleIsMain),
+    PDFUNC("runtime$setGarbageCollectionInterval",  runtime_setGarbageCollectionInterval),
+	 PDFUNC("runtime$setRecursionLimit", runtime_setRecursionLimit),
 
     // sqlite - SQLite module database functions
     PDFUNC("sqlite$open",               sqlite_open),

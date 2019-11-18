@@ -26,6 +26,7 @@
 #include "dictionary.h"
 #include "disassembly.h"
 #include "exec.h"
+#include "gc.h"
 #include "global.h"
 #include "framestack.h"
 #include "module.h"
@@ -73,6 +74,7 @@ void exec_freeExecutor(TExecutor *e)
     }
     destroyStack(e->stack);
     free(e->stack);
+    heap_freeHeap(e);
 
     // Next, iterate all allocated modules, freeing them as we go.
     for (unsigned int m = e->module_count; m > 0; m--) {
@@ -143,6 +145,12 @@ BOOL ParseOptions(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
+#ifdef __MS_HEAP_DBG
+    /* ToDo: Remove this!  This is only for debugging. */
+    /* gOptions.ExecutorDebugStats = TRUE; */
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    _CrtSetBreakAlloc(685);
+#endif
     int ret = 0;
     gOptions.pszExecutableName = path_getFileNameOnly(argv[0]);
 
@@ -172,6 +180,9 @@ int main(int argc, char* argv[])
                         "CallStack Height       : %" PRId32 "\n"
                         "Global Size            : %" PRIu32 "\n"
                         "Max Framesets          : %d\n"
+                        "Max Allocations        : %" PRIu64 "\n"
+                        "Objects Collected      : %" PRIu64 "\n"
+                        "Objects Abandoned      : %d\n"
                         "Execution Time         : %fms\n",
                         g_executor->diagnostics.total_opcodes,
                         g_executor->stack->max + 1,
@@ -180,6 +191,9 @@ int main(int argc, char* argv[])
                         g_executor->callstacktop,
                         g_executor->module[0].bytecode->global_size,
                         g_executor->framestack->max,
+                        g_executor->diagnostics.total_allocations,
+                        g_executor->diagnostics.collected_objects,
+                        heap_getObjectCount(g_executor),
                         (((float)g_executor->diagnostics.time_end - g_executor->diagnostics.time_start) / CLOCKS_PER_SEC) * 1000
         );
     }
@@ -246,7 +260,10 @@ TExecutor *exec_newExecutor(TModule *object)
     r->enable_assert = TRUE;
     r->debug = gOptions.ExecutorDebugStats;
     r->disassemble = gOptions.ExecutorDisassembly;
-    r->framestack = framestack_createFrameStack(r->callstacksize);
+    r->framestack = framestack_createFrameStack(r->param_recursion_limit);
+    r->allocations = 0;
+    r->collection_interval = 1000;
+    r->firstObject = NULL;
 
     // Load and initialize all the module code.  Note that there is always at least
     // one module!  See: runtime$moduleIsMain() call.
@@ -281,6 +298,8 @@ TExecutor *exec_newExecutor(TModule *object)
     /* Debug / Diagnostic fields */
     r->diagnostics.total_opcodes = 0;
     r->diagnostics.callstack_max_height = 0;
+    r->diagnostics.total_allocations = 0;
+    r->diagnostics.collected_objects = 0;
     return r;
 }
 
@@ -1314,9 +1333,12 @@ void exec_DUPX1(TExecutor *self)
     self->ip++;
     Cell *a = cell_fromCell(top(self->stack)); pop(self->stack);
     Cell *b = cell_fromCell(top(self->stack)); pop(self->stack);
-    push(self->stack, a);
-    push(self->stack, b);
     push(self->stack, cell_fromCell(a));
+    push(self->stack, b);
+    push(self->stack, a);
+    //push(self->stack, a);
+    //push(self->stack, b);
+    //push(self->stack, cell_fromCell(a));
 }
 
 void exec_DROP(TExecutor *self)
@@ -1387,15 +1409,19 @@ void exec_ALLOC(TExecutor *self)
 {
     self->ip++;
     uint32_t val = exec_getOperand(self);
-
     Cell *cell = cell_createArrayCell(val);
+    heap_allocObject(self, cell);
     push(self->stack, cell_fromAddress(cell));
+    self->allocations++;
+    if (self->collection_interval > 0 && self->allocations >= self->collection_interval) {
+        heap_sweepHeap(self, gOptions.ExecutorDebugStats);
+    }
 }
 
 void exec_PUSHNIL(TExecutor *self)
 {
     self->ip++;
-    push(self->stack, cell_newCell());
+    push(self->stack, cell_createAddressCell(NULL));
 }
 
 void exec_RESETC(TExecutor *self)
@@ -1547,11 +1573,9 @@ void exec_PUSHCI(TExecutor *self)
     if (dot == NPOS) {
         for (unsigned int c = 0; c < self->module->bytecode->classsize; c++) {
             if (self->module->bytecode->classes[c].name == val) {
-                Cell *ci = cell_createArrayCell(2);
-                ci->array->data[0].other = self->module;
-                ci->array->data[0].type = cOther;
-                ci->array->data[1].other = &self->module->bytecode->classes[c];
-                ci->array->data[1].type = cOther;
+                Cell *ci = cell_createArrayCell(0);
+                cell_arrayAppendElementPointer(ci, cell_createOtherCell(self->module));
+                cell_arrayAppendElementPointer(ci, cell_createOtherCell(&self->module->bytecode->classes[c]));
                 push(self->stack, ci);
                 return;
             }

@@ -613,6 +613,7 @@ void cell_copyCell(Cell *dest, const Cell *source)
     dest->boolean = source->boolean;
     dest->other = source->other;
     dest->type = source->type;
+    dest->marked = FALSE;
 }
 
 int32_t cell_compareCell(const Cell * s, const Cell * d)
@@ -648,6 +649,7 @@ Cell *cell_newCell(void)
         fatal_error("Could not allocate new cell object.");
     }
 
+    c->marked = FALSE;
     c->number = number_from_uint32(0);
     c->object = NULL;
     c->string = NULL;
@@ -670,6 +672,7 @@ Cell *cell_newCellType(CellType t)
 
 void cell_initCell(Cell *c)
 {
+    c->marked = FALSE;
     c->number = number_from_uint32(0);
     c->object = NULL;
     c->string = NULL;
@@ -683,6 +686,9 @@ void cell_initCell(Cell *c)
 
 void cell_clearCell(Cell *c)
 {
+    if (c == NULL) {
+        return; // Cell is NIL, or not initialized, so just return.
+    }
     assert(c != NULL);
 
     if (c->type == cString || c->type == cBytes) {
@@ -695,6 +701,8 @@ void cell_clearCell(Cell *c)
         if (c->object != NULL && c->object->release != NULL) {
             c->object->release(c->object);
         }
+    } else if (c->type == cAddress) {
+        //cell_clearCell(c->address);
     }
     cell_initCell(c);
 }
@@ -703,4 +711,46 @@ void cell_freeCell(Cell *c)
 {
     cell_clearCell(c);
     free(c);
+}
+
+void cell_markCell(Cell *c)
+{
+    //assert(c != NULL);
+    if (c == NULL || c->marked) {
+        return;
+    }
+
+     if (c->type == cAddress) {
+        cell_markCell(c->address);
+    } else if (c->type == cArray) {
+        for (size_t i = 0; i < c->array->size; i++) {
+            cell_markCell(&c->array->data[i]);
+        }
+    } else if (c->type == cDictionary) {
+        for (int64_t i = 0; i < c->dictionary->len; i++) {
+            cell_markCell(c->dictionary->data->value);
+        }
+    }
+    c->marked = TRUE;
+}
+
+void cell_unmarkCell(Cell *c)
+{
+    //assert(c != NULL);
+    if (c == NULL) {
+        return;
+    }
+
+    c->marked = FALSE;
+     if (c->type == cAddress) {
+        cell_unmarkCell(c->address);
+    } else if (c->type == cArray) {
+        for (size_t i = 0; i < c->array->size; i++) {
+            cell_unmarkCell(&c->array->data[i]);
+        }
+    } else if (c->type == cDictionary) {
+        for (int64_t i = 0; i < c->dictionary->len; i++) {
+            cell_unmarkCell(c->dictionary->data->value);
+        }
+    }
 }

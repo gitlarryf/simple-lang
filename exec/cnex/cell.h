@@ -27,6 +27,7 @@ typedef struct tagTCell {
     struct tagTString *string;
     enum tagEType type;
     BOOL boolean;
+    BOOL marked;
     void *other;
 } Cell;
 
@@ -86,5 +87,8 @@ BOOL cell_arrayElementExists(const Cell *a, const Cell *e);
 
 Cell *cell_dictionaryIndexForWrite(Cell *c, struct tagTString *key);
 Cell *cell_dictionaryIndexForRead(Cell *c, struct tagTString *key);
+
+void cell_markCell(Cell *c);
+void cell_unmarkCell(Cell *c);
 
 #endif
