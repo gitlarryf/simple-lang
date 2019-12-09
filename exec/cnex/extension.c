@@ -156,8 +156,7 @@ int cell_get_array_size(const struct Ne_Cell *cell)
 void cell_array_clear(struct Ne_Cell *cell)
 {
     cell_ensureArray((Cell*)cell);
-    array_freeArray(((Cell*)cell)->array);
-    cell_ensureArray((Cell*)cell);
+    array_clearArray(((Cell*)cell)->array);
 }
 
 const struct Ne_Cell *cell_get_array_cell(const struct Ne_Cell *cell, int index)
