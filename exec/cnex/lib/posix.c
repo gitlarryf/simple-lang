@@ -1,5 +1,9 @@
 #include "posix.h"
 
+#define _XOPEN_SOURCE       700
+#define _DEFAULT_SOURCE
+
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -7,6 +11,7 @@
 #include <string.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
@@ -19,7 +24,7 @@
 #include "stack.h"
 
 #ifdef __APPLE__
-    // TODO: Check macOS version >= 10.10
+    // TODO: Check MAC OS version >= 10.10
     #define HAVE_AT_FUNCTIONS 0
 #else
     #define HAVE_AT_FUNCTIONS 1
@@ -29,7 +34,7 @@
 
 static Number VAR_errno;
 
-inline Cell *wrap(int r)
+static inline Cell *wrap(int r)
 {
     if (r < 0) {
         VAR_errno = number_from_sint32(errno);
@@ -73,7 +78,7 @@ void posix_chown(struct tagTExecutor *exec)
     free(path);
 }
 
-void posix_close(struct tagTExecutor *exec)
+void posix_Close(struct tagTExecutor *exec)
 {
     Number fildes = top(exec->stack)->number; pop(exec->stack);
 
@@ -103,26 +108,31 @@ void posix_exit(struct tagTExecutor *exec)
 }
 
 void posix_execve(struct tagTExecutor *exec)
-//Number execve(const utf8string &path, const std::vector<utf8string> &argv, const std::vector<utf8string> &envp)
 {
     Cell *envp = cell_fromCell(top(exec->stack)); pop(exec->stack);
     Cell *argv = cell_fromCell(top(exec->stack)); pop(exec->stack);
-    char *path = string_ensureNullTerminated(top(exec->stack)->string); pop(exec->stack);
+    char *path = string_asCString(top(exec->stack)->string); pop(exec->stack);
 
-    char *a = malloc(sizeof(char*) * (argv->array->size+1));
+    char *a[argv->array->size + 1];
     for (size_t i = 0; i < argv->array->size; i++) {
-        a[i] = string_ensureNullTerminated(argv->array->data[i].string);
+        a[i] = string_asCString(argv->array->data[i].string);
     }
     a[argv->array->size] = NULL;
 
-    char *e = malloc(sizeof(char*) * (envp->array->size+1));
+    char *e[envp->array->size + 1];
     for (size_t i = 0; i < envp->array->size; i++) {
-        e[i] = string_ensureNullTerminated(envp->array->data[i].string);
+        e[i] = string_asCString(envp->array->data[i].string);
     }
     e[envp->array->size] = NULL;
 
     push(exec->stack, wrap(execve(path, a, e)));
     free(path);
+    for (size_t i = 0; i < argv->array->size; i++) {
+        free(a[i]);
+    }
+    for (size_t i = 0; i < envp->array->size; i++) {
+        free(e[i]);
+    }
     cell_freeCell(argv);
     cell_freeCell(envp);
     free(a);
@@ -137,7 +147,7 @@ void posix_faccessat(struct tagTExecutor *exec)
     char *path = string_asCString(top(exec->stack)->string); pop(exec->stack);
     Number fd = top(exec->stack)->number; pop(exec->stack);
 
-    push(exec->stack, wrap(faccessat(number_to_sint32(fd), path, number_to_sint32(mode), number_to_sint32(flag)));
+    push(exec->stack, wrap(faccessat(number_to_sint32(fd), path, number_to_sint32(mode), number_to_sint32(flag))));
     free(path);
 }
 #endif
@@ -270,7 +280,7 @@ void posix_getpid(struct tagTExecutor *exec)
 
 void posix_getppid(struct tagTExecutor *exec)
 {
-    push(exec->stack, cell_fromNumber(number_from_sint32(::getppid())));
+    push(exec->stack, cell_fromNumber(number_from_sint32(getppid())));
 }
 
 void posix_getpriority(struct tagTExecutor *exec)
@@ -412,9 +422,6 @@ void posix_pathconf(struct tagTExecutor *exec)
 
 void posix_pipe(struct tagTExecutor *exec)
 {
-    //Number wfd = top(exec->stack)->number; pop(exec->stack);
-    //Number rfd = top(exec->stack)->number; pop(exec->stack);
-
     int fds[2];
     int r = pipe(fds);
     if (r < 0) {
@@ -637,6 +644,8 @@ void posix_symlinkat(struct tagTExecutor *exec)
 
 void posix_sync(struct tagTExecutor *exec)
 {
+    assert(exec);
+
     sync();
 }
 
