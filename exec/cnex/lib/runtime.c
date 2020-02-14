@@ -35,6 +35,8 @@ void runtime_isModuleImported(TExecutor *exec)
 
 void runtime_garbageCollect(TExecutor *exec)
 {
+    //exec;
+    //ToDo: Mark and sweep all objects.
     heap_sweepHeap(exec, FALSE);
 }
 

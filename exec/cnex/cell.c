@@ -203,6 +203,7 @@ Cell *cell_fromCell(const Cell *c)
 
     Cell *x = cell_newCell();
     x->type = c->type;
+    x->alloced = c->alloced;
     switch (c->type) {
         case cAddress:
             cell_copyCell(x, c);
@@ -301,6 +302,7 @@ Cell *cell_fromCell(const Cell *c)
             x->array = NULL;
             x->dictionary = NULL;
             x->other = NULL;
+            x->marked = FALSE;
             break;
     }
     return x;
@@ -613,7 +615,8 @@ void cell_copyCell(Cell *dest, const Cell *source)
     dest->boolean = source->boolean;
     dest->other = source->other;
     dest->type = source->type;
-    dest->marked = FALSE;
+    dest->alloced = source->alloced;
+    //dest->marked = source->marked;
 }
 
 int32_t cell_compareCell(const Cell * s, const Cell * d)
@@ -650,6 +653,7 @@ Cell *cell_newCell(void)
     }
 
     c->marked = FALSE;
+    c->alloced = FALSE;
     c->number = number_from_uint32(0);
     c->object = NULL;
     c->string = NULL;
@@ -673,6 +677,7 @@ Cell *cell_newCellType(CellType t)
 void cell_initCell(Cell *c)
 {
     c->marked = FALSE;
+    c->alloced = FALSE;
     c->number = number_from_uint32(0);
     c->object = NULL;
     c->string = NULL;
@@ -716,22 +721,30 @@ void cell_freeCell(Cell *c)
 void cell_markCell(Cell *c)
 {
     //assert(c != NULL);
-    if (c == NULL || c->marked) {
+    if (c == NULL || (c->alloced && c->marked)) {
         return;
     }
+    c->marked = TRUE;
 
-     if (c->type == cAddress) {
+    if (c->type == cAddress) {
         cell_markCell(c->address);
     } else if (c->type == cArray) {
+        //array_markArrayCells(c->array);
         for (size_t i = 0; i < c->array->size; i++) {
-            cell_markCell(&c->array->data[i]);
+            switch (c->array->data[i].type) {
+                case cArray:
+                case cAddress:
+                case cDictionary:
+                    cell_markCell(&c->array->data[i]);
+                default:
+                    c->array->data[i].marked = TRUE;
+            }
         }
     } else if (c->type == cDictionary) {
         for (int64_t i = 0; i < c->dictionary->len; i++) {
             cell_markCell(c->dictionary->data->value);
         }
     }
-    c->marked = TRUE;
 }
 
 void cell_unmarkCell(Cell *c)

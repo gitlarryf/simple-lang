@@ -28,6 +28,7 @@ typedef struct tagTCell {
     enum tagEType type;
     BOOL boolean;
     BOOL marked;
+    BOOL alloced;
     void *other;
 } Cell;
 

@@ -59,6 +59,21 @@ Array *array_expandArray(Array *self, size_t iElements)
     return self;
 }
 
+void array_markArrayCells(Array *self)
+{
+    if (self != NULL && self->data != NULL) {
+        for (size_t i = 0; i < self->size; i++) {
+            if (self->data[i].alloced && self->data[i].marked) {
+                continue;
+            } else {
+                fprintf(stderr, "\t\tMarking Array Element %zd\n", i);
+                cell_markCell(&self->data[i]);
+                //fprintf(stderr, "\t\tSlipping marked Array Element %zd\n", i);
+            }
+        }
+    }
+}
+
 void array_freeArray(Array *self)
 {
     if (self != NULL && self->data != NULL) {

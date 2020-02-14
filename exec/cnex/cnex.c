@@ -1336,9 +1336,6 @@ void exec_DUPX1(TExecutor *self)
     push(self->stack, cell_fromCell(a));
     push(self->stack, b);
     push(self->stack, a);
-    //push(self->stack, a);
-    //push(self->stack, b);
-    //push(self->stack, cell_fromCell(a));
 }
 
 void exec_DROP(TExecutor *self)
@@ -1410,6 +1407,8 @@ void exec_ALLOC(TExecutor *self)
     self->ip++;
     uint32_t val = exec_getOperand(self);
     Cell *cell = cell_createArrayCell(val);
+    cell->array->data[0].number = number_from_uint32(42);
+    cell->array->data[1].number = number_from_uint32(17);
     heap_allocObject(self, cell);
     push(self->stack, cell_fromAddress(cell));
     self->allocations++;
@@ -1581,6 +1580,7 @@ void exec_PUSHCI(TExecutor *self)
             }
         }
     } else {
+        // Locate class interface in module
         TString *modname = string_subString(self->module->bytecode->strings[val], 0, dot);
         TString *methodname = string_subString(self->module->bytecode->strings[val], dot+1, self->module->bytecode->strings[val]->length - dot - 1);
         TModule *mod = module_findModule(self, TCSTR(modname));
