@@ -493,9 +493,11 @@ void neon_num(TExecutor *exec)
 
     if (number_is_nan(n)) {
         exec->rtl_raise(exec, "ValueRangeException", "num() argument not a number", BID_ZERO);
+        number_freeNumber(n);
         return;
     }
     push(exec->stack, cell_fromNumber(n));
+    number_freeNumber(n);
 }
 
 void neon_print(TExecutor *exec)
@@ -508,8 +510,9 @@ void neon_print(TExecutor *exec)
 
 void neon_str(TExecutor *exec)
 {
-    Number v = top(exec->stack)->number; pop(exec->stack);
+    Number v = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
     push(exec->stack, cell_fromCString(number_to_string(v)));
+    number_freeNumber(&v);
 }
 
 

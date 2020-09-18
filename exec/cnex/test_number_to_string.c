@@ -8,6 +8,24 @@
 
 int main()
 {
+    Number bid = number_from_bid(bid128_from_int32(INT_MIN));   // 0x0000000080000000, 0xb040000000000000
+    bid = number_from_bid(bid128_from_int32(INT_MAX));          // 0x000000007fffffff, 0x3040000000000000
+    bid = number_from_bid(bid128_from_uint32(0));               // 0x0000000000000000, 0x3040000000000000
+    bid = number_from_bid(bid128_from_uint32(UINT_MAX));        // 0x00000000ffffffff, 0x3040000000000000
+    
+    bid = number_from_bid(bid128_from_int64(LLONG_MIN));        // 0x8000000000000000, 0xb040000000000000
+    bid = number_from_bid(bid128_from_int64(LLONG_MAX));        // 0x7fffffffffffffff, 0x3040000000000000
+    bid = number_from_bid(bid128_from_uint64(0));               // 0x0000000000000000, 0x3040000000000000
+    bid = number_from_bid(bid128_from_uint64(ULLONG_MAX));      // 0xffffffffffffffff, 0x3040000000000000
+
+
+
+
+
+
+
+
+
     srand((unsigned int)time(NULL));
 
     for (int i = 0; i < 100000; i++) {
@@ -21,9 +39,9 @@ int main()
         }
         char buf1[50];
         bid128_to_string(buf1, bid128_bytes.n);
-        char *buf2 = number_to_string(bid128_bytes.n);
-        Number x = bid128_from_string(buf1);
-        Number y = bid128_from_string(buf2);
+        char *buf2 = number_to_string(number_from_bid(bid128_bytes.n));
+        Number x = number_from_bid(bid128_from_string(buf1));
+        Number y = number_from_bid(bid128_from_string(buf2));
         if (!(number_is_equal(x, y) || (number_is_nan(x) && number_is_nan(y)))) {
             printf("%s %s\n", buf1, buf2);
             assert(FALSE);

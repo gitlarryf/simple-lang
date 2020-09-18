@@ -138,7 +138,7 @@ Cell *cell_fromNumber(Number n)
 {
     Cell *x = cell_newCell();
     x->type = cNumber;
-    x->number = n;
+    x->number = number_fromNumber(&n);
     return x;
 }
 
@@ -261,7 +261,8 @@ Cell *cell_fromCell(const Cell *c)
             x->array = NULL;
             break;
         case cNumber:
-            x->number = c->number;
+            x->number = number_fromNumber(&c->number);
+            //x->number = c->number;
             x->object = NULL;
             x->string = NULL;
             x->address = NULL;
@@ -581,8 +582,6 @@ void cell_copyCell(Cell *dest, const Cell *source)
     assert(dest != NULL);
 
     cell_clearCell(dest);
-
-    dest->number = source->number;
     // ToDo: Split strings and bytes into separate entities; once we implement actual UTF8 strings.
     if ((source->type == cString || source->type == cBytes) && source->string != NULL) {
         dest->string = string_copyString(source->string);
@@ -608,6 +607,9 @@ void cell_copyCell(Cell *dest, const Cell *source)
         dest->object->refcount++;
     } else {
         dest->object = NULL;
+    }
+    if (source->type == cNumber) {
+        dest->number = number_fromNumber(&source->number);
     }
     dest->address = source->address;
     dest->boolean = source->boolean;
@@ -691,6 +693,10 @@ void cell_clearCell(Cell *c)
         array_freeArray(c->array);
     } else if (c->type == cDictionary) {
         dictionary_freeDictionary(c->dictionary);
+    } else if(c->type == cNumber) {
+        if (c->number.rep == MPZ) {
+            mpz_clear(c->number.mpz);
+        }
     } else if (c->type == cObject) {
         if (c->object != NULL && c->object->release != NULL) {
             c->object->release(c->object);

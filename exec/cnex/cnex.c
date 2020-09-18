@@ -157,8 +157,13 @@ int main(int argc, char* argv[])
     }
 #endif
     int ret = 0;
+#ifdef __MS_HEAP_DBG
+    /* ToDo: Remove this!  This is only for debugging. */
+    /* gOptions.ExecutorDebugStats = TRUE; */
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    _CrtSetBreakAlloc(82);
+#endif
     gOptions.pszExecutableName = path_getFileNameOnly(argv[0]);
-
     if (!ParseOptions(argc, argv)) {
         return 3;
     }
@@ -491,7 +496,9 @@ void exec_PUSHN(TExecutor *self)
 {
     self->ip++;
     unsigned int val = exec_getOperand(self);
-    push(self->stack, cell_fromNumber(number_from_string(self->module->bytecode->strings[val]->data)));
+    Number n = number_from_string(self->module->bytecode->strings[val]->data);
+    push(self->stack, cell_fromNumber(n));
+    number_freeNumber(n);
 }
 
 void exec_PUSHS(TExecutor *self)

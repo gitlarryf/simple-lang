@@ -13,31 +13,73 @@
 #pragma warning(push, 0)
 #endif
 #include "bid_functions.h"
+#include <gmp.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 
+//#undef min
+//#undef max
+
 #include "util.h"
 
-#define BID_ZERO        bid128_from_uint32(0)
+typedef enum {
+    NNI,    // Number Not Initialized; number has not been initialized at all; and is therefore UNSAFE!
+    MPZ,    // Multi-precision Integer
+    BID     // Binary encoded Decimal number
+} Rep;
 
-#define BID_MIN_INT32   bid128_from_int32(INT_MIN)
-#define BID_MAX_INT32   bid128_from_int32(INT_MAX)
-#define BID_MIN_UINT32  bid128_from_uint32(0)
-#define BID_MAX_UINT32  bid128_from_uint32(UINT_MAX)
-
-#define BID_MIN_INT64   bid128_from_int64(LLONG_MIN)
-#define BID_MAX_INT64   bid128_from_int64(LLONG_MAX)
-#define BID_MIN_UINT64  bid128_from_uint64(0)
-#define BID_MAX_UINT64  bid128_from_uint64(ULLONG_MAX)
+typedef struct Number {
+    BID_UINT128 bid;
+    mpz_t  mpz;
+    Rep rep;
+} Number;
 
 
-typedef BID_UINT128 Number;
+//#define BID_ZERO        bid128_from_uint32(0)
+static const Number BID_ZERO        = { { 0 }, 0, BID };
+static const Number BID_MIN_INT32   = { { 0x0000000080000000, 0xb040000000000000 }, 0, BID };
+static const Number BID_MAX_INT32   = { { 0x000000007fffffff, 0x3040000000000000 }, 0, BID };
+static const Number BID_MIN_UINT32  = { { 0x0000000000000000, 0x3040000000000000 }, 0, BID };
+static const Number BID_MAX_UINT32  = { { 0x00000000ffffffff, 0x3040000000000000 }, 0, BID };
+
+static const Number BID_MIN_INT64   = { { 0x8000000000000000, 0xb040000000000000 }, 0, BID };
+static const Number BID_MAX_INT64   = { { 0x7fffffffffffffff, 0x3040000000000000 }, 0, BID };
+static const Number BID_MIN_UINT64  = { { 0x0000000000000000, 0x3040000000000000 }, 0, BID };
+static const Number BID_MAX_UINT64  = { { 0xffffffffffffffff, 0x3040000000000000 }, 0, BID };
+//#define NUMBER_ZERO     BID_ZERO
+
+//static const Number BID_MIN_INT32 = { { bid128_from_int32(INT_MIN) }}
+
+//#define OLD_BID_MIN_INT32   bid128_from_int32(INT_MIN)
+//#define OLD_BID_MAX_INT32   bid128_from_int32(INT_MAX)
+//#define OLD_BID_MIN_UINT32  bid128_from_uint32(0)
+//#define OLD_BID_MAX_UINT32  bid128_from_uint32(UINT_MAX)
+//
+//#define OLD_BID_MIN_INT64   bid128_from_int64(LLONG_MIN)
+//#define OLD_BID_MAX_INT64   bid128_from_int64(LLONG_MAX)
+//#define OLD_BID_MIN_UINT64  bid128_from_uint64(0)
+//#define OLD_BID_MAX_UINT64  bid128_from_uint64(ULLONG_MAX)
+
+//#define BID_MIN_INT32   { { 0x0000000080000000, 0xb040000000000000 }, NULL, BID };
+//#define BID_MAX_INT32   { { 0x000000007fffffff, 0x3040000000000000 }, NULL, BID };
+//#define BID_MIN_UINT32  { { 0x0000000000000000, 0x3040000000000000 }, NULL, BID };
+//#define BID_MAX_UINT32  { { 0x00000000ffffffff, 0x3040000000000000 }, NULL, BID };
+//
+//#define BID_MIN_INT64   { { 0x8000000000000000, 0xb040000000000000 }, NULL, BID };
+//#define BID_MAX_INT64   { { 0x7fffffffffffffff, 0x3040000000000000 }, NULL, BID };
+//#define BID_MIN_UINT64  { { 0x0000000000000000, 0x3040000000000000 }, NULL, BID };
+//#define BID_MAX_UINT64  { { 0xffffffffffffffff, 0x3040000000000000 }, NULL, BID };
+
+//void number_copyNumber(Number *dest, const Number *src);
+Number number_fromNumber(const Number *src);
 
 void number_toString(Number x, char *buf, size_t len);
 char *number_to_string(Number x);
 
 Number number_from_string(char *s);
+
+Number number_from_bid(BID_UINT128 n);
 
 int32_t number_to_sint32(Number x);
 uint32_t number_to_uint32(Number x);

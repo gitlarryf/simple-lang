@@ -61,7 +61,7 @@ static BOOL range_checkU64(TExecutor *exec, Number x)
 
 static BOOL index_range_check(TExecutor *exec, Number x, int bits)
 {
-    if (number_is_less(x, BID_ZERO) || number_is_greater(x, bid128_from_uint32(bits))) {
+    if (number_is_less(x, BID_ZERO) || number_is_greater(x, number_from_bid(bid128_from_uint32(bits)))) {
         exec_rtl_raiseException(exec, "ValueRangeException", number_to_string(x), BID_ZERO);
         return FALSE;
     }
