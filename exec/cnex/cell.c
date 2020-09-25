@@ -315,7 +315,8 @@ void cell_setString(Cell *c, TString *s)
 
 void cell_setNumber(Cell *c, Number n)
 {
-    c->number = n;
+    c->number = number_fromNumber(&n);
+    //c->number = n;
     c->type = cNumber;
 }
 

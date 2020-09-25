@@ -181,6 +181,20 @@ Number number_from_string(char *s)
     return r;
 }
 
+Number number_newNumber(Rep representation)
+{
+    Number r = { { 0 }, 0, NNI };
+
+    if (representation == MPZ) {
+        r.rep = MPZ;
+        mpz_init(r.mpz);
+    } else if (representation == BID) {
+        r.rep = BID;
+        // BID is already initialized to 0.
+    }
+    return r;
+}
+
 Number number_from_bid(BID_UINT128 n)
 {
     Number r = INIT_NUMBER;
@@ -235,28 +249,59 @@ void number_freeNumber(Number *n)
 
 Number number_add(Number x, Number y)
 {
-    Number res = { { 0 }, 0, MPZ };
+    Number res = INIT_NUMBER;
 
     if (x.rep == MPZ && y.rep == MPZ) {
+        res.rep = MPZ;
+        mpz_init(res.mpz);
         mpz_add(res.mpz, x.mpz, y.mpz);
         return res;
     }
-    return number_from_bid(bid128_add(x.bid, y.bid));
+    res.rep = BID;
+    res.bid = bid128_add(x.bid, y.bid);
+    return res;
 }
 
 Number number_subtract(Number x, Number y)
 {
-    return number_from_bid(bid128_sub(x.bid, y.bid));
+    Number res = INIT_NUMBER;
+
+    if (x.rep == MPZ && y.rep == MPZ) {
+        res.rep = MPZ;
+        mpz_init(res.mpz);
+        mpz_add(res.mpz, x.mpz, y.mpz);
+        return res;
+    }
+    res.rep = BID;
+    res.bid = bid128_sub(x.bid, y.bid);
+    return res;
 }
 
 Number number_divide(Number x, Number y)
 {
-    return number_from_bid(bid128_div(x.bid, y.bid));
+    Number res = INIT_NUMBER;
+
+    if (x.rep == MPZ && y.rep == MPZ) {
+        res.rep = MPZ;
+        mpz_init(res.mpz);
+        mpz_add(res.mpz, x.mpz, y.mpz);
+        return res;
+    }
+    res.rep = BID;
+    res.bid = bid128_div(x.bid, y.bid);
+    return res;
 }
 
 Number number_modulo(Number x, Number y)
 {
     Number m;
+    if (x.rep == MPZ && y.rep == MPZ) {
+        m.rep = MPZ;
+        mpz_init(m.mpz);
+        mpz_fdiv_r(m.mpz, x.mpz, y.mpz);
+        return m;
+    }
+
     m.bid = bid128_abs(y.bid);
     if (bid128_isSigned(x.bid)) {
         Number q = number_from_bid(bid128_round_integral_positive(bid128_div(bid128_abs(x.bid), m.bid)));
@@ -271,7 +316,17 @@ Number number_modulo(Number x, Number y)
 
 Number number_multiply(Number x, Number y)
 {
-    return number_from_bid(bid128_mul(x.bid, y.bid));
+    Number res = INIT_NUMBER;
+
+    if (x.rep == MPZ && y.rep == MPZ) {
+        res.rep = MPZ;
+        mpz_init(res.mpz);
+        mpz_add(res.mpz, x.mpz, y.mpz);
+        return res;
+    }
+    res.rep = BID;
+    res.bid = bid128_mul(x.bid, y.bid);
+    return res;
 }
 
 Number number_negate(Number x)
@@ -281,6 +336,14 @@ Number number_negate(Number x)
 
 Number number_pow(Number x, Number y)
 {
+    if (x.rep == MPZ && y.rep == MPZ) {
+        Number r = INIT_NUMBER;
+        mpz_init(r.mpz);
+        r.rep = MPZ;
+        mpz_pow_ui(r.mpz, x.mpz, mpz_get_ui(y.mpz));
+        return r;
+    }
+
     if (number_is_integer(y) && !number_is_negative(y)) {
         uint32_t iy = number_to_uint32(y);
         Number r = number_from_uint32(1);

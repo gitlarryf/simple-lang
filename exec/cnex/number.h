@@ -72,6 +72,7 @@ static const Number BID_MAX_UINT64  = { { 0xffffffffffffffff, 0x3040000000000000
 //#define BID_MAX_UINT64  { { 0xffffffffffffffff, 0x3040000000000000 }, NULL, BID };
 
 //void number_copyNumber(Number *dest, const Number *src);
+void number_freeNumber(Number *n);
 Number number_fromNumber(const Number *src);
 
 void number_toString(Number x, char *buf, size_t len);

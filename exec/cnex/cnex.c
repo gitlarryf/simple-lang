@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
     /* ToDo: Remove this!  This is only for debugging. */
     /* gOptions.ExecutorDebugStats = TRUE; */
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-    _CrtSetBreakAlloc(82);
+    _CrtSetBreakAlloc(191);
 #endif
     gOptions.pszExecutableName = path_getFileNameOnly(argv[0]);
     if (!ParseOptions(argc, argv)) {
@@ -498,7 +498,7 @@ void exec_PUSHN(TExecutor *self)
     unsigned int val = exec_getOperand(self);
     Number n = number_from_string(self->module->bytecode->strings[val]->data);
     push(self->stack, cell_fromNumber(n));
-    number_freeNumber(n);
+    number_freeNumber(&n);
 }
 
 void exec_PUSHS(TExecutor *self)
@@ -720,64 +720,81 @@ void exec_STOREV(TExecutor *self)
 void exec_NEGN(TExecutor *self)
 {
     self->ip++;
-    Number x = top(self->stack)->number; pop(self->stack);
+    Number x = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     push(self->stack, cell_fromNumber(number_negate(x)));
+    number_freeNumber(&x);
 }
 
 void exec_ADDN(TExecutor *self)
 {
     self->ip++;
-    Number b = top(self->stack)->number; pop(self->stack);
-    Number a = top(self->stack)->number; pop(self->stack);
+    Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
+    Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     push(self->stack, cell_fromNumber(number_add(a, b)));
+    number_freeNumber(&b);
+    number_freeNumber(&a);
 }
 
 void exec_SUBN(TExecutor *self)
 {
     self->ip++;
-    Number b = top(self->stack)->number; pop(self->stack);
-    Number a = top(self->stack)->number; pop(self->stack);
+    Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
+    Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     push(self->stack, cell_fromNumber(number_subtract(a, b)));
+    number_freeNumber(&b);
+    number_freeNumber(&a);
 }
 
 void exec_MULN(TExecutor *self)
 {
     self->ip++;
-    Number b = top(self->stack)->number; pop(self->stack);
-    Number a = top(self->stack)->number; pop(self->stack);
+    Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
+    Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     push(self->stack, cell_fromNumber(number_multiply(a, b)));
+    number_freeNumber(&b);
+    number_freeNumber(&a);
 }
 
 void exec_DIVN(TExecutor *self)
 {
     self->ip++;
-    Number b = top(self->stack)->number; pop(self->stack);
-    Number a = top(self->stack)->number; pop(self->stack);
+    Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
+    Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
    if (number_is_zero(b)) {
         self->rtl_raise(self, "DivideByZeroException", "", BID_ZERO);
+        number_freeNumber(&b);
+        number_freeNumber(&a);
         return;
     }
     push(self->stack, cell_fromNumber(number_divide(a, b)));
+    number_freeNumber(&b);
+    number_freeNumber(&a);
 }
 
 void exec_MODN(TExecutor *self)
 {
     self->ip++;
-    Number b = top(self->stack)->number; pop(self->stack);
-    Number a = top(self->stack)->number; pop(self->stack);
+    Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
+    Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
    if (number_is_zero(b)) {
         self->rtl_raise(self, "DivideByZeroException", "", BID_ZERO);
+        number_freeNumber(&b);
+        number_freeNumber(&a);
         return;
     }
     push(self->stack, cell_fromNumber(number_modulo(a, b)));
+    number_freeNumber(&b);
+    number_freeNumber(&a);
 }
 
 void exec_EXPN(TExecutor *self)
 {
     self->ip++;
-    Number b = top(self->stack)->number; pop(self->stack);
-    Number a = top(self->stack)->number; pop(self->stack);
+    Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
+    Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     push(self->stack, cell_fromNumber(number_pow(a, b)));
+    number_freeNumber(&b);
+    number_freeNumber(&a);
 }
 
 void exec_EQB(TExecutor *self)
@@ -799,49 +816,61 @@ void exec_NEB(TExecutor *self)
 void exec_EQN(TExecutor *self)
 {
     self->ip++;
-    Number b = top(self->stack)->number; pop(self->stack);
-    Number a = top(self->stack)->number; pop(self->stack);
+    Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
+    Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     push(self->stack, cell_fromBoolean(number_is_equal(a, b)));
+    number_freeNumber(&b);
+    number_freeNumber(&a);
 }
 
 void exec_NEN(TExecutor *self)
 {
     self->ip++;
-    Number b = top(self->stack)->number; pop(self->stack);
-    Number a = top(self->stack)->number; pop(self->stack);
+    Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
+    Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     push(self->stack, cell_fromBoolean(number_is_not_equal(a, b)));
+    number_freeNumber(&b);
+    number_freeNumber(&a);
 }
 
 void exec_LTN(TExecutor *self)
 {
     self->ip++;
-    Number b = top(self->stack)->number; pop(self->stack);
-    Number a = top(self->stack)->number; pop(self->stack);
+    Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
+    Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     push(self->stack, cell_fromBoolean(number_is_less(a, b)));
+    number_freeNumber(&b);
+    number_freeNumber(&a);
 }
 
 void exec_GTN(TExecutor *self)
 {
     self->ip++;
-    Number b = top(self->stack)->number; pop(self->stack);
-    Number a = top(self->stack)->number; pop(self->stack);
+    Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
+    Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     push(self->stack, cell_fromBoolean(number_is_greater(a, b)));
+    number_freeNumber(&b);
+    number_freeNumber(&a);
 }
 
 void exec_LEN(TExecutor *self)
 {
     self->ip++;
-    Number b = top(self->stack)->number; pop(self->stack);
-    Number a = top(self->stack)->number; pop(self->stack);
+    Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
+    Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     push(self->stack, cell_fromBoolean(number_is_less_equal(a, b)));
+    number_freeNumber(&b);
+    number_freeNumber(&a);
 }
 
 void exec_GEN(TExecutor *self)
 {
     self->ip++;
-    Number b = top(self->stack)->number; pop(self->stack);
-    Number a = top(self->stack)->number; pop(self->stack);
+    Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
+    Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     push(self->stack, cell_fromBoolean(number_is_greater_equal(a, b)));
+    number_freeNumber(&b);
+    number_freeNumber(&a);
 }
 
 void exec_EQS(TExecutor *self)
