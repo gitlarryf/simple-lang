@@ -1,0 +1,221 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3C43338C-F41B-4706-B23B-A1F5E1DA621C}</ProjectGuid>
+    <RootNamespace>neonbind</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>NotSet</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <CustomBuildBeforeTargets>CoreBuild</CustomBuildBeforeTargets>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\external\minizip11;..\..\external\minijson_writer-master;..\..\external\hash-library;..\..\external\zlib-1.2.8;..\..\external\xz-5.2.1\src\liblzma\api;..\..\external\bzip2-1.0.6;..\..\external\PDCurses-3.4;..\..\external\pcre2-10.10\src;..\..\external\curl-7.41.0\include;..\..\external\sqlite-amalgamation-3080803;..\..\src;..\..\lib;..\..\external\lib\libffi-3.2.1\include;..\..\External\IntelRDFPMathLib20U1\LIBRARY\src;...\..\External\;..\..\external\utf8\source</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;LZMA_API_STATIC;CURL_STATICLIB;FFI_BUILDING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\..\external\easysid-version-1.0\external\resid-0.16;..\..\..\external\easysid-version-1.0;..\..\..\external\bzip2-1.0.6;..\..\..\external\curl-7.41.0\lib;..\..\..\external\hash-library;..\..\..\external\IntelRDFPMathLib20U1\LIBRARY;..\..\..\external\libffi-3.2.1\x86-win64;..\..\..\external\pcre2-10.10;..\..\..\external\PDCurses-3.4\win32;..\..\..\external\sqlite-amalgamation-3080803;..\..\..\lib\compress\bzip2-1.0.6;..\..\..\external\xz-5.2.1\src\liblzma;..\..\..\external\zlib-1.2.8;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libbz2.lib;libcurld.lib;libeasysid.lib;resid.lib;hash-library.lib;libbid.lib;libffi.lib;pcre2.lib;pdcurses.lib;sqlite3.lib;liblzma.lib;libz.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>EnableAllWarnings</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>false</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\external\minizip11;..\..\external\minijson_writer-master;..\..\external\hash-library;..\..\external\zlib-1.2.8;..\..\external\xz-5.2.1\src\liblzma\api;..\..\external\bzip2-1.0.6;..\..\external\PDCurses-3.4;..\..\external\pcre2-10.10\src;..\..\external\curl-7.41.0\include;..\..\external\sqlite-amalgamation-3080803;..\..\src;..\..\lib;..\..\external\lib\libffi-3.2.1\include;..\..\External\IntelRDFPMathLib20U1\LIBRARY\src;...\..\External\;..\..\external\utf8\source</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <StringPooling>true</StringPooling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\external\easysid-version-1.0\external\resid-0.16;..\..\external\easysid-version-1.0;..\..\lib\compress\bzip2-1.0.6;..\..\lib\http\curl-7.41.0\lib;..\..\external\hash-library;..\..\external\IntelRDFPMathLib20U1\LIBRARY;..\..\external\libffi-3.2.1\x86-win64;..\..\lib\regex\pcre2-10.10;..\..\lib\curses\PDCurses-3.4\win32;..\..\external\sqlite-amalgamation-3080803;..\..\lib\compress\xz-5.2.1\src\liblzma;..\..\lib\http\zlib-1.2.8</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libbz2.lib;libcurld.lib;libeasysid.lib;resid.lib;hash-library.lib;libbid.lib;libffi.lib;pcre2.lib;pdcurses.lib;sqlite3.lib;liblzma.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <FixedBaseAddress>false</FixedBaseAddress>
+      <DataExecutionPrevention>false</DataExecutionPrevention>
+      <TurnOffAssemblyGeneration>false</TurnOffAssemblyGeneration>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapFileName>$(OutDir)$(TargetName).map</MapFileName>
+      <MapExports>true</MapExports>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+    </ProjectReference>
+    <CustomBuildStep>
+      <Command>scons -C $(ProjectDir)\..\..\..\  $(ProjectDir)\src\exceptions.inc external</Command>
+      <Outputs>$(ProjectDirectory)\.vcscons</Outputs>
+      <Message>Building external libraries...</Message>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\external\minizip11;..\..\external\minijson_writer-master;..\..\external\hash-library;..\..\external\zlib-1.2.8;..\..\external\xz-5.2.1\src\liblzma\api;..\..\external\bzip2-1.0.6;..\..\external\PDCurses-3.4;..\..\external\pcre2-10.10\src;..\..\external\curl-7.41.0\include;..\..\external\sqlite-amalgamation-3080803;..\..\src;..\..\lib;..\..\external\lib\libffi-3.2.1\include;..\..\External\IntelRDFPMathLib20U1\LIBRARY\src;...\..\External\;..\..\external\utf8\source</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;LZMA_API_STATIC;CURL_STATICLIB;FFI_BUILDING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <StringPooling>true</StringPooling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointExceptions>true</FloatingPointExceptions>
+      <OpenMPSupport>true</OpenMPSupport>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>..\..\..\external\easysid-version-1.0\external\resid-0.16;..\..\..\external\easysid-version-1.0;..\..\..\external\bzip2-1.0.6;..\..\..\external\curl-7.41.0\lib;..\..\..\external\hash-library;..\..\..\external\IntelRDFPMathLib20U1\LIBRARY;..\..\..\external\libffi-3.2.1\x86-win64;..\..\..\external\pcre2-10.10;..\..\..\external\PDCurses-3.4\win32;..\..\..\external\sqlite-amalgamation-3080803;..\..\..\external\xz-5.2.1\src\liblzma;..\..\..\external\zlib-1.2.8;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libbz2.lib;libcurld.lib;libeasysid.lib;resid.lib;hash-library.lib;libbid.lib;libffi.lib;pcre2.lib;pdcurses.lib;sqlite3.lib;liblzma.lib;libz.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapFileName>$(OutDir)$(TargetName).map</MapFileName>
+      <MapExports>true</MapExports>
+      <SubSystem>Windows</SubSystem>
+      <LargeAddressAware>true</LargeAddressAware>
+      <TerminalServerAware>false</TerminalServerAware>
+      <SwapRunFromNET>true</SwapRunFromNET>
+      <SetChecksum>true</SetChecksum>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <FixedBaseAddress>false</FixedBaseAddress>
+      <DataExecutionPrevention>false</DataExecutionPrevention>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\external\minizip11;..\..\external\minijson_writer-master;..\..\external\hash-library;..\..\external\zlib-1.2.8;..\..\external\xz-5.2.1\src\liblzma\api;..\..\external\bzip2-1.0.6;..\..\external\PDCurses-3.4;..\..\external\pcre2-10.10\src;..\..\external\curl-7.41.0\include;..\..\external\sqlite-amalgamation-3080803;..\..\src;..\..\lib;..\..\external\lib\libffi-3.2.1\include;..\..\External\IntelRDFPMathLib20U1\LIBRARY\src;...\..\External\;..\..\external\utf8\source</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;LZMA_API_STATIC;CURL_STATICLIB;FFI_BUILDING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
+      <StringPooling>true</StringPooling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointExceptions>true</FloatingPointExceptions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>..\..\..\external\easysid-version-1.0\external\resid-0.16;..\..\..\external\easysid-version-1.0;..\..\..\external\bzip2-1.0.6;..\..\..\external\curl-7.41.0\lib;..\..\..\external\hash-library;..\..\..\external\IntelRDFPMathLib20U1\LIBRARY;..\..\..\external\libffi-3.2.1\x86-win64;..\..\..\external\pcre2-10.10;..\..\..\external\PDCurses-3.4\win32;..\..\..\external\sqlite-amalgamation-3080803;..\..\..\external\xz-5.2.1\src\liblzma;..\..\..\external\zlib-1.2.8;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libbz2.lib;libcurld.lib;libeasysid.lib;resid.lib;hash-library.lib;libbid.lib;libffi.lib;pcre2.lib;pdcurses.lib;sqlite3.lib;liblzma.lib;libz.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapFileName>$(OutDir)$(TargetName).pdb</MapFileName>
+      <MapExports>true</MapExports>
+      <SubSystem>Windows</SubSystem>
+      <LargeAddressAware>true</LargeAddressAware>
+      <SwapRunFromNET>true</SwapRunFromNET>
+      <SetChecksum>true</SetChecksum>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <FixedBaseAddress>false</FixedBaseAddress>
+      <DataExecutionPrevention>false</DataExecutionPrevention>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\external\minizip11\ioapi.c" />
+    <ClCompile Include="..\..\external\minizip11\iowin32.c" />
+    <ClCompile Include="..\..\external\minizip11\unzip.c" />
+    <ClCompile Include="..\..\external\minizip11\zip.c" />
+    <ClCompile Include="..\..\src\bytecode.cpp" />
+    <ClCompile Include="..\..\src\neonbind.cpp" />
+    <ClCompile Include="..\..\src\support.cpp" />
+    <ClCompile Include="..\..\src\support_exec.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\external\minizip11\ioapi.h" />
+    <ClInclude Include="..\..\external\minizip11\iowin32.h" />
+    <ClInclude Include="..\..\external\minizip11\unzip.h" />
+    <ClInclude Include="..\..\external\minizip11\zip.h" />
+    <ClInclude Include="..\..\src\bytecode.h" />
+    <ClInclude Include="..\..\src\support.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

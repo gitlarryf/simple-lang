@@ -1,0 +1,297 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{b0a565ca-4a04-45e8-85e7-a2c4964abb0a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\Source Files">
+      <UniqueIdentifier>{2721cb14-fa33-4db2-9508-fd154f525024}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\Header Files">
+      <UniqueIdentifier>{22718ab3-3079-4158-89ad-c121b23b2ce7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\exec\cnex\bytecode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\cell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\dictionary.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\exec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\framestack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\global.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\nstring.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\number.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\opcode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\stack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\array.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\binary.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\enums.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\io.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\random.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\sys.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\file.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\math.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\net.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\runtime.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\gc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\os.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\support.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\textio.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\module.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\time.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\rtl_platform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\string.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\disassembly.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\posix.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\struct.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\process.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\datetime.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\socketx.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\mmap.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\lib\sqlite.h">
+      <Filter>lib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exec\cnex\cJSON.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\exec\cnex\bytecode.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\cell.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\cnex.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\dictionary.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\framestack.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\global.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\nstring.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\number.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\stack.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\util.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\array.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\object.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\binary.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\random.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\io.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\math.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\sys.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\net.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\runtime.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\gc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\file.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\file_win32.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\os_posix.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\support.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\textio.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\file_posix.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\module.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\time_win32.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\time_posix.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\time_darwin.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\time_linux.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\rtl_win32.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\rtl_posix.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\os_win32.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\string.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\extension.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\os.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\disassembly.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\process_win32.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\process_posix.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\datetime.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\struct.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\posix.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\sqlite.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\cJSON.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\mmap_win32.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\mmap_posix.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\httpserver.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\random_win32.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\exec\cnex\lib\random_posix.c">
+      <Filter>lib\Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,1448 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="lib">
+      <UniqueIdentifier>{cb616f79-befe-40ca-b081-c22fe6ff496c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\Neon Files">
+      <UniqueIdentifier>{cb301c5d-afa3-4606-9fb9-8284ae874dc5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Build">
+      <UniqueIdentifier>{e18915dd-9ae3-4dc8-834c-4a0854641464}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dependencies">
+      <UniqueIdentifier>{5de2a2fe-72f9-489a-a2e2-c7fd209fe4c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="t">
+      <UniqueIdentifier>{deb26e25-6f2c-491d-9ea2-6e4e7b532ea2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="t\Errors">
+      <UniqueIdentifier>{9464d119-1fa1-446a-933c-98a9411f0aab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples">
+      <UniqueIdentifier>{0984eb72-7361-4fdb-a034-c65ba725fa62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples\99-Bottles">
+      <UniqueIdentifier>{b0147c23-782e-44f8-a4c8-12aab9311146}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples\Benchmark">
+      <UniqueIdentifier>{b16bc02d-ec93-41c5-a44e-2f128f2e4351}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples\cal">
+      <UniqueIdentifier>{9f75f2c0-4b89-420a-9f72-4b431da00a14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples\fizzbuzz">
+      <UniqueIdentifier>{b647a4e3-b513-4668-be59-a89fcedad8e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples\flappy">
+      <UniqueIdentifier>{81fa18dd-7923-4dbf-834c-eb5fe019861d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples\forth">
+      <UniqueIdentifier>{afbed886-ad2a-44e4-8c94-7d2190a0a075}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples\hello">
+      <UniqueIdentifier>{caaac54c-b36d-4c67-b25e-c4e3ab4081f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples\httpd">
+      <UniqueIdentifier>{56cf449f-92ec-41f8-a6cb-3b6154b582c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples\life">
+      <UniqueIdentifier>{efe02fad-720a-4fd1-bd35-b50aeb53ebc6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples\lisp">
+      <UniqueIdentifier>{252d3571-ddee-49da-a42f-23c4353440a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples\mandelbrot">
+      <UniqueIdentifier>{c3da2b8e-9008-4610-9972-36c1e4ee10bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\http">
+      <UniqueIdentifier>{b86bd99a-2581-443e-92df-5d609419768f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\compress">
+      <UniqueIdentifier>{5b699434-c354-4d59-98c5-4f911f3fa81e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\curses">
+      <UniqueIdentifier>{bfebf682-cfab-4cd7-bf8b-f1ff407630f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\crypto">
+      <UniqueIdentifier>{afcca430-7e57-4bbc-bcfb-d132517fb972}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\hash">
+      <UniqueIdentifier>{a708e595-f7d9-486c-a9fc-a60e33343fb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\html">
+      <UniqueIdentifier>{6d13e8b9-d25c-4724-a435-972395f0287b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\regex">
+      <UniqueIdentifier>{976e9283-9c0b-4bc4-b101-439e700bde22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\sodium">
+      <UniqueIdentifier>{34f407b1-bfc5-4174-9109-5b427496d55b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\sdl">
+      <UniqueIdentifier>{efbb108a-5347-4097-9c53-6d716ea4dffa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples\BBS">
+      <UniqueIdentifier>{c73abccf-0a84-4891-86b6-15ef7b1b8b2c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Samples\sudoku">
+      <UniqueIdentifier>{28cdc3de-874c-4141-b771-caf75f091891}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\fltk">
+      <UniqueIdentifier>{534e8b5b-c6f0-49cb-ab77-aae4a35de087}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\zeromq">
+      <UniqueIdentifier>{f81e8517-29ec-46de-a093-a9c85135ae4b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\analyzer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ast.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bytecode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\cell.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\compiler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\debuginfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\disassembler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\exec.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lexer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\number.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\pt_dump.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtl_compile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtl_exec.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtl_win32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\support.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\support_compiler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\datetime.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\file.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\file_win32.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\global.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\io.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\math.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\net.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\os.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\os_win32.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\random.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\runtime.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\sqlite.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\string.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\sys.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\time.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\time_win32.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\httpserver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\debugger.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\intrinsic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\serial.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\serial_win32.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\mmap_win32.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\file_posix.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\serial_const.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\mmap_posix.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\os_posix.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\time_darwin.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\time_linux.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\time_posix.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\binary.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\process_posix.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\process_win32.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\sql.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\serial_posix.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\curses\curses.cpp">
+      <Filter>lib\curses</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\hash\hash.cpp">
+      <Filter>lib\hash</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\sodium\sodium.cpp">
+      <Filter>lib\sodium</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\sdl\sdl.cpp">
+      <Filter>lib\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\regex\regex.cpp">
+      <Filter>lib\regex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\neon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\compress\compress.cpp">
+      <Filter>lib\compress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\textio.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\posix.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\fltk\fltk.cpp">
+      <Filter>lib\fltk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\crypto\crypto.cpp">
+      <Filter>lib\crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtl_posix.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\repl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\support_exec.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\struct.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\console.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\random_posix.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\random_win32.cpp">
+      <Filter>lib</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\analyzer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ast.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bytecode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\cell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\compiler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\debuginfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\disassembler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\exec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\format.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lexer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\number.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\opcode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\opstack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\pt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\pt_dump.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rtl_compile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rtl_exec.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rtl_platform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\socketx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\support.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\token.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utf8string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\external\minijson_writer-master\minijson_writer.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\httpserver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\neonversion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\intrinsic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\sql.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\neonext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\curses\PDCurses-3.4\curses.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\lib\bigint.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\cformat.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\complex.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\compress.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\curses.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\datetime.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\file.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\global.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\hash.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\http.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\io.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\json.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\math.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\net.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\os.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\random.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\regex.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\runtime.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\sqlite.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\string.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\struct.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\sys.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\time.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\variant.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\win32.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\xml.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\src\constants_compile.inc">
+      <Filter>Dependencies</Filter>
+    </None>
+    <None Include="..\..\src\enums.inc">
+      <Filter>Dependencies</Filter>
+    </None>
+    <None Include="..\..\src\exceptions.inc">
+      <Filter>Dependencies</Filter>
+    </None>
+    <None Include="..\..\src\functions_compile.inc">
+      <Filter>Dependencies</Filter>
+    </None>
+    <None Include="..\..\src\functions_exec.inc">
+      <Filter>Dependencies</Filter>
+    </None>
+    <None Include="..\..\src\thunks.inc">
+      <Filter>Dependencies</Filter>
+    </None>
+    <None Include="..\..\lib\debugger.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\multiarray.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\sid.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\sodium.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\encoding.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\t\42.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\arithmetic.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\arithmetic2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\array.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\array2d.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\array-append.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\array-concat.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\array-extend.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\array-fraction.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\array-negative.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\array-resize.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\arraysize.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\array-slice.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\array-tostring.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\assert.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\assert-enum.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\assert-fail.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\assert-fail2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\assign.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\assign2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\assign-ignore.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\assignment.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\base.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\base-decimal.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\base-invalid.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\base-invalidchar.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\base-invalid-digit.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\bigint-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\binary-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\bitwise-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\boolean.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\bytecode-stringtable.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\bytes.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\bytes-embed.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\bytes-literal.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\bytes-slice.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\cal-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\case.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\case2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\case3.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\case4.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\case-overlap.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\cformat-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\cmdline.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\comments.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\comments-block.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\comments-block2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\comments-block3.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\comments-block4.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\comments-block5.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\comments-block6.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\comparison.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\comparison2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\complex-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\compress-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\concat.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\concat-bytes.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\conditional.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\const.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\const-assign.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\const-boolean.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\const-chain.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\const-expression.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\const-notconst.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\const-string.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\copiedfile.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\datetime-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\debug-example.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\debug-server.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\decimal.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\dictionary.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\divide-by-zero.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\duplicate.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\empty.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\encoding-base64.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\enum.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\enum3.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\equality.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\exception.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\exception-clear.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\exception-code.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\exception-current.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\exception-function.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\exception-nested.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\exception-opstack.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\exception-trace.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\exit-for.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\exit-while.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\export.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\export-recursive.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\expr.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\ffi.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\file-exists.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\file-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\file-writebytes.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\file-writelines.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\for.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\for-bounds.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\foreach.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\foreach-function.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\foreach-update.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\foreach-value.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\fork.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\for-nested.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\for-nested2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\for-readonly.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\for-scope.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\forth-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\forward.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\function.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\function-args.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\function-defaultargs.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\function-local.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\function-namedargs.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\function-pointer.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\gc1.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\gc2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\gc3.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\gc-array.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\gc-long-chain.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\global-parameter-name.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\hash-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\hello.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\http-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\if.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\import.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\import-string.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\in.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\inc.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\inc-reference.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\indent.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\index.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\inline-construct-record.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\inline-init.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\inline-init4.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\inline-init-record.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\input.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\intrinsic.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\io-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\json-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\let.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\let-assign.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\LexerBufferTest1.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\LexerBufferTest2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\LexerBufferTest3.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\LexerBufferTest4.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\LexerBufferTest5.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\lexer-raw.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\lexer-unicode.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\lexical-scope.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\lisp-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\literal.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\literal-dup.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\literal-empty.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\literal-string.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\local-clear.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\logical.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\logical2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\loop.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\math-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\methods.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\methods-declare.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\methods-self.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\mismatch.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\mkdir.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\module.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\module2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\module-alias.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\module-alias2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\module-import-name.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\module-import-name2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\module-import-name3.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\module-import-name-alias.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\module-import-name-alias2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\modulo.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\multiarray-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\nested-substitution.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\net-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\next-for.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\next-while.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\number-ceil.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\number-underscore.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\os-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\outer.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\outer2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\parameters.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\parameters-ignore.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\pathnotfound.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\pointer.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\pointer2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\pointer3.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\pointer4.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\pointer5.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\pointer6.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\pointer7.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\pointer8.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\pointer-method.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\pointer-mismatch.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\pointer-nil.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\pointer-valid.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\predeclare1.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\predeclare2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\predeclare3.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\predefined-generation.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\record-empty.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\record-init.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\record-private.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\recursion.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\recursion-limit.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\regex-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\repeat.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\repeat-next.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\return.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\return-case.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\return-case2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\return-if.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\return-loop.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\return-nothing.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\return-try.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\retval-index.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\rtl.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\sdl-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\shadow.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\shadow2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\shebang.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\shortcut.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\sodium-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\sqlite-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\stack-overflow.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\string-append-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\string-bytes.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\string-escape.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\string-format.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\string-multiline.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\strings.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\string-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\struct-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\structure.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\sudoku-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\sys-exit.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\tail-call.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\time-stopwatch.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\time-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\tostring.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\type.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\type_mismatch.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\type-compat.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\type-nested.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\unary-plus.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\unicode-char.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\unicode-source.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\unicode-string.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\uninitialised-case.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\uninitialised-case-noelse.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\uninitialised-function.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\uninitialised-if.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\uninitialised-if-exit.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\uninitialised-if-nested.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\uninitialised-if-noelse.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\uninitialised-loop.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\uninitialised-nested.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\uninitialised-out.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\uninitialised-repeat.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\uninitialised-simple.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\uninitialised-try.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\unused-parameter.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\unused-return.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\utf8-invalid.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\valuecopy.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\value-index.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\value-method.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\value-method2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\var.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\var-declaration.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\var-declaration2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\variant-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\var-reset.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\while.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\win32-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\xml-test.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\lib\serial.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\t\file-filecopied.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\file-filecopied1.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\file-filecopied2.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\file-filecopied3.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\t\file-pathnotfound.neon">
+      <Filter>t</Filter>
+    </None>
+    <None Include="..\..\lib\binary.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\process.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\http\http.neon">
+      <Filter>lib\http</Filter>
+    </None>
+    <None Include="..\..\lib\mmap.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\sdl\sdl.neon">
+      <Filter>lib\sdl</Filter>
+    </None>
+    <None Include="..\..\lib\compress\compress.neon">
+      <Filter>lib\compress</Filter>
+    </None>
+    <None Include="..\..\lib\posix.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\simplehttp.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\lib\textio.neon">
+      <Filter>lib\Neon Files</Filter>
+    </None>
+    <None Include="..\..\samples\httpd\httpd.neon">
+      <Filter>Samples\httpd</Filter>
+    </None>
+    <None Include="..\..\samples\99-bottles\99-bottles.neon">
+      <Filter>Samples\99-Bottles</Filter>
+    </None>
+    <None Include="..\..\samples\bbs\bbs.neon">
+      <Filter>Samples\BBS</Filter>
+    </None>
+    <None Include="..\..\samples\sudoku\sudoku.neon">
+      <Filter>Samples\sudoku</Filter>
+    </None>
+    <None Include="..\..\lib\regex\regex.neon">
+      <Filter>lib\regex</Filter>
+    </None>
+    <None Include="..\..\lib\fltk\fltk.neon">
+      <Filter>lib\fltk</Filter>
+    </None>
+    <None Include="..\..\lib\crypto\crypto.neon">
+      <Filter>lib\crypto</Filter>
+    </None>
+    <None Include="..\..\lib\curses\curses.neon">
+      <Filter>lib\curses</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\SConstruct">
+      <Filter>Build</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\CMakeLists.txt">
+      <Filter>Build</Filter>
+    </Text>
+  </ItemGroup>
+</Project>

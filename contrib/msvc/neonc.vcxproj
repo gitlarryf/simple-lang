@@ -1,0 +1,230 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{260581AA-AC52-4EB1-9B92-72B6A291C534}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>neonc</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;LZMA_API_STATIC;CURL_STATICLIB;FFI_BUILDING;SODIUM_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\external\SDL2-2.0.3\include;..\..\external\libsodium-1.0.5\src\libsodium\include;..\..\external\minijson_writer-master;..\..\external\IntelRDFPMathLib20U1\LIBRARY\src;..\..\external\hash-library;..\..\external\zlib-1.2.8;..\..\external\xz-5.2.1\src\liblzma\api;..\..\external\bzip2-1.0.6;..\..\external\PDCurses-3.4;..\..\external\pcre2-10.10\src;..\..\external\curl-7.41.0\include;..\..\external\sqlite-amalgamation-3080803;..\..\src;..\..\lib;..\..\external\lib\libffi-3.2.1\include;..\..\External\IntelRDFPMathLib20U1\LIBRARY\src;...\..\External\;..\..\external\utfcpp-master\source</AdditionalIncludeDirectories>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\external\SDL2-2.0.3;..\..\external\libsodium-1.0.5;..\..\external\easysid-version-1.0\external\resid-0.16;..\..\external\easysid-version-1.0;..\..\external\bzip2-1.0.6\;..\..\external\curl-7.41.0\lib;..\..\external\hash-library;..\..\external\IntelRDFPMathLib20U1\LIBRARY;..\..\external\libffi-3.2.1\x86-win64;..\..\external\pcre2-10.10;..\..\external\PDCurses-3.4\win32;..\..\external\sqlite-amalgamation-3080803;..\..\external\xz-5.2.1\src\liblzma;..\..\external\zlib-1.2.8;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libsodium.lib;libbz2.lib;libcurld.lib;hash-library.lib;libbid.lib;libffi.lib;pcre2.lib;pdcurses.lib;sqlite3.lib;liblzma.lib;libz.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapFileName>$(OutDir)$(TargetName).map</MapFileName>
+      <MapExports>true</MapExports>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <FixedBaseAddress>false</FixedBaseAddress>
+      <DataExecutionPrevention>false</DataExecutionPrevention>
+    </Link>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\analyzer.h" />
+    <ClInclude Include="..\..\src\ast.h" />
+    <ClInclude Include="..\..\src\bytecode.h" />
+    <ClInclude Include="..\..\src\cell.h" />
+    <ClInclude Include="..\..\src\compiler.h" />
+    <ClInclude Include="..\..\src\debuginfo.h" />
+    <ClInclude Include="..\..\src\exec.h" />
+    <ClInclude Include="..\..\src\format.h" />
+    <ClInclude Include="..\..\src\intrinsic.h" />
+    <ClInclude Include="..\..\src\lexer.h" />
+    <ClInclude Include="..\..\src\number.h" />
+    <ClInclude Include="..\..\src\opcode.h" />
+    <ClInclude Include="..\..\src\opstack.h" />
+    <ClInclude Include="..\..\src\parser.h" />
+    <ClInclude Include="..\..\src\pt.h" />
+    <ClInclude Include="..\..\src\rtl_compile.h" />
+    <ClInclude Include="..\..\src\rtl_exec.h" />
+    <ClInclude Include="..\..\src\rtl_platform.h" />
+    <ClInclude Include="..\..\src\sql.h" />
+    <ClInclude Include="..\..\src\support.h" />
+    <ClInclude Include="..\..\src\token.h" />
+    <ClInclude Include="..\..\src\utf8string.h" />
+    <ClInclude Include="..\..\src\util.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\lib\curses_const.cpp" />
+    <ClCompile Include="..\..\lib\file_const_win32.cpp" />
+    <ClCompile Include="..\..\lib\sdl_const.cpp" />
+    <ClCompile Include="..\..\lib\sodium_const.cpp" />
+    <ClCompile Include="..\..\lib\sqlite.cpp">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/FS %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="..\..\src\analyzer.cpp" />
+    <ClCompile Include="..\..\src\ast.cpp" />
+    <ClCompile Include="..\..\src\bytecode.cpp" />
+    <ClCompile Include="..\..\src\cell.cpp" />
+    <ClCompile Include="..\..\src\compiler.cpp" />
+    <ClCompile Include="..\..\src\compiler_cli.cpp" />
+    <ClCompile Include="..\..\src\compiler_cpp.cpp" />
+    <ClCompile Include="..\..\src\compiler_js.cpp" />
+    <ClCompile Include="..\..\src\compiler_jvm.cpp" />
+    <ClCompile Include="..\..\src\debuginfo.cpp" />
+    <ClCompile Include="..\..\src\disassembler.cpp" />
+    <ClCompile Include="..\..\src\format.cpp" />
+    <ClCompile Include="..\..\src\intrinsic.cpp" />
+    <ClCompile Include="..\..\src\lexer.cpp" />
+    <ClCompile Include="..\..\src\neonc.cpp" />
+    <ClCompile Include="..\..\src\number.cpp" />
+    <ClCompile Include="..\..\src\parser.cpp" />
+    <ClCompile Include="..\..\src\rtl_compile.cpp" />
+    <ClCompile Include="..\..\src\rtl_win32.cpp" />
+    <ClCompile Include="..\..\src\sql.cpp" />
+    <ClCompile Include="..\..\src\support.cpp" />
+    <ClCompile Include="..\..\src\support_compiler.cpp" />
+    <ClCompile Include="..\..\src\util.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\constants_compile.inc" />
+    <None Include="..\..\src\enums.inc" />
+    <None Include="..\..\src\exceptions.inc" />
+    <None Include="..\..\src\functions_compile.inc" />
+    <None Include="..\..\src\functions_exec.inc" />
+    <None Include="..\..\src\thunks.inc" />
+    <None Include="..\..\src\variables_compile.inc" />
+    <None Include="..\..\src\variables_exec.inc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

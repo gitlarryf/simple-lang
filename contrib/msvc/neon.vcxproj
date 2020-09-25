@@ -1,0 +1,721 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8656D14C-B704-4355-A977-3A883821C25C}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>neon</RootNamespace>
+    <ProjectName>neon</ProjectName>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="SConstruct.props" />
+    <Import Project="SConsClean.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <CustomBuildBeforeTargets>CoreBuild</CustomBuildBeforeTargets>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;SODIUM_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\external\libsodium-1.0.5\src\libsodium\include;..\..\external\minijson_writer-master;..\..\external\IntelRDFPMathLib20U1\LIBRARY\src;..\..\external\hash-library;..\..\external\zlib-1.2.8;..\..\external\xz-5.2.1\src\liblzma\api;..\..\external\bzip2-1.0.6;..\..\external\PDCurses-3.4;..\..\external\pcre2-10.10\src;..\..\external\curl-7.41.0\include;..\..\external\sqlite-amalgamation-3080803;..\..\src;..\..\lib;..\..\external\lib\libffi-3.2.1\include;..\..\External\IntelRDFPMathLib20U1\LIBRARY\src;...\..\External\;..\..\external\utf8\source</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\external\libsodium-1.0.5;..\..\external\easysid-version-1.0\external\resid-0.16;..\..\external\easysid-version-1.0;..\..\external\bzip2-1.0.6\;..\..\external\curl-7.41.0\lib;..\..\external\hash-library;..\..\external\IntelRDFPMathLib20U1\LIBRARY;..\..\external\libffi-3.2.1\x86-win64;..\..\external\pcre2-10.10;..\..\external\PDCurses-3.4\win32;..\..\external\sqlite-amalgamation-3080803;..\..\external\xz-5.2.1\src\liblzma;..\..\external\zlib-1.2.8;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>
+      </ImportLibrary>
+      <AdditionalDependencies>libsodium.lib;libbz2.lib;libcurld.lib;libeasysid.lib;resid.lib;hash-library.lib;libbid.lib;libffi.lib;pcre2.lib;pdcurses.lib;sqlite3.lib;liblzma.lib;libz.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ForceFileOutput>
+      </ForceFileOutput>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <FixedBaseAddress>false</FixedBaseAddress>
+      <DataExecutionPrevention>false</DataExecutionPrevention>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;LZMA_API_STATIC;CURL_STATICLIB;FFI_BUILDING;SODIUM_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>false</SDLCheck>
+      <AdditionalIncludeDirectories>f:\dropbox\projects\neon-lang\neon-lang\external\gmp-6.1.2\;..\external\gmp-6.1.2\;$(LocalDebuggerWorkingDirectory)external\gmp-6.1.2\;$(LocalDebuggerWorkingDirectory)\external\SDL2-2.0.3\include;..\..\external\libsodium-1.0.5\src\libsodium\include;..\..\external\minijson_writer-master;$(LocalDebuggerWorkingDirectory)\external\IntelRDFPMathLib20U1\LIBRARY\src;..\..\external\hash-library;..\..\external\zlib-1.2.8;..\..\external\xz-5.2.1\src\liblzma\api;..\..\external\bzip2-1.0.6;..\lib\curses\PDCurses-3.4;..\..\external\pcre2-10.10\src;..\..\external\curl-7.41.0\include;..\..\external\sqlite-amalgamation-3080803;$(LocalDebuggerWorkingDirectory)\src;$(LocalDebuggerWorkingDirectory)\lib;..\..\external\lib\libffi-3.2.1\include;..\..\External\IntelRDFPMathLib20U1\LIBRARY\src;$(LocalDebuggerWorkingDirectory)\External\;..\..\common\;..\..\external\utfcpp-master\source</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <StringPooling>true</StringPooling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <EnablePREfast>true</EnablePREfast>
+      <DisableSpecificWarnings>4324</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\lib\sdl\SDL2-2.0.3;..\..\lib\sodium\libsodium-1.0.5;..\..\external\easysid-version-1.0\external\resid-0.16;..\..\external\easysid-version-1.0;..\..\lib\compress\bzip2-1.0.6\;..\..\lib\http\curl-7.41.0\lib;..\..\lib\hash\hash-library;..\..\external\IntelRDFPMathLib20U1\LIBRARY;..\..\external\libffi-3.2.1\x86-win64;..\..\lib\regex\pcre2-10.10;..\..\lib\curses\PDCurses-3.4\win32;..\..\external\sqlite-amalgamation-3080803;..\..\lib\compress\xz-5.2.1\src\liblzma;..\..\lib\compress\zlib-1.2.8;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>
+      </ImportLibrary>
+      <AdditionalDependencies>sdl.lib;libsodium.lib;libbz2.lib;libcurld.lib;hash-library.lib;libbid.lib;libffi.lib;pcre2.lib;pdcurses.lib;sqlite3.lib;liblzma.lib;wsock32.lib;version.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;imm32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ForceFileOutput>
+      </ForceFileOutput>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <FixedBaseAddress>false</FixedBaseAddress>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapFileName>$(OutDir)$(TargetName).map</MapFileName>
+      <MapExports>true</MapExports>
+    </Link>
+    <ProjectReference>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+    <CustomBuildStep>
+      <Command>scons -C $(ProjectDir)\..\..\..\  $(ProjectDir)\src\exceptions.inc external</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>Building external libraries...</Message>
+      <TreatOutputAsContent>false</TreatOutputAsContent>
+      <Outputs>$(ProjectDirectory)\.vcscons</Outputs>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\external\hash-library;..\..\external\zlib-1.2.8;..\..\external\xz-5.2.1\src\liblzma\api;..\..\external\bzip2-1.0.6;..\..\external\PDCurses-3.4;..\..\external\pcre2-10.10\src;..\..\external\curl-7.41.0\include;..\..\external\sqlite-amalgamation-3080803;..\..\src;..\..\lib;..\..\external\lib\libffi-3.2.1\include;..\..\External\IntelRDFPMathLib20U1\LIBRARY\src;...\..\External\;..\..\external\utf8\source</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NCURSES_MOUSE_VERSION;WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\external\hash-library;..\..\external\zlib-1.2.8;..\..\external\xz-5.2.1\src\liblzma\api;..\..\external\bzip2-1.0.6;..\..\external\PDCurses-3.4;..\..\external\pcre2-10.10\src;..\..\external\curl-7.41.0\include;..\..\external\sqlite-amalgamation-3080803;..\..\src;..\..\lib;..\..\external\lib\libffi-3.2.1\include;..\..\External\IntelRDFPMathLib20U1\LIBRARY\src;...\..\External\;..\..\external\utf8\source</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\lib\binary.cpp" />
+    <ClCompile Include="..\..\lib\compress\compress.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\console.cpp" />
+    <ClCompile Include="..\..\lib\crypto\crypto.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\curses\curses.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\lib\curses\PDCurses-3.4;..\..\external\pcre2-10.10\src;..\..\external\curl-7.41.0\include;..\..\external\sqlite-amalgamation-3080803;..\..\src;..\..\lib;..\..\external\lib\libffi-3.2.1\include;..\..\External\IntelRDFPMathLib20U1\LIBRARY\src;...\..\External\;..\..\external\utfcpp-master\source</AdditionalIncludeDirectories>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\datetime.cpp" />
+    <ClCompile Include="..\..\lib\debugger.cpp" />
+    <ClCompile Include="..\..\lib\file.cpp" />
+    <ClCompile Include="..\..\lib\file_posix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\file_win32.cpp" />
+    <ClCompile Include="..\..\lib\fltk\fltk.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\global.cpp" />
+    <ClCompile Include="..\..\lib\hash\hash.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\io.cpp" />
+    <ClCompile Include="..\..\lib\math.cpp" />
+    <ClCompile Include="..\..\lib\mmap_posix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\mmap_win32.cpp" />
+    <ClCompile Include="..\..\lib\net.cpp" />
+    <ClCompile Include="..\..\lib\os.cpp" />
+    <ClCompile Include="..\..\lib\os_posix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\os_win32.cpp" />
+    <ClCompile Include="..\..\lib\posix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\process_posix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\process_win32.cpp" />
+    <ClCompile Include="..\..\lib\random.cpp" />
+    <ClCompile Include="..\..\lib\random_posix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\random_win32.cpp" />
+    <ClCompile Include="..\..\lib\regex\regex.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\lib\regex\pcre2-10.10\src;..\..\external\curl-7.41.0\include;..\..\external\sqlite-amalgamation-3080803;..\..\src;..\..\lib;..\..\external\lib\libffi-3.2.1\include;..\..\External\IntelRDFPMathLib20U1\LIBRARY\src;...\..\External\;..\..\external\utfcpp-master\source</AdditionalIncludeDirectories>
+      <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</TreatWarningAsError>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\runtime.cpp" />
+    <ClCompile Include="..\..\lib\sdl\sdl.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\lib\sdl\SDL2-2.0.3\include;..\..\external\libsodium-1.0.5\src\libsodium\include;..\..\external\minijson_writer-master;..\..\external\IntelRDFPMathLib20U1\LIBRARY\src;..\..\external\hash-library;..\..\external\zlib-1.2.8;..\..\external\xz-5.2.1\src\liblzma\api;..\..\external\bzip2-1.0.6;..\..\external\PDCurses-3.4;..\..\external\pcre2-10.10\src;..\..\external\curl-7.41.0\include;..\..\external\sqlite-amalgamation-3080803;..\..\src;..\..\lib;..\..\external\lib\libffi-3.2.1\include;..\..\External\IntelRDFPMathLib20U1\LIBRARY\src;...\..\External\;..\..\external\utfcpp-master\source</AdditionalIncludeDirectories>
+      <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</TreatWarningAsError>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\serial.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\serial_const.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\serial_posix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\serial_win32.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\sodium\sodium.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">SDL2-2.0.3\include;..\..\lib\sodium\libsodium-1.0.5\src\libsodium\include;..\..\external\minijson_writer-master;..\..\external\IntelRDFPMathLib20U1\LIBRARY\src;..\..\external\hash-library;..\..\external\zlib-1.2.8;..\..\external\xz-5.2.1\src\liblzma\api;..\..\external\bzip2-1.0.6;..\..\external\PDCurses-3.4;..\..\external\pcre2-10.10\src;..\..\external\curl-7.41.0\include;..\..\external\sqlite-amalgamation-3080803;..\..\src;..\..\lib;..\..\external\lib\libffi-3.2.1\include;..\..\External\IntelRDFPMathLib20U1\LIBRARY\src;...\..\External\;..\..\external\utfcpp-master\source</AdditionalIncludeDirectories>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\sqlite.cpp" />
+    <ClCompile Include="..\..\lib\string.cpp" />
+    <ClCompile Include="..\..\lib\struct.cpp" />
+    <ClCompile Include="..\..\lib\sys.cpp" />
+    <ClCompile Include="..\..\lib\textio.cpp" />
+    <ClCompile Include="..\..\lib\time.cpp" />
+    <ClCompile Include="..\..\lib\time_darwin.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\time_linux.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\time_posix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\time_win32.cpp" />
+    <ClCompile Include="..\..\src\analyzer.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\lib\compress\xz-5.2.1\src\liblzma\api\;..\..\external\SDL2-2.0.3\include;..\..\external\libsodium-1.0.5\src\libsodium\include;..\..\external\minijson_writer-master;..\..\external\IntelRDFPMathLib20U1\LIBRARY\src;..\..\external\hash-library;..\..\external\zlib-1.2.8;..\..\external\xz-5.2.1\src\liblzma\api;..\..\external\bzip2-1.0.6;..\..\external\PDCurses-3.4;..\..\external\pcre2-10.10\src;..\..\external\curl-7.41.0\include;..\..\external\sqlite-amalgamation-3080803;..\..\src;..\..\lib;..\..\external\lib\libffi-3.2.1\include;..\..\External\IntelRDFPMathLib20U1\LIBRARY\src;...\..\External\;..\..\external\utfcpp-master\source</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ast.cpp" />
+    <ClCompile Include="..\..\src\bytecode.cpp" />
+    <ClCompile Include="..\..\src\cell.cpp" />
+    <ClCompile Include="..\..\src\compiler.cpp" />
+    <ClCompile Include="..\..\src\debuginfo.cpp" />
+    <ClCompile Include="..\..\src\disassembler.cpp" />
+    <ClCompile Include="..\..\src\exec.cpp" />
+    <ClCompile Include="..\..\src\httpserver.cpp" />
+    <ClCompile Include="..\..\src\intrinsic.cpp" />
+    <ClCompile Include="..\..\src\lexer.cpp" />
+    <ClCompile Include="..\..\src\neon.cpp" />
+    <ClCompile Include="..\..\src\number.cpp" />
+    <ClCompile Include="..\..\src\parser.cpp" />
+    <ClCompile Include="..\..\src\pt_dump.cpp" />
+    <ClCompile Include="..\..\src\repl.cpp" />
+    <ClCompile Include="..\..\src\rtl_compile.cpp" />
+    <ClCompile Include="..\..\src\rtl_exec.cpp" />
+    <ClCompile Include="..\..\src\rtl_posix.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rtl_win32.cpp" />
+    <ClCompile Include="..\..\src\sql.cpp" />
+    <ClCompile Include="..\..\src\support.cpp" />
+    <ClCompile Include="..\..\src\support_compiler.cpp" />
+    <ClCompile Include="..\..\src\support_exec.cpp" />
+    <ClCompile Include="..\..\src\util.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\external\minijson_writer-master\minijson_writer.hpp" />
+    <ClInclude Include="..\..\lib\curses\PDCurses-3.4\curses.h" />
+    <ClInclude Include="..\..\src\analyzer.h" />
+    <ClInclude Include="..\..\src\ast.h" />
+    <ClInclude Include="..\..\src\bytecode.h" />
+    <ClInclude Include="..\..\src\cell.h" />
+    <ClInclude Include="..\..\src\compiler.h" />
+    <ClInclude Include="..\..\src\debuginfo.h" />
+    <ClInclude Include="..\..\src\disassembler.h" />
+    <ClInclude Include="..\..\src\exec.h" />
+    <ClInclude Include="..\..\src\format.h" />
+    <ClInclude Include="..\..\src\httpserver.h" />
+    <ClInclude Include="..\..\src\intrinsic.h" />
+    <ClInclude Include="..\..\src\lexer.h" />
+    <ClInclude Include="..\..\src\neonext.h" />
+    <ClInclude Include="..\..\src\neonversion.h" />
+    <ClInclude Include="..\..\src\number.h" />
+    <ClInclude Include="..\..\src\opcode.h" />
+    <ClInclude Include="..\..\src\opstack.h" />
+    <ClInclude Include="..\..\src\parser.h" />
+    <ClInclude Include="..\..\src\pt.h" />
+    <ClInclude Include="..\..\src\pt_dump.h" />
+    <ClInclude Include="..\..\src\rtl_compile.h" />
+    <ClInclude Include="..\..\src\rtl_exec.h" />
+    <ClInclude Include="..\..\src\rtl_platform.h" />
+    <ClInclude Include="..\..\src\socketx.h" />
+    <ClInclude Include="..\..\src\sql.h" />
+    <ClInclude Include="..\..\src\support.h" />
+    <ClInclude Include="..\..\src\token.h" />
+    <ClInclude Include="..\..\src\utf8string.h" />
+    <ClInclude Include="..\..\src\util.h" />
+    <ClInclude Include="..\..\src\version.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\lib\bigint.neon" />
+    <None Include="..\..\lib\binary.neon" />
+    <None Include="..\..\lib\cformat.neon" />
+    <None Include="..\..\lib\complex.neon" />
+    <None Include="..\..\lib\compress.neon" />
+    <None Include="..\..\lib\compress\compress.neon" />
+    <None Include="..\..\lib\crypto\crypto.neon">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\..\lib\curses.neon" />
+    <None Include="..\..\lib\curses\curses.neon" />
+    <None Include="..\..\lib\datetime.neon" />
+    <None Include="..\..\lib\debugger.neon" />
+    <None Include="..\..\lib\encoding.neon" />
+    <None Include="..\..\lib\file.neon" />
+    <None Include="..\..\lib\fltk\fltk.neon" />
+    <None Include="..\..\lib\global.neon" />
+    <None Include="..\..\lib\hash.neon" />
+    <None Include="..\..\lib\http.neon" />
+    <None Include="..\..\lib\http\http.neon" />
+    <None Include="..\..\lib\io.neon" />
+    <None Include="..\..\lib\json.neon" />
+    <None Include="..\..\lib\math.neon" />
+    <None Include="..\..\lib\mmap.neon" />
+    <None Include="..\..\lib\multiarray.neon" />
+    <None Include="..\..\lib\net.neon" />
+    <None Include="..\..\lib\os.neon" />
+    <None Include="..\..\lib\posix.neon" />
+    <None Include="..\..\lib\process.neon" />
+    <None Include="..\..\lib\random.neon" />
+    <None Include="..\..\lib\regex.neon" />
+    <None Include="..\..\lib\regex\regex.neon" />
+    <None Include="..\..\lib\runtime.neon" />
+    <None Include="..\..\lib\sdl\sdl.neon" />
+    <None Include="..\..\lib\serial.neon" />
+    <None Include="..\..\lib\sid.neon" />
+    <None Include="..\..\lib\simplehttp.neon" />
+    <None Include="..\..\lib\sodium.neon" />
+    <None Include="..\..\lib\sqlite.neon" />
+    <None Include="..\..\lib\string.neon" />
+    <None Include="..\..\lib\struct.neon" />
+    <None Include="..\..\lib\sys.neon" />
+    <None Include="..\..\lib\textio.neon" />
+    <None Include="..\..\lib\time.neon" />
+    <None Include="..\..\lib\variant.neon" />
+    <None Include="..\..\lib\win32.neon" />
+    <None Include="..\..\lib\xml.neon" />
+    <CustomBuild Include="..\..\SConstruct">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">scons -C $(ProjectDir)..\..\  src/exceptions.inc external</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building external libraries...</Message>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)\.vsscons;%(Outputs)</Outputs>
+    </CustomBuild>
+    <None Include="..\..\samples\99-bottles\99-bottles.neon" />
+    <None Include="..\..\samples\bbs\bbs.neon" />
+    <None Include="..\..\samples\httpd\httpd.neon" />
+    <None Include="..\..\samples\sudoku\sudoku.neon" />
+    <None Include="..\..\src\constants_compile.inc" />
+    <None Include="..\..\src\enums.inc" />
+    <None Include="..\..\src\exceptions.inc" />
+    <None Include="..\..\src\functions_compile.inc" />
+    <None Include="..\..\src\functions_exec.inc" />
+    <None Include="..\..\src\thunks.inc" />
+    <None Include="..\..\t\42.neon" />
+    <None Include="..\..\t\arithmetic.neon" />
+    <None Include="..\..\t\arithmetic2.neon" />
+    <None Include="..\..\t\array-append.neon" />
+    <None Include="..\..\t\array-concat.neon" />
+    <None Include="..\..\t\array-extend.neon" />
+    <None Include="..\..\t\array-fraction.neon" />
+    <None Include="..\..\t\array-negative.neon" />
+    <None Include="..\..\t\array-resize.neon" />
+    <None Include="..\..\t\array-slice.neon" />
+    <None Include="..\..\t\array-tostring.neon" />
+    <None Include="..\..\t\array.neon" />
+    <None Include="..\..\t\array2d.neon" />
+    <None Include="..\..\t\arraysize.neon" />
+    <None Include="..\..\t\assert-enum.neon" />
+    <None Include="..\..\t\assert-fail.neon" />
+    <None Include="..\..\t\assert-fail2.neon" />
+    <None Include="..\..\t\assert.neon" />
+    <None Include="..\..\t\assign-ignore.neon" />
+    <None Include="..\..\t\assign.neon" />
+    <None Include="..\..\t\assign2.neon" />
+    <None Include="..\..\t\assignment.neon" />
+    <None Include="..\..\t\base-decimal.neon" />
+    <None Include="..\..\t\base-invalid-digit.neon" />
+    <None Include="..\..\t\base-invalid.neon" />
+    <None Include="..\..\t\base-invalidchar.neon" />
+    <None Include="..\..\t\base.neon" />
+    <None Include="..\..\t\bigint-test.neon" />
+    <None Include="..\..\t\binary-test.neon" />
+    <None Include="..\..\t\bitwise-test.neon" />
+    <None Include="..\..\t\boolean.neon" />
+    <None Include="..\..\t\bytecode-stringtable.neon" />
+    <None Include="..\..\t\bytes-embed.neon" />
+    <None Include="..\..\t\bytes-literal.neon" />
+    <None Include="..\..\t\bytes-slice.neon" />
+    <None Include="..\..\t\bytes.neon" />
+    <None Include="..\..\t\cal-test.neon" />
+    <None Include="..\..\t\case-overlap.neon" />
+    <None Include="..\..\t\case.neon" />
+    <None Include="..\..\t\case2.neon" />
+    <None Include="..\..\t\case3.neon" />
+    <None Include="..\..\t\case4.neon" />
+    <None Include="..\..\t\cformat-test.neon" />
+    <None Include="..\..\t\cmdline.neon" />
+    <None Include="..\..\t\comments-block.neon" />
+    <None Include="..\..\t\comments-block2.neon" />
+    <None Include="..\..\t\comments-block3.neon" />
+    <None Include="..\..\t\comments-block4.neon" />
+    <None Include="..\..\t\comments-block5.neon" />
+    <None Include="..\..\t\comments-block6.neon" />
+    <None Include="..\..\t\comments.neon" />
+    <None Include="..\..\t\comparison.neon" />
+    <None Include="..\..\t\comparison2.neon" />
+    <None Include="..\..\t\complex-test.neon" />
+    <None Include="..\..\t\compress-test.neon" />
+    <None Include="..\..\t\concat-bytes.neon" />
+    <None Include="..\..\t\concat.neon" />
+    <None Include="..\..\t\conditional.neon" />
+    <None Include="..\..\t\const-assign.neon" />
+    <None Include="..\..\t\const-boolean.neon" />
+    <None Include="..\..\t\const-chain.neon" />
+    <None Include="..\..\t\const-expression.neon" />
+    <None Include="..\..\t\const-notconst.neon" />
+    <None Include="..\..\t\const-string.neon" />
+    <None Include="..\..\t\const.neon" />
+    <None Include="..\..\t\copiedfile.neon" />
+    <None Include="..\..\t\datetime-test.neon" />
+    <None Include="..\..\t\debug-example.neon" />
+    <None Include="..\..\t\debug-server.neon" />
+    <None Include="..\..\t\decimal.neon" />
+    <None Include="..\..\t\dictionary.neon" />
+    <None Include="..\..\t\divide-by-zero.neon" />
+    <None Include="..\..\t\duplicate.neon" />
+    <None Include="..\..\t\empty.neon" />
+    <None Include="..\..\t\encoding-base64.neon" />
+    <None Include="..\..\t\enum.neon" />
+    <None Include="..\..\t\enum3.neon" />
+    <None Include="..\..\t\equality.neon" />
+    <None Include="..\..\t\exception-clear.neon" />
+    <None Include="..\..\t\exception-code.neon" />
+    <None Include="..\..\t\exception-current.neon" />
+    <None Include="..\..\t\exception-function.neon" />
+    <None Include="..\..\t\exception-nested.neon" />
+    <None Include="..\..\t\exception-opstack.neon" />
+    <None Include="..\..\t\exception-trace.neon" />
+    <None Include="..\..\t\exception.neon" />
+    <None Include="..\..\t\exit-for.neon" />
+    <None Include="..\..\t\exit-while.neon" />
+    <None Include="..\..\t\export-recursive.neon" />
+    <None Include="..\..\t\export.neon" />
+    <None Include="..\..\t\expr.neon" />
+    <None Include="..\..\t\ffi.neon" />
+    <None Include="..\..\t\file-exists.neon" />
+    <None Include="..\..\t\file-filecopied.neon" />
+    <None Include="..\..\t\file-filecopied1.neon" />
+    <None Include="..\..\t\file-filecopied2.neon" />
+    <None Include="..\..\t\file-filecopied3.neon" />
+    <None Include="..\..\t\file-pathnotfound.neon" />
+    <None Include="..\..\t\file-test.neon" />
+    <None Include="..\..\t\file-writebytes.neon" />
+    <None Include="..\..\t\file-writelines.neon" />
+    <None Include="..\..\t\for-bounds.neon" />
+    <None Include="..\..\t\for-nested.neon" />
+    <None Include="..\..\t\for-nested2.neon" />
+    <None Include="..\..\t\for-readonly.neon" />
+    <None Include="..\..\t\for-scope.neon" />
+    <None Include="..\..\t\for.neon" />
+    <None Include="..\..\t\foreach-function.neon" />
+    <None Include="..\..\t\foreach-update.neon" />
+    <None Include="..\..\t\foreach-value.neon" />
+    <None Include="..\..\t\foreach.neon" />
+    <None Include="..\..\t\fork.neon" />
+    <None Include="..\..\t\forth-test.neon" />
+    <None Include="..\..\t\forward.neon" />
+    <None Include="..\..\t\function-args.neon" />
+    <None Include="..\..\t\function-defaultargs.neon" />
+    <None Include="..\..\t\function-local.neon" />
+    <None Include="..\..\t\function-namedargs.neon" />
+    <None Include="..\..\t\function-pointer.neon" />
+    <None Include="..\..\t\function.neon" />
+    <None Include="..\..\t\gc-array.neon" />
+    <None Include="..\..\t\gc-long-chain.neon" />
+    <None Include="..\..\t\gc1.neon" />
+    <None Include="..\..\t\gc2.neon" />
+    <None Include="..\..\t\gc3.neon" />
+    <None Include="..\..\t\global-parameter-name.neon" />
+    <None Include="..\..\t\hash-test.neon" />
+    <None Include="..\..\t\hello.neon" />
+    <None Include="..\..\t\http-test.neon" />
+    <None Include="..\..\t\if.neon" />
+    <None Include="..\..\t\import-string.neon" />
+    <None Include="..\..\t\import.neon" />
+    <None Include="..\..\t\in.neon" />
+    <None Include="..\..\t\inc-reference.neon" />
+    <None Include="..\..\t\inc.neon" />
+    <None Include="..\..\t\indent.neon" />
+    <None Include="..\..\t\index.neon" />
+    <None Include="..\..\t\inline-construct-record.neon" />
+    <None Include="..\..\t\inline-init-record.neon" />
+    <None Include="..\..\t\inline-init.neon" />
+    <None Include="..\..\t\inline-init4.neon" />
+    <None Include="..\..\t\input.neon" />
+    <None Include="..\..\t\intrinsic.neon" />
+    <None Include="..\..\t\io-test.neon" />
+    <None Include="..\..\t\json-test.neon" />
+    <None Include="..\..\t\let-assign.neon" />
+    <None Include="..\..\t\let.neon" />
+    <None Include="..\..\t\lexer-raw.neon" />
+    <None Include="..\..\t\lexer-unicode.neon" />
+    <None Include="..\..\t\LexerBufferTest1.neon" />
+    <None Include="..\..\t\LexerBufferTest2.neon" />
+    <None Include="..\..\t\LexerBufferTest3.neon" />
+    <None Include="..\..\t\LexerBufferTest4.neon" />
+    <None Include="..\..\t\LexerBufferTest5.neon" />
+    <None Include="..\..\t\lexical-scope.neon" />
+    <None Include="..\..\t\lisp-test.neon" />
+    <None Include="..\..\t\literal-dup.neon" />
+    <None Include="..\..\t\literal-empty.neon" />
+    <None Include="..\..\t\literal-string.neon" />
+    <None Include="..\..\t\literal.neon" />
+    <None Include="..\..\t\local-clear.neon" />
+    <None Include="..\..\t\logical.neon" />
+    <None Include="..\..\t\logical2.neon" />
+    <None Include="..\..\t\loop.neon" />
+    <None Include="..\..\t\math-test.neon" />
+    <None Include="..\..\t\methods-declare.neon" />
+    <None Include="..\..\t\methods-self.neon" />
+    <None Include="..\..\t\methods.neon" />
+    <None Include="..\..\t\mismatch.neon" />
+    <None Include="..\..\t\mkdir.neon" />
+    <None Include="..\..\t\module-alias.neon" />
+    <None Include="..\..\t\module-alias2.neon" />
+    <None Include="..\..\t\module-import-name-alias.neon" />
+    <None Include="..\..\t\module-import-name-alias2.neon" />
+    <None Include="..\..\t\module-import-name.neon" />
+    <None Include="..\..\t\module-import-name2.neon" />
+    <None Include="..\..\t\module-import-name3.neon" />
+    <None Include="..\..\t\module.neon" />
+    <None Include="..\..\t\module2.neon" />
+    <None Include="..\..\t\modulo.neon" />
+    <None Include="..\..\t\multiarray-test.neon" />
+    <None Include="..\..\t\nested-substitution.neon" />
+    <None Include="..\..\t\net-test.neon" />
+    <None Include="..\..\t\next-for.neon" />
+    <None Include="..\..\t\next-while.neon" />
+    <None Include="..\..\t\number-ceil.neon" />
+    <None Include="..\..\t\number-underscore.neon" />
+    <None Include="..\..\t\os-test.neon" />
+    <None Include="..\..\t\outer.neon" />
+    <None Include="..\..\t\outer2.neon" />
+    <None Include="..\..\t\parameters-ignore.neon" />
+    <None Include="..\..\t\parameters.neon" />
+    <None Include="..\..\t\pathnotfound.neon" />
+    <None Include="..\..\t\pointer-method.neon" />
+    <None Include="..\..\t\pointer-mismatch.neon" />
+    <None Include="..\..\t\pointer-nil.neon" />
+    <None Include="..\..\t\pointer-valid.neon" />
+    <None Include="..\..\t\pointer.neon" />
+    <None Include="..\..\t\pointer2.neon" />
+    <None Include="..\..\t\pointer3.neon" />
+    <None Include="..\..\t\pointer4.neon" />
+    <None Include="..\..\t\pointer5.neon" />
+    <None Include="..\..\t\pointer6.neon" />
+    <None Include="..\..\t\pointer7.neon" />
+    <None Include="..\..\t\pointer8.neon" />
+    <None Include="..\..\t\predeclare1.neon" />
+    <None Include="..\..\t\predeclare2.neon" />
+    <None Include="..\..\t\predeclare3.neon" />
+    <None Include="..\..\t\predefined-generation.neon" />
+    <None Include="..\..\t\record-empty.neon" />
+    <None Include="..\..\t\record-init.neon" />
+    <None Include="..\..\t\record-private.neon" />
+    <None Include="..\..\t\recursion-limit.neon" />
+    <None Include="..\..\t\recursion.neon" />
+    <None Include="..\..\t\regex-test.neon" />
+    <None Include="..\..\t\repeat-next.neon" />
+    <None Include="..\..\t\repeat.neon" />
+    <None Include="..\..\t\return-case.neon" />
+    <None Include="..\..\t\return-case2.neon" />
+    <None Include="..\..\t\return-if.neon" />
+    <None Include="..\..\t\return-loop.neon" />
+    <None Include="..\..\t\return-nothing.neon" />
+    <None Include="..\..\t\return-try.neon" />
+    <None Include="..\..\t\return.neon" />
+    <None Include="..\..\t\retval-index.neon" />
+    <None Include="..\..\t\rtl.neon" />
+    <None Include="..\..\t\sdl-test.neon" />
+    <None Include="..\..\t\shadow.neon" />
+    <None Include="..\..\t\shadow2.neon" />
+    <None Include="..\..\t\shebang.neon" />
+    <None Include="..\..\t\shortcut.neon" />
+    <None Include="..\..\t\sodium-test.neon" />
+    <None Include="..\..\t\sqlite-test.neon" />
+    <None Include="..\..\t\stack-overflow.neon" />
+    <None Include="..\..\t\string-append-test.neon" />
+    <None Include="..\..\t\string-bytes.neon" />
+    <None Include="..\..\t\string-escape.neon" />
+    <None Include="..\..\t\string-format.neon" />
+    <None Include="..\..\t\string-multiline.neon" />
+    <None Include="..\..\t\string-test.neon" />
+    <None Include="..\..\t\strings.neon" />
+    <None Include="..\..\t\struct-test.neon" />
+    <None Include="..\..\t\structure.neon" />
+    <None Include="..\..\t\sudoku-test.neon" />
+    <None Include="..\..\t\sys-exit.neon" />
+    <None Include="..\..\t\tail-call.neon" />
+    <None Include="..\..\t\time-stopwatch.neon" />
+    <None Include="..\..\t\time-test.neon" />
+    <None Include="..\..\t\tostring.neon" />
+    <None Include="..\..\t\type-compat.neon" />
+    <None Include="..\..\t\type-nested.neon" />
+    <None Include="..\..\t\type.neon" />
+    <None Include="..\..\t\type_mismatch.neon" />
+    <None Include="..\..\t\unary-plus.neon" />
+    <None Include="..\..\t\unicode-char.neon" />
+    <None Include="..\..\t\unicode-source.neon" />
+    <None Include="..\..\t\unicode-string.neon" />
+    <None Include="..\..\t\uninitialised-case-noelse.neon" />
+    <None Include="..\..\t\uninitialised-case.neon" />
+    <None Include="..\..\t\uninitialised-function.neon" />
+    <None Include="..\..\t\uninitialised-if-exit.neon" />
+    <None Include="..\..\t\uninitialised-if-nested.neon" />
+    <None Include="..\..\t\uninitialised-if-noelse.neon" />
+    <None Include="..\..\t\uninitialised-if.neon" />
+    <None Include="..\..\t\uninitialised-loop.neon" />
+    <None Include="..\..\t\uninitialised-nested.neon" />
+    <None Include="..\..\t\uninitialised-out.neon" />
+    <None Include="..\..\t\uninitialised-repeat.neon" />
+    <None Include="..\..\t\uninitialised-simple.neon" />
+    <None Include="..\..\t\uninitialised-try.neon" />
+    <None Include="..\..\t\unused-parameter.neon" />
+    <None Include="..\..\t\unused-return.neon" />
+    <None Include="..\..\t\utf8-invalid.neon" />
+    <None Include="..\..\t\value-index.neon" />
+    <None Include="..\..\t\value-method.neon" />
+    <None Include="..\..\t\value-method2.neon" />
+    <None Include="..\..\t\valuecopy.neon" />
+    <None Include="..\..\t\var-declaration.neon" />
+    <None Include="..\..\t\var-declaration2.neon" />
+    <None Include="..\..\t\var-reset.neon" />
+    <None Include="..\..\t\var.neon" />
+    <None Include="..\..\t\variant-test.neon" />
+    <None Include="..\..\t\while.neon" />
+    <None Include="..\..\t\win32-test.neon" />
+    <None Include="..\..\t\xml-test.neon" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\CMakeLists.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
