@@ -5,7 +5,7 @@ using System.Text;
 
 namespace csnex
 {
-    public enum Opcodes : byte
+    public enum Opcode : byte
     {
         ENTER,
         LEAVE,
