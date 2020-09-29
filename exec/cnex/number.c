@@ -212,7 +212,7 @@ Number number_from_mpz(mpz_t n)
     return r;
 }
 
-Number number_fromNumber(const Number *n)
+Number number_fromNumber(Number *n)
 {
     Number r = INIT_NUMBER;
 
@@ -223,6 +223,18 @@ Number number_fromNumber(const Number *n)
         r.bid = n->bid;
     }
     return r;
+}
+
+BID_UINT128 bid_from_number(Number n)
+{
+    if (n.rep == BID) {
+        return n.bid;
+    }
+    assert(n.rep == MPZ);
+    char buf[500];
+    mpz_get_str(buf, 10, n.mpz);
+    //mpz_clear(n.mpz);
+    return bid128_from_string(buf);
 }
 
 //void number_copyNumber(Number *dest, const Number *src)
@@ -258,7 +270,7 @@ Number number_add(Number x, Number y)
         return res;
     }
     res.rep = BID;
-    res.bid = bid128_add(x.bid, y.bid);
+    res.bid = bid128_add(bid_from_number(x), bid_from_number(y));
     return res;
 }
 
@@ -269,11 +281,11 @@ Number number_subtract(Number x, Number y)
     if (x.rep == MPZ && y.rep == MPZ) {
         res.rep = MPZ;
         mpz_init(res.mpz);
-        mpz_add(res.mpz, x.mpz, y.mpz);
+        mpz_sub(res.mpz, x.mpz, y.mpz);
         return res;
     }
     res.rep = BID;
-    res.bid = bid128_sub(x.bid, y.bid);
+    res.bid = bid128_sub(bid_from_number(x), bid_from_number(y));
     return res;
 }
 
@@ -284,11 +296,14 @@ Number number_divide(Number x, Number y)
     if (x.rep == MPZ && y.rep == MPZ) {
         res.rep = MPZ;
         mpz_init(res.mpz);
-        mpz_add(res.mpz, x.mpz, y.mpz);
-        return res;
+        if (mpz_divisible_p(x.mpz, y.mpz)) {
+            mpz_tdiv_q(res.mpz, x.mpz, y.mpz);
+            return res;
+        }
+        mpz_clear(res.mpz);
     }
     res.rep = BID;
-    res.bid = bid128_div(x.bid, y.bid);
+    res.bid = bid128_div(bid_from_number(x), bid_from_number(y));
     return res;
 }
 
@@ -321,11 +336,11 @@ Number number_multiply(Number x, Number y)
     if (x.rep == MPZ && y.rep == MPZ) {
         res.rep = MPZ;
         mpz_init(res.mpz);
-        mpz_add(res.mpz, x.mpz, y.mpz);
+        mpz_mul(res.mpz, x.mpz, y.mpz);
         return res;
     }
     res.rep = BID;
-    res.bid = bid128_mul(x.bid, y.bid);
+    res.bid = bid128_mul(bid_from_number(x), bid_from_number(y));
     return res;
 }
 
@@ -557,7 +572,10 @@ BOOL number_is_negative(Number x)
 
 BOOL number_is_zero(Number x)
 {
-    return bid128_isZero(x.bid) != 0;
+    if (x.rep == MPZ) {
+        return mpz_cmp_si(x.mpz, 0) == 0;
+    }
+    return bid128_isZero(bid_from_number(x)) == 0;
 }
 
 /*

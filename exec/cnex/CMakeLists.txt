@@ -104,6 +104,7 @@ add_executable(test_number_to_string_c
 )
 target_link_libraries(test_number_to_string_c
     bid
+    ${GMP_TARGET}
 )
 add_test(
     NAME test_number_to_string_c
@@ -129,6 +130,7 @@ endif ()
 
 target_link_libraries(cnex
     bid
+    ${GMP_TARGET}
     sqlite3
 )
 

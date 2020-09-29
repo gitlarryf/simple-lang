@@ -721,8 +721,10 @@ void exec_NEGN(TExecutor *self)
 {
     self->ip++;
     Number x = number_fromNumber(&top(self->stack)->number); pop(self->stack);
-    push(self->stack, cell_fromNumber(number_negate(x)));
+    Number r = number_negate(x);
+    push(self->stack, cell_fromNumber(r));
     number_freeNumber(&x);
+    number_freeNumber(&r);
 }
 
 void exec_ADDN(TExecutor *self)
@@ -730,9 +732,11 @@ void exec_ADDN(TExecutor *self)
     self->ip++;
     Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
-    push(self->stack, cell_fromNumber(number_add(a, b)));
+    Number s = number_add(a, b);
+    push(self->stack, cell_fromNumber(s));
     number_freeNumber(&b);
     number_freeNumber(&a);
+    number_freeNumber(&s);
 }
 
 void exec_SUBN(TExecutor *self)
@@ -740,9 +744,11 @@ void exec_SUBN(TExecutor *self)
     self->ip++;
     Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
-    push(self->stack, cell_fromNumber(number_subtract(a, b)));
+    Number r = number_subtract(a, b);
+    push(self->stack, cell_fromNumber(r));
     number_freeNumber(&b);
     number_freeNumber(&a);
+    number_freeNumber(&r);
 }
 
 void exec_MULN(TExecutor *self)
@@ -750,9 +756,11 @@ void exec_MULN(TExecutor *self)
     self->ip++;
     Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
-    push(self->stack, cell_fromNumber(number_multiply(a, b)));
+    Number r = number_multiply(a, b);
+    push(self->stack, cell_fromNumber(r));
     number_freeNumber(&b);
     number_freeNumber(&a);
+    number_freeNumber(&r);
 }
 
 void exec_DIVN(TExecutor *self)
@@ -760,15 +768,17 @@ void exec_DIVN(TExecutor *self)
     self->ip++;
     Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
-   if (number_is_zero(b)) {
+    if (number_is_zero(b)) {
         self->rtl_raise(self, "DivideByZeroException", "", BID_ZERO);
         number_freeNumber(&b);
         number_freeNumber(&a);
         return;
     }
-    push(self->stack, cell_fromNumber(number_divide(a, b)));
+    Number r = number_divide(a, b);
+    push(self->stack, cell_fromNumber(r));
     number_freeNumber(&b);
     number_freeNumber(&a);
+    number_freeNumber(&r);
 }
 
 void exec_MODN(TExecutor *self)
@@ -776,15 +786,17 @@ void exec_MODN(TExecutor *self)
     self->ip++;
     Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
-   if (number_is_zero(b)) {
+    if (number_is_zero(b)) {
         self->rtl_raise(self, "DivideByZeroException", "", BID_ZERO);
         number_freeNumber(&b);
         number_freeNumber(&a);
         return;
     }
-    push(self->stack, cell_fromNumber(number_modulo(a, b)));
+    Number r = number_modulo(a, b);
+    push(self->stack, cell_fromNumber(r));
     number_freeNumber(&b);
     number_freeNumber(&a);
+    number_freeNumber(&r);
 }
 
 void exec_EXPN(TExecutor *self)
@@ -792,9 +804,11 @@ void exec_EXPN(TExecutor *self)
     self->ip++;
     Number b = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     Number a = number_fromNumber(&top(self->stack)->number); pop(self->stack);
-    push(self->stack, cell_fromNumber(number_pow(a, b)));
+    Number r = number_pow(a, b);
+    push(self->stack, cell_fromNumber(r));
     number_freeNumber(&b);
     number_freeNumber(&a);
+    number_freeNumber(&r);
 }
 
 void exec_EQB(TExecutor *self)
