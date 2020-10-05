@@ -12,6 +12,7 @@ void math_abs(TExecutor *exec)
 {
     Number x = top(exec->stack)->number; pop(exec->stack);
 
+    Number r = number_abs(x);
     push(exec->stack, cell_fromNumber(number_abs(x)));
 }
 

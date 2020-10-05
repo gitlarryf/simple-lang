@@ -1127,43 +1127,50 @@ void exec_NOTB(TExecutor *self)
 void exec_INDEXAR(TExecutor *self)
 {
     self->ip++;
-    Number index = top(self->stack)->number; pop(self->stack);
+    Number index = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     Cell *addr = top(self->stack)->address; pop(self->stack);
 
     if (!number_is_integer(index)) {
         self->rtl_raise(self, "ArrayIndexException", number_to_string(index), BID_ZERO);
+        number_freeNumber(&index);
         return;
     }
     int64_t i = number_to_sint64(index);
     if (i < 0) {
         self->rtl_raise(self, "ArrayIndexException", number_to_string(number_from_sint64(i)), BID_ZERO);
+        number_freeNumber(&index);
         return;
     }
     uint64_t j = (uint64_t)i;
     if (j >= addr->array->size) {
         self->rtl_raise(self, "ArrayIndexException", number_to_string(number_from_uint64(j)), BID_ZERO);
+        number_freeNumber(&index);
         return;
     }
     push(self->stack, cell_fromAddress(cell_arrayIndexForRead(addr, j)));
+    number_freeNumber(&index);
 }
 
 void exec_INDEXAW(TExecutor *self)
 {
     self->ip++;
-    Number index = top(self->stack)->number; pop(self->stack);
+    Number index = number_fromNumber(&top(self->stack)->number); pop(self->stack);
     Cell *addr = top(self->stack)->address; pop(self->stack);
 
     if (!number_is_integer(index)) {
         self->rtl_raise(self, "ArrayIndexException", number_to_string(index), BID_ZERO);
+        number_freeNumber(&index);
         return;
     }
     int64_t i = number_to_sint64(index);
     if (i < 0) {
+        number_freeNumber(&index);
         self->rtl_raise(self, "ArrayIndexException", number_to_string(number_from_sint64(i)), BID_ZERO);
         return;
     }
     uint64_t j = (uint64_t)i;
     push(self->stack, cell_fromAddress(cell_arrayIndexForWrite(addr, j)));
+    number_freeNumber(&index);
 }
 
 void exec_INDEXAV(TExecutor *self)
