@@ -37,7 +37,7 @@ typedef struct Number {
 
 
 //#define BID_ZERO        bid128_from_uint32(0)
-static const Number BID_ZERO        = { { 0 }, 0, BID };
+static const Number BID_ZERO = { { 0 }, 0, BID };
 static const Number BID_MIN_INT32   = { { 0x0000000080000000, 0xb040000000000000 }, 0, BID };
 static const Number BID_MAX_INT32   = { { 0x000000007fffffff, 0x3040000000000000 }, 0, BID };
 static const Number BID_MIN_UINT32  = { { 0x0000000000000000, 0x3040000000000000 }, 0, BID };

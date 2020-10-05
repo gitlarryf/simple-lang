@@ -98,6 +98,19 @@ add_test(
     COMMAND test_string_support
 )
 
+add_executable(test_number_c
+    test_number.c
+    number.c
+)
+target_link_libraries(test_number_c
+    bid
+    ${GMP_TARGET}
+)
+add_test(
+    NAME test_number_c
+    COMMAND test_number_c
+)
+
 add_executable(test_number_to_string_c
     test_number_to_string.c
     number.c
@@ -124,6 +137,7 @@ add_test(
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set_target_properties(cnex PROPERTIES COMPILE_FLAGS "-std=c99 -Wall -Werror")
     set_target_properties(test_string_support PROPERTIES COMPILE_FLAGS "-std=c99 -Wall -Werror")
+    set_target_properties(test_number_c PROPERTIES COMPILE_FLAGS "-std=c99 -Wall -Werror")
     set_target_properties(test_number_to_string_c PROPERTIES COMPILE_FLAGS "-std=c99 -Wall -Werror")
     set_target_properties(test_path_support PROPERTIES COMPILE_FLAGS "-std=c99 -Wall -Werror")
 endif ()
@@ -141,6 +155,7 @@ else (WIN32)
     endif ()
     target_link_libraries(cnex m)
     target_link_libraries(test_string_support m)
+    target_link_libraries(test_number_c m)
     target_link_libraries(test_number_to_string_c m)
     target_link_libraries(test_path_support m)
 endif (WIN32)

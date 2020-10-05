@@ -162,12 +162,14 @@ Number number_from_string(char *s)
 {
     Number r = { { 0 }, 0, BID };
 
+    char *p = s;
     size_t len = strlen(s);
     size_t i = 0;
     if (s[i] == '-') {
         i++;
+        p++;
     }
-    if (strspn(s, "0123456789") == len) {
+    if (strspn(p, "0123456789") == len - i) {
         if (mpz_init_set_str(r.mpz, s, 10) == 0) {
             r.rep = MPZ;
         } else {
@@ -176,7 +178,7 @@ Number number_from_string(char *s)
         }
         return r;
     }
-
+    r.rep = BID;
     r.bid = bid128_from_string(s);
     return r;
 }
@@ -212,7 +214,7 @@ Number number_from_mpz(mpz_t n)
     return r;
 }
 
-Number number_fromNumber(Number *n)
+Number number_fromNumber(const Number *n)
 {
     Number r = INIT_NUMBER;
 
@@ -346,6 +348,10 @@ Number number_multiply(Number x, Number y)
 
 Number number_negate(Number x)
 {
+    if (x.rep == MPZ) {
+        mpz_neg(x.mpz, x.mpz);
+        return x;
+    }
     return number_from_bid(bid128_negate(x.bid));
 }
 
@@ -376,177 +382,223 @@ Number number_pow(Number x, Number y)
 
 Number number_abs(Number x)
 {
-    return number_from_bid(bid128_abs(x.bid));
+    Number res = INIT_NUMBER;
+
+    if (x.rep == MPZ) {
+        res.rep = MPZ;
+        mpz_init(res.mpz);
+        mpz_abs(res.mpz, x.mpz);
+        return res;
+    }
+    res.rep = BID;
+    res.bid = bid128_abs(bid_from_number(x));
+    return res;
 }
 
 Number number_sign(Number x)
 {
-    return number_from_bid(bid128_copySign(bid128_from_uint32(1), x.bid));
+    Number res = INIT_NUMBER;
+
+    if (x.rep == MPZ) {
+        res.rep = MPZ;
+        mpz_init_set_si(res.mpz, mpz_sgn(x.mpz));
+        return res;
+    }
+    res.rep = BID;
+    res.bid = bid128_copySign(bid128_from_uint32(1), bid_from_number(x));
+    return res;
 }
 
 Number number_ceil(Number x)
 {
-    return number_from_bid(bid128_round_integral_positive(x.bid));
+    Number res = INIT_NUMBER;
+
+    if (x.rep == MPZ) {
+        return x;
+    }
+    res.rep = BID;
+    res.bid = bid128_round_integral_positive(bid_from_number(x));
+    return res;
 }
 
 Number number_floor(Number x)
 {
-    return number_from_bid(bid128_round_integral_negative(x.bid));
+    Number res = INIT_NUMBER;
+
+    if (x.rep == MPZ) {
+        return x;
+    }
+    res.rep = BID;
+    res.bid = bid128_round_integral_negative(bid_from_number(x));
+    return res;
 }
 
 Number number_trunc(Number x)
 {
-    return number_from_bid(bid128_round_integral_zero(x.bid));
+    Number res = INIT_NUMBER;
+
+    if (x.rep == MPZ) {
+        return x;
+    }
+    res.rep = BID;
+    res.bid = bid128_round_integral_zero(bid_from_number(x));
+    return res;
 }
 
 Number number_exp(Number x)
 {
-    return number_from_bid(bid128_exp(x.bid));
+    return number_from_bid(bid128_exp(bid_from_number(x)));
 }
 
 Number number_log(Number x)
 {
-    return number_from_bid(bid128_log(x.bid));
+    return number_from_bid(bid128_log(bid_from_number(x)));
 }
 
 Number number_sqrt(Number x)
 {
-    return number_from_bid(bid128_sqrt(x.bid));
+    // ToDo: mpz
+    return number_from_bid(bid128_sqrt(bid_from_number(x)));
 }
 
 Number number_acos(Number x)
 {
-    return number_from_bid(bid128_acos(x.bid));
+    return number_from_bid(bid128_acos(bid_from_number(x)));
 }
 
 Number number_asin(Number x)
 {
-    return number_from_bid(bid128_asin(x.bid));
+    return number_from_bid(bid128_asin(bid_from_number(x)));
 }
 
 Number number_atan(Number x)
 {
-    return number_from_bid(bid128_atan(x.bid));
+    return number_from_bid(bid128_atan(bid_from_number(x)));
 }
 
 Number number_cos(Number x)
 {
-    return number_from_bid(bid128_cos(x.bid));
+    return number_from_bid(bid128_cos(bid_from_number(x)));
 }
 
 Number number_sin(Number x)
 {
-    return number_from_bid(bid128_sin(x.bid));
+    return number_from_bid(bid128_sin(bid_from_number(x)));
 }
 
 Number number_tan(Number x)
 {
-    return number_from_bid(bid128_tan(x.bid));
+    return number_from_bid(bid128_tan(bid_from_number(x)));
 }
 
 Number number_acosh(Number x)
 {
-    return number_from_bid(bid128_acosh(x.bid));
+    return number_from_bid(bid128_acosh(bid_from_number(x)));
 }
 
 Number number_asinh(Number x)
 {
-    return number_from_bid(bid128_asinh(x.bid));
+    return number_from_bid(bid128_asinh(bid_from_number(x)));
 }
 
 Number number_atanh(Number x)
 {
-    return number_from_bid(bid128_atanh(x.bid));
+    return number_from_bid(bid128_atanh(bid_from_number(x)));
 }
 
 Number number_atan2(Number y, Number x)
 {
-    return number_from_bid(bid128_atan2(y.bid, x.bid));
+    return number_from_bid(bid128_atan2(bid_from_number(y), bid_from_number(x)));
 }
 
 Number number_cbrt(Number x)
 {
-    return number_from_bid(bid128_cbrt(x.bid));
+    // ToDo: mpz
+    return number_from_bid(bid128_cbrt(bid_from_number(x)));
 }
 
 Number number_cosh(Number x)
 {
-    return number_from_bid(bid128_cosh(x.bid));
+    return number_from_bid(bid128_cosh(bid_from_number(x)));
 }
 
 Number number_erf(Number x)
 {
-    return number_from_bid(bid128_erf(x.bid));
+    return number_from_bid(bid128_erf(bid_from_number(x)));
 }
 
 Number number_erfc(Number x)
 {
-    return number_from_bid(bid128_erfc(x.bid));
+    return number_from_bid(bid128_erfc(bid_from_number(x)));
 }
 
 Number number_exp2(Number x)
 {
-    return number_from_bid(bid128_exp2(x.bid));
+    // ToDo: mpz
+    return number_from_bid(bid128_exp2(bid_from_number(x)));
 }
 
 Number number_expm1(Number x)
 {
-    return number_from_bid(bid128_expm1(x.bid));
+    return number_from_bid(bid128_expm1(bid_from_number(x)));
 }
 
 Number number_frexp(Number x, int *exp)
 {
-    return number_from_bid(bid128_frexp(x.bid, exp));
+    return number_from_bid(bid128_frexp(bid_from_number(x), exp));
 }
 
 Number number_hypot(Number x, Number y)
 {
-    return number_from_bid(bid128_hypot(x.bid, y.bid));
+    return number_from_bid(bid128_hypot(bid_from_number(x), bid_from_number(y)));
 }
 
 Number number_ldexp(Number x, int exp)
 {
-    return number_from_bid(bid128_ldexp(x.bid, exp));
+    return number_from_bid(bid128_ldexp(bid_from_number(x), exp));
 }
 
 Number number_lgamma(Number x)
 {
-    return number_from_bid(bid128_lgamma(x.bid));
+    return number_from_bid(bid128_lgamma(bid_from_number(x)));
 }
 
 Number number_log10(Number x)
 {
-    return number_from_bid(bid128_log10(x.bid));
+    return number_from_bid(bid128_log10(bid_from_number(x)));
 }
 
 Number number_log1p(Number x)
 {
-    return number_from_bid(bid128_log1p(x.bid));
+    return number_from_bid(bid128_log1p(bid_from_number(x)));
 }
 
 Number number_log2(Number x)
 {
-    return number_from_bid(bid128_log2(x.bid));
+    return number_from_bid(bid128_log2(bid_from_number(x)));
 }
 
 Number number_nearbyint(Number x)
 {
-    return number_from_bid(bid128_nearbyint(x.bid));
+    if (x.rep == MPZ) {
+        return x;
+    }
+    return number_from_bid(bid128_nearbyint(bid_from_number(x)));
 }
 
 Number number_sinh(Number x)
 {
-    return number_from_bid(bid128_sinh(x.bid));
+    return number_from_bid(bid128_sinh(bid_from_number(x)));
 }
 
 Number number_tanh(Number x)
 {
-    return number_from_bid(bid128_tanh(x.bid));
+    return number_from_bid(bid128_tanh(bid_from_number(x)));
 }
 
 Number number_tgamma(Number x)
 {
-    return number_from_bid(bid128_tgamma(x.bid));
+    return number_from_bid(bid128_tgamma(bid_from_number(x)));
 }
 
 
@@ -556,17 +608,26 @@ Number number_tgamma(Number x)
 
 BOOL number_is_integer(Number x)
 {
-    Number i = number_from_bid(bid128_round_integral_zero(x.bid));
-    return bid128_quiet_equal(x.bid, i.bid) != 0;
+    if (x.rep == MPZ) {
+        return TRUE;
+    }
+    BID_UINT128 i = bid128_round_integral_zero(x.bid);
+    return bid128_quiet_equal(x.bid, i) != 0;
 }
 
 BOOL number_is_nan(Number x)
 {
+    if (x.rep == MPZ) {
+        return FALSE;
+    }
     return bid128_isNaN(x.bid) != 0;
 }
 
 BOOL number_is_negative(Number x)
 {
+    if (x.rep == MPZ) {
+        return mpz_sgn(x.mpz) == -1;
+    }
     return bid128_isSigned(x.bid) != 0;
 }
 
@@ -584,31 +645,91 @@ BOOL number_is_zero(Number x)
 
 int32_t number_to_sint32(Number x)
 {
+    if (x.rep == MPZ) {
+        return (int32_t)mpz_get_si(x.mpz);
+    }
     return bid128_to_int32_int(x.bid);
 }
 
 uint32_t number_to_uint32(Number x)
 {
+    if (x.rep == MPZ) {
+        return (uint32_t)mpz_get_ui(x.mpz);
+    }
     return bid128_to_uint32_int(x.bid);
 }
 
 int64_t number_to_sint64(Number x)
 { 
+    if (x.rep == MPZ) {
+        size_t sls = sizeof(signed long);
+        if (sls >= 8) {
+            return mpz_get_si(x.mpz);
+        } else {
+            BOOL negative = FALSE;
+            if (number_is_negative(x)) {
+                negative = TRUE;
+                x = number_negate(x);
+            }
+            //uint64_t ur = static_cast<uint64_t>(x.get_mpz().get_ui() & 0xFFFFFFFF) + (static_cast<uint64_t>(mpz_class(x.get_mpz() >> 32).get_ui() & 0xFFFFFFFF) << 32);
+            //uint64_t ur = (uint64_t)(mpz_get_ui(x.mpz) & 0xFFFFFFFF) + ((uint64_t)((mpz_get_si(x.mpz) >> 32) & 0xFFFFFFFF) << 32);
+            //uint64_t lsw = mpz_get_ui(x.mpz) & 0xFFFFFFFF;
+            mpz_t ms;
+            mpz_init_set(ms, x.mpz);
+            mpz_fdiv_q_2exp(ms, x.mpz, 32);
+            //uint32_t msw = mpz_get_si(ms);
+            
+            uint64_t ur = (mpz_get_ui(x.mpz) & 0xFFFFFFFF) | (((uint64_t)mpz_get_ui(ms) & 0xFFFFFFFF) << 32);
+            mpz_clear(ms);
+            if (ur > LLONG_MAX) {
+                if (negative) {
+                    return LLONG_MIN;
+                } else {
+                    return LLONG_MAX;
+                }
+            }
+            int64_t sr = (int64_t)ur;
+            if (negative) {
+                sr = -sr;
+            }
+            return sr;
+        }
+    }
     return bid128_to_int64_int(x.bid);
 }
 
 uint64_t number_to_uint64(Number x)
 {
+    if (x.rep == MPZ) {
+        size_t uls = sizeof(unsigned long);
+        if (uls >= 8) {
+            return mpz_get_ui(x.mpz);
+        } else {
+            uint64_t lsw = mpz_get_ui(x.mpz) & 0xFFFFFFFF;
+            mpz_t ms;
+            mpz_init_set(ms, x.mpz);
+            mpz_fdiv_q_2exp(ms, x.mpz, 32);
+            uint32_t msw = mpz_get_ui(ms);
+            mpz_clear(ms);
+            return lsw | (((uint64_t)msw & 0xFFFFFFFF) << 32);
+        }
+    }
     return bid128_to_uint64_int(x.bid);
 }
 
 float number_to_float(Number x)
 {
+    if (x.rep == MPZ) {
+        return (float)mpz_get_d(x.mpz);
+    }
     return bid128_to_binary32(x.bid);
 }
 
 double number_to_double(Number x)
 {
+    if (x.rep == MPZ) {
+        return mpz_get_d(x.mpz);
+    }
     return bid128_to_binary64(x.bid);
 }
 
@@ -664,35 +785,56 @@ Number number_from_double(double x)
 
 BOOL number_is_equal(Number x, Number y)
 {
-    return bid128_quiet_equal(x.bid, y.bid);
+    if (x.rep == MPZ && y.rep == MPZ) {
+        return mpz_cmp(x.mpz, y.mpz) == 0;
+    }
+    return bid128_quiet_equal(bid_from_number(x), bid_from_number(y));
 }
 
 BOOL number_is_not_equal(Number x, Number y)
 {
-    return bid128_quiet_not_equal(x.bid, y.bid) != 0;
+    if (x.rep == MPZ && y.rep == MPZ) {
+        return mpz_cmp(x.mpz, y.mpz) != 0;
+    }
+    return bid128_quiet_equal(bid_from_number(x), bid_from_number(y)) != 0;
 }
 
 BOOL number_is_less(Number x, Number y)
 {
-    return bid128_quiet_less(x.bid, y.bid);
+    if (x.rep == MPZ && y.rep == MPZ) {
+        return mpz_cmp(x.mpz, y.mpz) < 0;
+    }
+    return bid128_quiet_less(bid_from_number(x), bid_from_number(y));
 }
 
 BOOL number_is_greater(Number x, Number y)
 {
-    return bid128_quiet_greater(x.bid, y.bid) != 0;
+    if (x.rep == MPZ && y.rep == MPZ) {
+        return mpz_cmp(x.mpz, y.mpz) > 0;
+    }
+    return bid128_quiet_greater(bid_from_number(x), bid_from_number(y));
 }
 
 BOOL number_is_less_equal(Number x, Number y)
 {
-    return bid128_quiet_less_equal(x.bid, y.bid) != 0;
+    if (x.rep == MPZ && y.rep == MPZ) {
+        return mpz_cmp(x.mpz, y.mpz) <= 0;
+    }
+    return bid128_quiet_less_equal(bid_from_number(x), bid_from_number(y)) != 0;
 }
 
 BOOL number_is_greater_equal(Number x, Number y)
 {
-    return bid128_quiet_greater_equal(x.bid, y.bid) != 0;
+    if (x.rep == MPZ && y.rep == MPZ) {
+        return mpz_cmp(x.mpz, y.mpz) >= 0;
+    }
+    return bid128_quiet_greater_equal(bid_from_number(x), bid_from_number(y)) != 0;
 }
 
 BOOL number_is_odd(Number x)
 {
-    return !bid128_isZero(bid128_fmod(x.bid, bid128_from_uint32(2)));
+    if (x.rep == MPZ) {
+        return  mpz_odd_p(x.mpz);
+    }
+    return !bid128_isZero(bid128_fmod(bid_from_number(x), bid128_from_uint32(2)));
 }
