@@ -724,7 +724,6 @@ void exec_NEGN(TExecutor *self)
     Number r = number_negate(x);
     push(self->stack, cell_fromNumber(r));
     number_freeNumber(&x);
-    number_freeNumber(&r);
 }
 
 void exec_ADDN(TExecutor *self)

@@ -34,6 +34,7 @@ void math_max(struct tagTExecutor *exec);
 void math_min(struct tagTExecutor *exec);
 void math_nearbyint(struct tagTExecutor *exec);
 void math_odd(struct tagTExecutor *exec);
+void math_powmod(struct tagTExecutor *exec);
 void math_round(struct tagTExecutor *exec);
 void math_sign(struct tagTExecutor *exec);
 void math_sin(struct tagTExecutor *exec);

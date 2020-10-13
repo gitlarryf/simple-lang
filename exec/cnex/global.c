@@ -141,6 +141,7 @@ TDispatch gfuncDispatch[] = {
     PDFUNC("math$min",                  math_min),
     PDFUNC("math$nearbyint",            math_nearbyint),
     PDFUNC("math$odd",                  math_odd),
+    PDFUNC("math$powmod",               math_powmod),
     PDFUNC("math$round",                math_round),
     PDFUNC("math$sign",                 math_sign),
     PDFUNC("math$sin",                  math_sin),
@@ -448,6 +449,7 @@ void global_shutdown()
 
     os_shutdownModule();
     sqlite_shutdownModule();
+    time_shutdownModule();
 }
 
 Cell *global_getVariable(const char *pszVar)

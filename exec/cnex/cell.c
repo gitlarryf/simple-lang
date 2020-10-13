@@ -213,7 +213,7 @@ Cell *cell_fromCell(const Cell *c)
                 cell_copyCell(&x->array->data[i], &c->array->data[i]);
             }
             x->boolean = FALSE;
-            x->number = number_from_uint32(0);
+            x->number = BID_ZERO;
             x->object = NULL;
             x->string = NULL;
             x->address = NULL;
@@ -222,7 +222,7 @@ Cell *cell_fromCell(const Cell *c)
             break;
         case cBoolean:
             x->boolean = c->boolean;
-            x->number = number_from_uint32(0);
+            x->number = BID_ZERO;
             x->object = NULL;
             x->string = NULL;
             x->address = NULL;
@@ -233,7 +233,7 @@ Cell *cell_fromCell(const Cell *c)
         case cBytes:
             x->string = string_copyString(c->string);
             x->boolean = FALSE;
-            x->number = number_from_uint32(0);
+            x->number = BID_ZERO;
             x->object = NULL;
             x->address = NULL;
             x->array = NULL;
@@ -242,7 +242,7 @@ Cell *cell_fromCell(const Cell *c)
         case cDictionary:
             x->dictionary = dictionary_copyDictionary(c->dictionary);
             x->boolean = FALSE;
-            x->number = number_from_uint32(0);
+            x->number = BID_ZERO;
             x->object = NULL;
             x->string = NULL;
             x->address = NULL;
@@ -255,7 +255,7 @@ Cell *cell_fromCell(const Cell *c)
             x->boolean = FALSE;
             x->dictionary = NULL;
             x->other = NULL;
-            x->number = number_from_uint32(0);
+            x->number = BID_ZERO;
             x->string = NULL;
             x->address = NULL;
             x->array = NULL;
@@ -274,7 +274,7 @@ Cell *cell_fromCell(const Cell *c)
         case cString:
             x->string = string_copyString(c->string);
             x->address = NULL;
-            x->number = number_from_uint32(0);
+            x->number = BID_ZERO;
             x->object = NULL;
             x->boolean = FALSE;
             x->array = NULL;
@@ -285,7 +285,7 @@ Cell *cell_fromCell(const Cell *c)
             x->other = c->other;
             x->string = NULL;
             x->address = NULL;
-            x->number = number_from_uint32(0);
+            x->number = BID_ZERO;
             x->boolean = FALSE;
             x->array = NULL;
             x->dictionary = NULL;
@@ -294,7 +294,7 @@ Cell *cell_fromCell(const Cell *c)
             assert(c->type == cNothing);
             break;
         default:
-            x->number = number_from_uint32(0);
+            x->number = BID_ZERO;
             x->object = NULL;
             x->string = NULL;
             x->address = NULL;
@@ -651,7 +651,7 @@ Cell *cell_newCell(void)
         fatal_error("Could not allocate new cell object.");
     }
 
-    c->number = number_from_uint32(0);
+    c->number = BID_ZERO;
     c->object = NULL;
     c->string = NULL;
     c->address = NULL;
@@ -673,7 +673,7 @@ Cell *cell_newCellType(CellType t)
 
 void cell_initCell(Cell *c)
 {
-    c->number = number_from_uint32(0);
+    c->number = BID_ZERO;
     c->object = NULL;
     c->string = NULL;
     c->array = NULL;

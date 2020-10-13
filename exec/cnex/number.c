@@ -380,6 +380,16 @@ Number number_pow(Number x, Number y)
     return number_from_bid(bid128_pow(x.bid, y.bid));
 }
 
+Number number_powmod(Number b, Number e, Number m)
+{
+    Number r = INIT_NUMBER;
+
+    mpz_powm(r.mpz, b.mpz, e.mpz, m.mpz);
+    r.rep = MPZ;
+
+    return r;
+}
+
 Number number_abs(Number x)
 {
     Number res = INIT_NUMBER;
@@ -671,14 +681,9 @@ int64_t number_to_sint64(Number x)
                 negative = TRUE;
                 x = number_negate(x);
             }
-            //uint64_t ur = static_cast<uint64_t>(x.get_mpz().get_ui() & 0xFFFFFFFF) + (static_cast<uint64_t>(mpz_class(x.get_mpz() >> 32).get_ui() & 0xFFFFFFFF) << 32);
-            //uint64_t ur = (uint64_t)(mpz_get_ui(x.mpz) & 0xFFFFFFFF) + ((uint64_t)((mpz_get_si(x.mpz) >> 32) & 0xFFFFFFFF) << 32);
-            //uint64_t lsw = mpz_get_ui(x.mpz) & 0xFFFFFFFF;
             mpz_t ms;
             mpz_init_set(ms, x.mpz);
             mpz_fdiv_q_2exp(ms, x.mpz, 32);
-            //uint32_t msw = mpz_get_si(ms);
-            
             uint64_t ur = (mpz_get_ui(x.mpz) & 0xFFFFFFFF) | (((uint64_t)mpz_get_ui(ms) & 0xFFFFFFFF) << 32);
             mpz_clear(ms);
             if (ur > LLONG_MAX) {
@@ -740,31 +745,87 @@ double number_to_double(Number x)
 
 Number number_from_sint8(int8_t x)
 {
+    //Number r = INIT_NUMBER;
+    //r.rep = MPZ;
+    //mpz_init_set_si(r.mpz, x);
+    //return r;
     return number_from_bid(bid128_from_int32(x));
 }
 
 Number number_from_uint8(uint8_t x)
 {
+    //Number r = INIT_NUMBER;
+    //r.rep = MPZ;
+    //mpz_init_set_ui(r.mpz, x);
+    //return r;
     return number_from_bid(bid128_from_uint32(x));
 }
 
 Number number_from_sint32(int32_t x)
 {
+    //Number r = INIT_NUMBER;
+    //r.rep = MPZ;
+    //mpz_init_set_si(r.mpz, x);
+    //return r;
     return number_from_bid(bid128_from_int32(x));
 }
 
 Number number_from_uint32(uint32_t x)
 {
+    //Number r = INIT_NUMBER;
+    //r.rep = MPZ;
+    //mpz_init_set_ui(r.mpz, x);
+    //return r;
     return number_from_bid(bid128_from_uint32(x));
 }
 
 Number number_from_uint64(uint64_t x)
 {
+    //Number r = INIT_NUMBER;
+    //mpz_t hi;
+    //mpz_t lo;
+
+    //mpz_init_set_ui(hi, ((x >> 32) & 0xFFFFFFFF));
+    //mpz_mul_2exp(hi, hi, 32);
+    //mpz_init_set_ui(lo, (uint32_t)(x & 0xFFFFFFFF));
+    //mpz_add(r.mpz, lo, hi);
+    //mpz_clear(lo);
+    //mpz_clear(hi);
+    //r.rep = MPZ;
+
+    //return r;
     return number_from_bid(bid128_from_uint64(x));
 }
 
 Number number_from_sint64(int64_t x)
 {
+    //Number r = INIT_NUMBER;
+    //mpz_t hi;
+    //mpz_t lo;
+
+    //if (x >= 0) {
+    //    mpz_init_set_ui(hi, (uint32_t)(x >> 32));
+    //    mpz_mul_2exp(hi, hi, 32);
+    //    mpz_init_set_ui(lo, (uint32_t)(x & 0xFFFFFFFF));
+    //    mpz_add(r.mpz, lo, hi);
+    //} else if (x == _I64_MIN) {
+    //    mpz_init_set_ui(hi, 0x80000000);
+    //    mpz_mul_2exp(hi, hi, 32);
+    //    mpz_init_set_ui(lo, (int32_t)(x & 0xFFFFFFFF));
+    //    mpz_add(r.mpz, lo, hi);
+    //    mpz_neg(r.mpz, r.mpz);
+    //} else {
+    //    mpz_init_set_ui(hi, (uint32_t)(-x >> 32));
+    //    mpz_mul_2exp(hi, hi, 32);
+    //    mpz_init_set_ui(lo, (uint32_t)(-x & 0xFFFFFFFF));
+    //    mpz_add(r.mpz, lo, hi);
+    //    mpz_neg(r.mpz, r.mpz);
+    //}
+
+    //r.rep = MPZ;
+    //mpz_clear(lo);
+    //mpz_clear(hi);
+    //return r;
     return number_from_bid(bid128_from_int64(x));
 }
 

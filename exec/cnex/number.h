@@ -129,6 +129,7 @@ Number number_log1p(Number x);
 Number number_log2(Number x);
 Number number_nearbyint(Number x);
 Number number_pow(Number x, Number y);
+Number number_powmod(Number b, Number e, Number m);
 Number number_sinh(Number x);
 Number number_tanh(Number x);
 Number number_tgamma(Number x);

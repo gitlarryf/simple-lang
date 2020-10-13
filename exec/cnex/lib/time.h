@@ -4,6 +4,7 @@
 struct tagTExecutor;
 
 void time_initModule();
+void time_shutdownModule();
 
 void time_now(struct tagTExecutor *exec);
 void time_sleep(struct tagTExecutor *exec);
