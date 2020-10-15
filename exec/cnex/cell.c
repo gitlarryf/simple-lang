@@ -674,6 +674,7 @@ Cell *cell_newCellType(CellType t)
 void cell_initCell(Cell *c)
 {
     c->number = BID_ZERO;
+    //c->number = number_from_uint32(0);
     c->object = NULL;
     c->string = NULL;
     c->array = NULL;
@@ -701,6 +702,13 @@ void cell_clearCell(Cell *c)
     } else if (c->type == cObject) {
         if (c->object != NULL && c->object->release != NULL) {
             c->object->release(c->object);
+        }
+    }
+    if (c->type == cNothing) {
+        // Be sure to clear cNothing Cells, as they might be cells that were initialized
+        // to cNothing's, or they might be cells that were clearned to cNothing.
+        if (c->number.rep == MPZ) {
+            mpz_clear(c->number.mpz);
         }
     }
     cell_initCell(c);

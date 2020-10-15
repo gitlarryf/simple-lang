@@ -210,6 +210,7 @@ else ()
             gmp-6.1.2/mpz/set_ui.c
             gmp-6.1.2/mpz/sub.c
             gmp-6.1.2/mpz/tdiv_q.c
+            gmp-6.1.2/mpz/tdiv_qr.c
             gmp-6.1.2/mpz/tdiv_r.c
             gmp-6.1.2/mpz/tdiv_r_ui.c
         )

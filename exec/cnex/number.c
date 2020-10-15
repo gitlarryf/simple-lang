@@ -8,6 +8,7 @@
 #include "cell.h"
 
 #define INIT_NUMBER { { 0 }, 0, NNI }
+//#define NUMBER_AS_BID
 
 /*
  * Number / string functions
@@ -214,16 +215,29 @@ Number number_from_mpz(mpz_t n)
     return r;
 }
 
+#ifdef NUMBER_FREE_NUMBERS
+Number number_fromNumber(Number *n)
+#else
 Number number_fromNumber(const Number *n)
+#endif
 {
     Number r = INIT_NUMBER;
 
     r.rep = n->rep;
     if (n->rep == MPZ) {
         mpz_init_set(r.mpz, n->mpz);
-    } else {
+    } else if (n->rep == BID) {
         r.bid = n->bid;
+    } else {
+        assert(FALSE);
+        r = BID_ZERO;
     }
+    assert(r.rep != NNI);
+#ifdef NUMBER_FREE_NUMBERS
+    if (n->rep == MPZ) {
+        mpz_clear(n->mpz);
+    }
+#endif
     return r;
 }
 
@@ -232,7 +246,7 @@ BID_UINT128 bid_from_number(Number n)
     if (n.rep == BID) {
         return n.bid;
     }
-    assert(n.rep == MPZ);
+    assert(n.rep != NNI);
     char buf[500];
     mpz_get_str(buf, 10, n.mpz);
     //mpz_clear(n.mpz);
@@ -296,13 +310,23 @@ Number number_divide(Number x, Number y)
     Number res = INIT_NUMBER;
 
     if (x.rep == MPZ && y.rep == MPZ) {
-        res.rep = MPZ;
-        mpz_init(res.mpz);
+        // ToDo: use mpz_tdiv_qr() so the division is ony done once.
+        //mpz_t rem;
+        //mpz_init(rem);
+        //mpz_init(res.mpz);
+        //mpz_tdiv_qr(res.mpz, rem, x.mpz, y.mpz);
+        //if (mpz_cmp_si(rem, 0)) {
+        //    mpz_clear(rem);
+        //    res.rep = MPZ;
+        //    return res;
+        //}
+        //mpz_clear(rem);
         if (mpz_divisible_p(x.mpz, y.mpz)) {
+            res.rep = MPZ;
+            mpz_init(res.mpz);
             mpz_tdiv_q(res.mpz, x.mpz, y.mpz);
             return res;
         }
-        mpz_clear(res.mpz);
     }
     res.rep = BID;
     res.bid = bid128_div(bid_from_number(x), bid_from_number(y));
@@ -311,7 +335,8 @@ Number number_divide(Number x, Number y)
 
 Number number_modulo(Number x, Number y)
 {
-    Number m;
+    Number m = INIT_NUMBER;
+
     if (x.rep == MPZ && y.rep == MPZ) {
         m.rep = MPZ;
         mpz_init(m.mpz);
@@ -319,15 +344,17 @@ Number number_modulo(Number x, Number y)
         return m;
     }
 
-    m.bid = bid128_abs(y.bid);
-    if (bid128_isSigned(x.bid)) {
-        Number q = number_from_bid(bid128_round_integral_positive(bid128_div(bid128_abs(x.bid), m.bid)));
-        x.bid = bid128_add(x.bid, bid128_mul(m.bid, q.bid));
+    m.rep = BID;
+    m.bid = bid128_abs(bid_from_number(y));
+    if (bid128_isSigned(bid_from_number(x))) {
+        Number q = number_from_bid(bid128_round_integral_positive(bid128_div(bid128_abs(bid_from_number(x)), m.bid)));
+        x.bid = bid128_add(bid_from_number(x), bid128_mul(m.bid, q.bid));
     }
-    Number r = number_from_bid(bid128_fmod(x.bid, m.bid));
-    if (bid128_isSigned(y.bid) && !bid128_isZero(r.bid)) {
+    Number r = number_from_bid(bid128_fmod(bid_from_number(x), m.bid));
+    if (bid128_isSigned(bid_from_number(y)) && !bid128_isZero(r.bid)) {
         r.bid = bid128_sub(r.bid, m.bid);
     }
+    r.rep = BID;
     return r;
 }
 
@@ -448,6 +475,8 @@ Number number_trunc(Number x)
     Number res = INIT_NUMBER;
 
     if (x.rep == MPZ) {
+        //mpz_init_set(res.mpz, x.mpz);
+        //res.rep = MPZ;
         return x;
     }
     res.rep = BID;
@@ -745,88 +774,106 @@ double number_to_double(Number x)
 
 Number number_from_sint8(int8_t x)
 {
-    //Number r = INIT_NUMBER;
-    //r.rep = MPZ;
-    //mpz_init_set_si(r.mpz, x);
-    //return r;
+#ifndef NUMBER_AS_BID
+    Number r = INIT_NUMBER;
+    r.rep = MPZ;
+    mpz_init_set_si(r.mpz, x);
+    return r;
+#else
     return number_from_bid(bid128_from_int32(x));
+#endif
 }
 
 Number number_from_uint8(uint8_t x)
 {
-    //Number r = INIT_NUMBER;
-    //r.rep = MPZ;
-    //mpz_init_set_ui(r.mpz, x);
-    //return r;
+#ifndef NUMBER_AS_BID
+    Number r = INIT_NUMBER;
+    r.rep = MPZ;
+    mpz_init_set_ui(r.mpz, x);
+    return r;
+#else
     return number_from_bid(bid128_from_uint32(x));
+#endif
 }
 
 Number number_from_sint32(int32_t x)
 {
-    //Number r = INIT_NUMBER;
-    //r.rep = MPZ;
-    //mpz_init_set_si(r.mpz, x);
-    //return r;
+#ifndef NUMBER_AS_BID
+    Number r = INIT_NUMBER;
+    r.rep = MPZ;
+    mpz_init_set_si(r.mpz, x);
+    return r;
+#else
     return number_from_bid(bid128_from_int32(x));
+#endif
 }
 
 Number number_from_uint32(uint32_t x)
 {
-    //Number r = INIT_NUMBER;
-    //r.rep = MPZ;
-    //mpz_init_set_ui(r.mpz, x);
-    //return r;
+#ifndef NUMBER_AS_BID
+    Number r = INIT_NUMBER;
+    r.rep = MPZ;
+    mpz_init_set_ui(r.mpz, x);
+    return r;
+#else
     return number_from_bid(bid128_from_uint32(x));
+#endif
 }
 
 Number number_from_uint64(uint64_t x)
 {
-    //Number r = INIT_NUMBER;
-    //mpz_t hi;
-    //mpz_t lo;
+#ifndef NUMBER_AS_BID
+    Number r = INIT_NUMBER;
+    mpz_t hi;
+    mpz_t lo;
 
-    //mpz_init_set_ui(hi, ((x >> 32) & 0xFFFFFFFF));
-    //mpz_mul_2exp(hi, hi, 32);
-    //mpz_init_set_ui(lo, (uint32_t)(x & 0xFFFFFFFF));
-    //mpz_add(r.mpz, lo, hi);
-    //mpz_clear(lo);
-    //mpz_clear(hi);
-    //r.rep = MPZ;
+    mpz_init_set_ui(hi, ((x >> 32) & 0xFFFFFFFF));
+    mpz_mul_2exp(hi, hi, 32);
+    mpz_init_set_ui(lo, (uint32_t)(x & 0xFFFFFFFF));
+    mpz_add(r.mpz, lo, hi);
+    mpz_clear(lo);
+    mpz_clear(hi);
+    r.rep = MPZ;
 
-    //return r;
+    return r;
+#else
     return number_from_bid(bid128_from_uint64(x));
+#endif
 }
 
 Number number_from_sint64(int64_t x)
 {
-    //Number r = INIT_NUMBER;
-    //mpz_t hi;
-    //mpz_t lo;
+#ifndef NUMBER_AS_BID
+    Number r = INIT_NUMBER;
+    mpz_t hi;
+    mpz_t lo;
 
-    //if (x >= 0) {
-    //    mpz_init_set_ui(hi, (uint32_t)(x >> 32));
-    //    mpz_mul_2exp(hi, hi, 32);
-    //    mpz_init_set_ui(lo, (uint32_t)(x & 0xFFFFFFFF));
-    //    mpz_add(r.mpz, lo, hi);
-    //} else if (x == _I64_MIN) {
-    //    mpz_init_set_ui(hi, 0x80000000);
-    //    mpz_mul_2exp(hi, hi, 32);
-    //    mpz_init_set_ui(lo, (int32_t)(x & 0xFFFFFFFF));
-    //    mpz_add(r.mpz, lo, hi);
-    //    mpz_neg(r.mpz, r.mpz);
-    //} else {
-    //    mpz_init_set_ui(hi, (uint32_t)(-x >> 32));
-    //    mpz_mul_2exp(hi, hi, 32);
-    //    mpz_init_set_ui(lo, (uint32_t)(-x & 0xFFFFFFFF));
-    //    mpz_add(r.mpz, lo, hi);
-    //    mpz_neg(r.mpz, r.mpz);
-    //}
+    if (x >= 0) {
+        mpz_init_set_ui(hi, (uint32_t)(x >> 32));
+        mpz_mul_2exp(hi, hi, 32);
+        mpz_init_set_ui(lo, (uint32_t)(x & 0xFFFFFFFF));
+        mpz_add(r.mpz, lo, hi);
+    } else if (x == _I64_MIN) {
+        mpz_init_set_ui(hi, 0x80000000);
+        mpz_mul_2exp(hi, hi, 32);
+        mpz_init_set_ui(lo, (int32_t)(x & 0xFFFFFFFF));
+        mpz_add(r.mpz, lo, hi);
+        mpz_neg(r.mpz, r.mpz);
+    } else {
+        mpz_init_set_ui(hi, (uint32_t)(-x >> 32));
+        mpz_mul_2exp(hi, hi, 32);
+        mpz_init_set_ui(lo, (uint32_t)(-x & 0xFFFFFFFF));
+        mpz_add(r.mpz, lo, hi);
+        mpz_neg(r.mpz, r.mpz);
+    }
 
-    //r.rep = MPZ;
-    //mpz_clear(lo);
-    //mpz_clear(hi);
-    //return r;
+    r.rep = MPZ;
+    mpz_clear(lo);
+    mpz_clear(hi);
+    return r;
+#else
     return number_from_bid(bid128_from_int64(x));
+#endif
 }
 
 Number number_from_float(float x)

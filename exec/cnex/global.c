@@ -611,11 +611,12 @@ void array__range(TExecutor *exec)
 
 void array__remove(TExecutor *exec)
 {
-    Number index = top(exec->stack)->number; pop(exec->stack);
+    Number index = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
     Cell *addr = top(exec->stack)->address; pop(exec->stack);
 
     if (!number_is_integer(index)) {
         exec->rtl_raise(exec, "ArrayIndexException", number_to_string(index), BID_ZERO);
+        number_freeNumber(&index);
         return;
     }
 
@@ -623,15 +624,17 @@ void array__remove(TExecutor *exec)
     size_t i = number_to_uint64(index);
     cell_clearCell(&addr->array->data[i]);
     array_removeItem(addr->array, i);
+    number_freeNumber(&index);
 }
 
 void array__resize(TExecutor *exec)
 {
-    Number new_size = top(exec->stack)->number; pop(exec->stack);
+    Number new_size = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
     Cell *addr = top(exec->stack)->address; pop(exec->stack);
 
     if (!number_is_integer(new_size)) {
         exec->rtl_raise(exec, "ArrayIndexException", number_to_string(new_size), BID_ZERO);
+        number_freeNumber(&new_size);
         return;
     }
 
@@ -646,6 +649,7 @@ void array__resize(TExecutor *exec)
     for (size_t i = array_size; i < addr->array->size; i++) {
         cell_initCell(&addr->array->data[i]);
     }
+    number_freeNumber(&new_size);
 }
 
 void array__reversed(TExecutor *exec)
@@ -668,14 +672,16 @@ void array__size(TExecutor *exec)
 void array__slice(TExecutor *exec)
 {
     int64_t ri = 0;
-    BOOL last_from_end = top(exec->stack)->boolean;   pop(exec->stack);
-    Number last  = top(exec->stack)->number;          pop(exec->stack);
-    BOOL first_from_end  = top(exec->stack)->boolean; pop(exec->stack);
-    Number first = top(exec->stack)->number;          pop(exec->stack);
+    BOOL last_from_end = top(exec->stack)->boolean;              pop(exec->stack);
+    Number last  = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
+    BOOL first_from_end  = top(exec->stack)->boolean;            pop(exec->stack);
+    Number first = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
     const Cell *array = top(exec->stack);
 
     int64_t fst = number_to_sint64(first);
     int64_t lst = number_to_sint64(last);
+    number_freeNumber(&last);
+    number_freeNumber(&first);
     if (first_from_end) {
         fst += array->array->size - 1;
     }
@@ -706,16 +712,18 @@ void array__slice(TExecutor *exec)
 
 void array__splice(TExecutor *exec)
 {
-    BOOL last_from_end = top(exec->stack)->boolean;   pop(exec->stack);
-    Number last  = top(exec->stack)->number;          pop(exec->stack);
-    BOOL first_from_end  = top(exec->stack)->boolean; pop(exec->stack);
-    Number first = top(exec->stack)->number;          pop(exec->stack);
+    BOOL last_from_end = top(exec->stack)->boolean;              pop(exec->stack);
+    Number last  = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
+    BOOL first_from_end  = top(exec->stack)->boolean;            pop(exec->stack);
+    Number first = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
     Cell *a = peek(exec->stack, 0);
     Cell *b = peek(exec->stack, 1);
     const Cell *array = a;
 
     int64_t fst = number_to_sint64(first);
     int64_t lst = number_to_sint64(last);
+    number_freeNumber(&last);
+    number_freeNumber(&first);
     if (first_from_end) {
         fst += array->array->size - 1;
     }
@@ -858,16 +866,22 @@ void bytes__range(TExecutor *exec)
     if (!number_is_integer(first)) {
         pop(exec->stack);
         exec->rtl_raise(exec, "BytesIndexException", number_to_string(first), BID_ZERO);
+        number_freeNumber(&last);
+        number_freeNumber(&first);
         return;
     }
     if (!number_is_integer(last)) {
         pop(exec->stack);
         exec->rtl_raise(exec, "BytesIndexException", number_to_string(last), BID_ZERO);
+        number_freeNumber(&last);
+        number_freeNumber(&first);
         return;
     }
 
     int64_t fst = number_to_sint64(first);
     int64_t lst = number_to_sint64(last);
+    number_freeNumber(&last);
+    number_freeNumber(&first);
     if (first_from_end) {
         fst += t->string->length - 1;
     }
@@ -930,15 +944,17 @@ void bytes__size(TExecutor *exec)
 
 void bytes__splice(TExecutor *exec)
 {
-    BOOL last_from_end = top(exec->stack)->boolean;   pop(exec->stack);
-    Number last  = top(exec->stack)->number;          pop(exec->stack);
-    BOOL first_from_end  = top(exec->stack)->boolean; pop(exec->stack);
-    Number first = top(exec->stack)->number;          pop(exec->stack);
-    Cell *s = cell_fromCell(top(exec->stack));        pop(exec->stack);
-    Cell *t = cell_fromCell(top(exec->stack));        pop(exec->stack);
+    BOOL last_from_end = top(exec->stack)->boolean;              pop(exec->stack);
+    Number last  = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
+    BOOL first_from_end  = top(exec->stack)->boolean;            pop(exec->stack);
+    Number first = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
+    Cell *s = cell_fromCell(top(exec->stack));                   pop(exec->stack);
+    Cell *t = cell_fromCell(top(exec->stack));                   pop(exec->stack);
 
     int64_t fst = number_to_sint64(first);
     int64_t lst = number_to_sint64(last);
+    number_freeNumber(&last);
+    number_freeNumber(&first);
     if (first_from_end) {
         fst += s->string->length - 1;
     }
@@ -1158,7 +1174,7 @@ void object__makeNull(TExecutor *exec)
 
 void object__makeNumber(TExecutor *exec)
 {
-    Number v = top(exec->stack)->number; pop(exec->stack);
+    Number v = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
     push(exec->stack, cell_fromObject(object_createNumberObject(v)));
 }
 
@@ -1327,15 +1343,17 @@ void string__length(TExecutor *exec)
 void string__splice(TExecutor *exec)
 {
     /* TODO: utf8 */
-    BOOL last_from_end = top(exec->stack)->boolean;   pop(exec->stack);
-    Number last  = top(exec->stack)->number;          pop(exec->stack);
-    BOOL first_from_end  = top(exec->stack)->boolean; pop(exec->stack);
-    Number first = top(exec->stack)->number;          pop(exec->stack);
-    Cell *s = cell_fromCell(top(exec->stack));        pop(exec->stack);
-    Cell *t = cell_fromCell(top(exec->stack));        pop(exec->stack);
+    BOOL last_from_end = top(exec->stack)->boolean;              pop(exec->stack);
+    Number last  = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
+    BOOL first_from_end  = top(exec->stack)->boolean;            pop(exec->stack);
+    Number first = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
+    Cell *s = cell_fromCell(top(exec->stack));                   pop(exec->stack);
+    Cell *t = cell_fromCell(top(exec->stack));                   pop(exec->stack);
 
     int64_t f = number_to_sint64(first);
     int64_t l = number_to_sint64(last);
+    number_freeNumber(&last);
+    number_freeNumber(&first);
     if (first_from_end) {
         f += s->string->length - 1;
     }
@@ -1363,23 +1381,29 @@ void string__splice(TExecutor *exec)
 void string__substring(TExecutor *exec)
 {
     int64_t i, x;
-    BOOL last_from_end = top(exec->stack)->boolean;   pop(exec->stack);
-    Number last  = top(exec->stack)->number;          pop(exec->stack);
-    BOOL first_from_end  = top(exec->stack)->boolean; pop(exec->stack);
-    Number first = top(exec->stack)->number;          pop(exec->stack);
-    Cell *a = cell_fromCell(top(exec->stack));        pop(exec->stack);
+    BOOL last_from_end = top(exec->stack)->boolean;              pop(exec->stack);
+    Number last  = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
+    BOOL first_from_end  = top(exec->stack)->boolean;            pop(exec->stack);
+    Number first = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
+    Cell *a = cell_fromCell(top(exec->stack));                   pop(exec->stack);
 
     if (!number_is_integer(first)) {
         exec->rtl_raise(exec, "StringIndexException", number_to_string(first), BID_ZERO);
+        number_freeNumber(&last);
+        number_freeNumber(&first);
         return;
     }
     if (!number_is_integer(last)) {
         exec->rtl_raise(exec, "StringIndexException", number_to_string(last), BID_ZERO);
+        number_freeNumber(&last);
+        number_freeNumber(&first);
         return;
     }
 
     int64_t f = number_to_sint64(first);
     int64_t l = number_to_sint64(last);
+    number_freeNumber(&last);
+    number_freeNumber(&first);
     if (first_from_end) {
         f += a->string->length - 1;
     }

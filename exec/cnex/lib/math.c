@@ -184,9 +184,11 @@ void math_intdiv(TExecutor *exec)
     Number x = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
     Number y = number_fromNumber(&top(exec->stack)->number); pop(exec->stack);
 
-    push(exec->stack, cell_fromNumber(number_trunc(number_divide(x, y))));
+    Number r = number_divide(y, x);
+    push(exec->stack, cell_fromNumber(number_trunc(r)));
     number_freeNumber(&x);
     number_freeNumber(&y);
+    number_freeNumber(&r);
 }
 
 void math_ldexp(TExecutor *exec)

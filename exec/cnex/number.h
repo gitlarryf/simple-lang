@@ -7,6 +7,7 @@
 
 #define DECIMAL_GLOBAL_ROUNDING 1
 #define DECIMAL_GLOBAL_EXCEPTION_FLAGS 1
+//#define NUMBER_FREE_NUMBERS 1
 
 #include "bid_conf.h"
 #ifdef _MSC_VER
@@ -37,7 +38,7 @@ typedef struct Number {
 
 
 //#define BID_ZERO        bid128_from_uint32(0)
-static const Number BID_ZERO = { { 0 }, 0, BID };
+static const Number BID_ZERO        = { { 0x0000000000000000, 0x3040000000000000 }, {0}, BID };
 static const Number BID_MIN_INT32   = { { 0x0000000080000000, 0xb040000000000000 }, 0, BID };
 static const Number BID_MAX_INT32   = { { 0x000000007fffffff, 0x3040000000000000 }, 0, BID };
 static const Number BID_MIN_UINT32  = { { 0x0000000000000000, 0x3040000000000000 }, 0, BID };
@@ -47,6 +48,8 @@ static const Number BID_MIN_INT64   = { { 0x8000000000000000, 0xb040000000000000
 static const Number BID_MAX_INT64   = { { 0x7fffffffffffffff, 0x3040000000000000 }, 0, BID };
 static const Number BID_MIN_UINT64  = { { 0x0000000000000000, 0x3040000000000000 }, 0, BID };
 static const Number BID_MAX_UINT64  = { { 0xffffffffffffffff, 0x3040000000000000 }, 0, BID };
+static const Number MPZ_ZERO        = { { 0x0000000000000000, 0x0000000000000000 }, { 0, 0, 0} , MPZ };
+
 //#define NUMBER_ZERO     BID_ZERO
 
 //static const Number BID_MIN_INT32 = { { bid128_from_int32(INT_MIN) }}
@@ -73,7 +76,12 @@ static const Number BID_MAX_UINT64  = { { 0xffffffffffffffff, 0x3040000000000000
 
 //void number_copyNumber(Number *dest, const Number *src);
 void number_freeNumber(Number *n);
-Number number_fromNumber(const Number *src);
+#ifdef NUMBER_FREE_NUMBERS
+Number number_fromNumber(Number *n);
+#else
+Number number_fromNumber(const Number *n);
+#endif
+//Number number_fromNumber(const Number *src);
 
 void number_toString(Number x, char *buf, size_t len);
 char *number_to_string(Number x);
