@@ -9,12 +9,11 @@ gc2.neon                   # Object Count
 gc3.neon                   # Object Count
 gc-two-pointers.neon       # class
 math-test.neon             # math.powmod()
-string-bytes.neon          # Cell Type assertion
+string-bytes.neon          # utf8
 string-escape.neon         # utf8
 unicode-char.neon          # unicode
 unicode-length.neon        # unicode
 win32-test.neon            # CALLE
 
-http-test.neon             # string$split
 sodium-test.neon           # binary$shiftRight32() exception
 zeromq-test.neon           # module
