@@ -13,7 +13,5 @@ string-bytes.neon          # utf8
 string-escape.neon         # utf8
 unicode-char.neon          # unicode
 unicode-length.neon        # unicode
-win32-test.neon            # CALLE
 
-sodium-test.neon           # binary$shiftRight32() exception
-zeromq-test.neon           # module
+#zeromq-test.neon           # module
