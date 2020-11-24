@@ -3,8 +3,22 @@
 #include <stdint.h>
 #include <time.h>
 
+//#include "httpserver.h"
 #include "number.h"
 #include "util.h"
+
+struct THttpServer;
+struct THttpResponse;
+struct tagTString;
+struct StringArray;
+
+typedef enum tagEDebuggerState {
+    dsSTOPPED,
+    dsRUN,
+    dsSTEP_INSTRUCTION,
+    dsSTEP_SOURCE,
+    dsQUIT,
+} DebuggerState;
 
 typedef struct tagTExecutor {
     unsigned int ip;
@@ -31,6 +45,14 @@ typedef struct tagTExecutor {
     size_t allocations;
     size_t collection_interval;
 
+    /* Interactive Debugger fields */
+    struct THttpServer *server;
+    DebuggerState debugger_state;
+    size_t debugger_step_source_depth;
+    size_t **debugger_breakpoints;
+    size_t debugger_breakpoint_count;
+    struct StringArray *debugger_log;
+
     /* Debug / Diagnostic fields */
     struct {
         uint64_t total_opcodes;
@@ -44,6 +66,9 @@ typedef struct tagTExecutor {
 
 int exec_loop(TExecutor *self, int64_t min_callstack_depth);
 int exec_run(struct tagTExecutor *self, BOOL enable_assert);
+
+void exec_handleGET(/*struct tagTExecutor *exec,*/ struct tagTString *path, struct THttpResponse *response);
+void exec_handlePOST(/*struct tagTExecutor *exec,*/ struct tagTString *path, struct tagTString *data, struct THttpResponse *response);
 
 void invoke(struct tagTExecutor *self, struct tagTModule *m, int index);
 

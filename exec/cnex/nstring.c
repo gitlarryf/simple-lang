@@ -128,6 +128,29 @@ int string_compareString(TString *lhs, TString *rhs)
     return r;
 }
 
+int string_compareCString(TString *lhs, char *rhs)
+{
+    int r = 0;
+    uint64_t size = lhs->length;
+    size_t rlen = strlen(rhs);
+
+    if (lhs->length > rlen) {
+        size = rlen;
+    } else if (lhs->length < rlen) {
+        size = lhs->length;
+    }
+    r = memcmp(lhs->data, rhs, size);
+    if (r == 0) {
+        if (lhs->length > rlen) {
+            return 1;
+        } else if (lhs->length < rlen) {
+            return -1;
+        }
+    }
+    return r;
+}
+
+
 BOOL string_isEmpty(TString *s)
 {
     if (s) {
@@ -373,6 +396,37 @@ int64_t string_findString(TString *self, size_t pos, TString *p)
     return -1;
 }
 
+int64_t string_findCString(TString *self, size_t pos, const char *p)
+{
+    size_t plen = strlen(p);
+
+    if (p == NULL || plen == 0) {
+        return -1;
+    }
+    if (self == NULL || self->data == NULL || self->length == 0) {
+        return -1;
+    }
+    if (pos > self->length || plen > self->length || plen + pos > self->length) {
+        return -1;
+    }
+
+    for (size_t i = pos; i < ((self->length - plen) + 1); i++) {
+        if (self->data[i] == p[0]) {
+            BOOL bFound = TRUE;
+            for (size_t n = 1; n < plen - 1; n++) {
+                if (self->data[i + n] != p[n]) {
+                    bFound = FALSE;
+                    break;
+                }
+            }
+            if (bFound) {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
 char *tprintf(char *dest, TString *s)
 {
     if (s == NULL) {
@@ -447,6 +501,20 @@ TString *string_toUpperCase(TString *s)
     return r;
 }
 
+// ToDo: Consider adding Integer-to-TString functions:
+//TString *string_integerToString(int64_t n);
+//TString *string_unsignedIntegerToString(unt64_t n);
+//TString *string_realToString(double d);
+//TSring *string_appendInteger(TString *s, int64_t n);
+//TSring *string_appendReal(TString *s, double d);
+// I think viable use-case arguments would need to be made for each
+// case before time should be spent on writing single one of these.
+// The main advantage would be when interfacing between native data
+// types and the Number class, for example.  The UTF8 implementation
+// would also be a good case for this.  (When all of TString goes to
+// full UTF8 support, or at least enough support to satisify its use
+// within cnex.
+
 // This may not be the best place for this, because it is not part of
 // the implementation of TString, but is just a specific string utility
 // function. But there wasn't an obviously better place to put it.
@@ -515,4 +583,57 @@ TString *string_quote(TString *s)
     }
     string_appendChar(r, '"');
     return r;
+}
+
+
+
+StringArray *stringarray_createArray()
+{
+    StringArray *r = malloc(sizeof(StringArray));
+    r->data = malloc(sizeof(TString*) * 1);
+    r->size = 0;
+    return r;
+}
+
+size_t stringarray_addString(StringArray *a, TString *s)
+{
+    if (a->data == NULL) {
+        a->data = malloc(sizeof(TString));
+    }
+    a->size++;
+    a->data = realloc(a->data, (sizeof(TString*) * a->size));
+    a->data[a->size - 1] = s;
+    return a->size;
+}
+
+StringArray *stringarray_splitString(TString *s, char d)
+{
+    StringArray *r = stringarray_createArray();
+
+    size_t i = 0;
+    size_t start = 0;
+    while (i < s->length) {
+        if (s->data[i] == d) {
+            stringarray_addString(r, string_subString(s, start, i - start));
+            start = i + 1;
+        }
+        i++;
+    }
+    if (i > start) {
+        stringarray_addString(r, string_subString(s, start, i - start));
+    }
+    return r;
+}
+
+void stringarray_freeStringArray(StringArray *a)
+{
+    if (a == NULL) {
+        return;
+    }
+
+    for (size_t i = 0; i < a->size; i++) {
+        string_freeString(a->data[i]);
+    }
+    free(a->data);
+    free(a);
 }

@@ -30,6 +30,7 @@
 #include "gc.h"
 #include "global.h"
 #include "framestack.h"
+#include "httpserver.h"
 #include "module.h"
 #include "neonext.h"
 #include "nstring.h"
@@ -63,10 +64,18 @@ typedef struct tagTCommandLineOptions {
     char *pszFilename;
     char *pszExecutableName;
     char *pszExecutablePath;
+    unsigned short DebugPort;
 } TOptions;
 
-static TOptions gOptions = { FALSE, FALSE, TRUE, 0, NULL, NULL, NULL };
+static TOptions gOptions = { FALSE, FALSE, TRUE, 0, NULL, NULL, NULL, 0 };
 
+static const char *DebuggerStateName[] = {
+    "stopped",
+    "run",
+    "single_step",
+    "source_step",
+    "quit",
+};
 
 void exec_freeExecutor(TExecutor *e)
 {
@@ -98,6 +107,8 @@ void exec_freeExecutor(TExecutor *e)
     // Destroy the callstack.
     free(e->callstack);
 
+    http_serverShutdown(e->server);
+
     // Finally, free the TExecutor object.
     free(e);
 }
@@ -109,7 +120,8 @@ void showUsage(void)
     fprintf(stderr, "Usage:\n\n");
     fprintf(stderr, "   %s [options] program.neonx\n", gOptions.pszExecutableName);
     fprintf(stderr, "\n Where [options] is one or more of the following:\n");
-    fprintf(stderr, "     -d       Display executor debug stats.\n");
+    fprintf(stderr, "     -d port  Set debugger port to [port].\n");
+    fprintf(stderr, "     -D       Display executor debug stats.\n");
     fprintf(stderr, "     -t       Trace execution disassembly during run.\n");
     fprintf(stderr, "     -h       Display this help screen.\n");
     fprintf(stderr, "     -n       No Assertions\n");
@@ -126,6 +138,17 @@ BOOL ParseOptions(int argc, char* argv[])
             } else if (argv[nIndex][1] == 't') {
                 gOptions.ExecutorDisassembly = TRUE;
             } else if (argv[nIndex][1] == 'd') {
+                nIndex++;
+                if (nIndex > argc || argv[nIndex][0] == '\0') {
+                    printf("You must supply a parameter for the %s option.", argv[nIndex-1]);
+                    return FALSE;
+                }
+                gOptions.DebugPort = (unsigned short)atoi(argv[nIndex]);
+                if (gOptions.DebugPort <= 0 || gOptions.DebugPort > UINT16_MAX) {
+                    printf("%s requires an integer value.", argv[nIndex - 1]);
+                    return FALSE;
+                }
+            } else if (argv[nIndex][1] == 'D') {
                 gOptions.ExecutorDebugStats = TRUE;
             } else if (argv[nIndex][1] == 'n') {
                 gOptions.EnableAssertions = FALSE;
@@ -265,6 +288,14 @@ TExecutor *exec_newExecutor(TModule *object)
     r->exit_code = 0;
     r->param_recursion_limit = 1000;
     r->callstacksize = 10;
+    r->debugger_state = dsRUN;
+    r->server = NULL;
+    if (gOptions.DebugPort != 0) {
+        HttpServerHandler *handler = malloc(sizeof(HttpServerHandler));
+        handler->handle_GET = exec_handleGET;
+        handler->handle_POST = exec_handlePOST;
+        r->server = http_initServer(gOptions.DebugPort, handler);
+    }
     r->callstack = malloc(sizeof(struct CallStack) * r->callstacksize);
     if (r->callstack == NULL) {
         fatal_error("Failed to allocate Call stack memory.");
@@ -329,6 +360,148 @@ void dump_frames(TExecutor *exec)
             }
         }
     }
+}
+
+void exec_handleGET(TExecutor *exec, TString *path, HttpResponse *response)
+{
+    TString *r = string_newString();
+    cJSON *config = cJSON_CreateObject();
+    //minijson::writer_configuration config = minijson::writer_configuration().pretty_printing(true);
+    StringArray *parts = stringarray_splitString(path, '/');
+    if (string_compareCString(path, "/break") == 0) {
+        response->code = 200;
+        cJSON *writer = cJSON_CreateObject();
+        cJSON_AddArrayToObject(cJSON_CreateIntArray(*exec->debugger_breakpoints, exec->debugger_breakpoint_count), "");
+
+        //minijson::array_writer writer(r, config);
+        //for (int b = 0; b < exec->debugger_breakpoint_count; b++) {
+            //cJSON_AddItemToObject(writer, "", cJSON_CreateIntArray(exec->debugger_breakpoints[b]));
+        }
+        //writer.close();
+        /*
+    } else if (path == "/callstack") {
+        response.code = 200;
+        minijson::array_writer writer(r, config);
+        for (auto i = callstack.rbegin(); i != callstack.rend(); ++i) {
+            auto w = writer.nested_object();
+            w.write("module", i->first->name);
+            w.write("ip", i->second);
+            w.close();
+        }
+        writer.close();
+    } else if (path == "/frames") {
+        response.code = 200;
+        minijson::array_writer writer(r, config);
+        for (auto i = frames.rbegin(); i != frames.rend(); ++i) {
+            auto wf = writer.nested_object();
+            auto wl = wf.nested_array("locals");
+            for (auto &local : i->locals) {
+                wl.write(local);
+            }
+            wl.close();
+            wf.close();
+        }
+        writer.close();
+    } else if (parts.size() >= 3 && parts[1] == "module") {
+        std::string modname = parts[2];
+        if (modname == "-") {
+            modname = "";
+        }
+        Module *m = modules[modname];
+        if (parts.size() == 4 && parts[3] == "bytecode") {
+            response.code = 200;
+            minijson::write_array(r, m->object.obj.begin(), m->object.obj.end());
+        } else if (parts.size() == 4 && parts[3] == "debuginfo") {
+            response.code = 200;
+            std::ifstream di(m->debug->source_path + "d");
+            r << di.rdbuf();
+        } else if (parts.size() == 5 && parts[3] == "global") {
+            response.code = 200;
+            minijson::default_value_writer<Cell>()(r, m->globals[std::stoi(parts[4])], config);
+        } else if (parts.size() == 4 && parts[3] == "source") {
+            response.code = 200;
+            minijson::write_array(r, m->debug->source_lines.begin(), m->debug->source_lines.end());
+        }
+    } else if (path == "/modules") {
+        response.code = 200;
+        std::vector<std::string> names;
+        for (auto m : modules) {
+            names.push_back(m.first);
+        }
+        minijson::write_array(r, names.begin(), names.end());
+    } else if (path == "/opstack") {
+        response.code = 200;
+        minijson::write_array(r, stack.begin(), stack.end(), config);
+        */
+    } else if (string_compareCString(path, "/status") == 0) {
+        response->code = 200;
+        //minijson::object_writer writer(r, config);
+        cJSON *writer = cJSON_CreateObject();
+        cJSON_AddItemToObject(writer, "state", cJSON_CreateString(DebuggerStateName[(int)exec->debugger_state]));
+        //writer.write("state", DebuggerStateName[static_cast<int>(debugger_state)]);
+        cJSON_AddItemToObject(writer, "module", cJSON_CreateString(exec->module->name));
+        //writer.write("module", module->name);
+        cJSON_AddItemToObject(writer, "ip", cJSON_CreateNumber(exec->ip));
+        //writer.write("ip", ip);
+        cJSON_AddItemToObject(writer, "log_messages", cJSON_CreateNumber(exec->debugger_log->size));
+        //writer.write("log_messages", debugger_log.size());
+        //writer.close();
+        char *str = cJSON_Print(writer);
+        r = string_appendCString(r, str);
+    }
+    if (response->code == 0) {
+        response->code = 404;
+        r = string_appendCString(r, "[debug server] path not found: ");
+        r = string_appendString(r, path);
+    }
+    response->content = r;
+}
+
+void exec_handlePOST(/*TExecutor *exec,*/ TString *path, TString *data, HttpResponse *response)
+{
+    TString *r = string_newString();
+
+    //minijson::writer_configuration config = minijson::writer_configuration().pretty_printing(true);
+    StringArray *parts = stringarray_splitString(path, '/');
+
+    if (parts->size == 3 && string_compareCString(parts->data[1], "break") == 0) {
+        response->code = 200;
+        int addr = atoi(parts->data[2]->data);
+        if (string_compareCString(data, "true") == 0) {
+            //debugger_addBreakpoint(debugger, addr);
+        } else {
+            //debugger_removeBreakpoint(debugger, addr);
+        }
+    } else if (string_compareCString(path, "/continue") == 0) {
+        response->code = 200;
+        //self->debugger_state = dsRUN;
+    } /*else if (path == "/log") {
+        response.code = 200;
+        minijson::write_array(r, debugger_log.begin(), debugger_log.end(), config);
+        debugger_log.clear();
+    } else if (path == "/quit") {
+        response.code = 200;
+        debugger_state = DebuggerState::QUIT;
+    } else if (path == "/step/instruction") {
+        response.code = 200;
+        debugger_state = DebuggerState::STEP_INSTRUCTION;
+    } else if (parts.size() == 4 && parts[1] == "step" && parts[2] == "source") {
+        response.code = 200;
+        debugger_state = DebuggerState::STEP_SOURCE;
+        debugger_step_source_depth = callstack.size() + std::stoi(parts[3]);
+    } else if (path == "/stop") {
+        response.code = 200;
+        debugger_state = DebuggerState::STOPPED;
+    }*/
+    if (response->code == 0) {
+        response->code = 404;
+        r = string_appendCString(r, "[debug server] path not found: ");
+        r = string_appendString(r, path);
+    }
+    if (string_isEmpty(r)) {
+        r = string_appendCString(r, "{}");
+    }
+    response->content = r;
 }
 
 void exec_raiseLiteral(TExecutor *self, TString *name, Cell *info)
@@ -1651,6 +1824,34 @@ int exec_loop(TExecutor *self, int64_t min_callstack_depth)
     while ((self->callstacktop +1) > min_callstack_depth && self->ip < self->module->bytecode->codelen && self->exit_code == 0) {
         if (self->disassemble) {
             fprintf(stderr, "mod %s ip %d (%d) %s\n", self->module->name, self->ip, self->stack->top, disasm_disassembleInstruction(self));
+        }
+        if (self->server != NULL) {
+            switch (self->debugger_state) {
+                case dsSTOPPED:
+                    break;
+                case dsRUN:
+                    //if (debugger_breakpoints.find(ip) != debugger_breakpoints.end()) {
+                        self->debugger_state = dsSTOPPED;
+                    //}
+                    break;
+                case dsSTEP_INSTRUCTION:
+                    self->debugger_state = dsSTOPPED;
+                    break;
+                case dsSTEP_SOURCE:
+                    //if (self->callstacksize <= debugger_step_source_depth && self->module->debug != NULL && self->module->debug->line_numbers.find(ip) != self->module->debug->line_numbers.end()) {
+                        self->debugger_state = dsSTOPPED;
+                    //}
+                    break;
+                case dsQUIT:
+                    break;
+            }
+            http_serverService(self->server, FALSE);
+            while (self->debugger_state == dsSTOPPED) {
+                http_serverService(self->server, TRUE);
+            }
+            if (self->debugger_state == dsQUIT) {
+                return 1;
+            }
         }
         switch (self->module->bytecode->code[self->ip]) {
             case PUSHB:   exec_PUSHB(self); break;

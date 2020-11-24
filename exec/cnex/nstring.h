@@ -32,6 +32,7 @@ TString *string_createString(size_t length);
 TString *string_createStringFromData(void *data, size_t len);
 
 int string_compareString(TString *lhs, TString *rhs);
+int string_compareCString(TString *lhs, char *rhs);
 BOOL string_isEmpty(TString *s);
 
 TString *string_copyString(TString *s);
@@ -53,6 +54,7 @@ BOOL string_endsWith(TString *self, TString *s);
 size_t string_findChar(TString *self, char c);
 size_t string_findCharRev(TString *self, char c);
 
+int64_t string_findCString(TString *self, size_t pos, const char *p);
 int64_t string_findString(TString *self, size_t pos, TString *p);
 int64_t string_findFirstOf(TString *self, size_t pos, TString *p);
 int64_t string_findFirstNotOf(TString *self, size_t pos, TString *p);
@@ -66,5 +68,19 @@ TString *string_toUpperCase(TString *s);
 const char *string_ensureNullTerminated(TString *s);
 
 TString *string_quote(TString *s);
+
+
+// StringArray object, used to split a string into many parts, and contain them
+// in a single object.
+typedef struct TStringArray {
+    TString **data;
+    size_t size;
+} StringArray;
+
+StringArray *stringarray_createArray();
+size_t stringarray_addString(StringArray *a, TString *s);
+// Note: stringarray_splitString() creates a NEW string array, rather than appending to one.
+StringArray *stringarray_splitString(TString *s, char d);
+void stringarray_freeStringArray(StringArray *a);
 
 #endif
