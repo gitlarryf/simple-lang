@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -40,8 +41,7 @@ namespace csnex
 
     public class Diagnostics
     {
-        public DateTime time_start;
-        public DateTime time_end;
+        public Stopwatch timer;
         public UInt64 total_opcodes;
         public UInt64 opstack_max;
         public UInt64 callstack_max;
@@ -52,36 +52,142 @@ namespace csnex
     {
         public Executor(CommandLineOptions ops)
         {
+            stack = new Stack<Cell>();
+            callstack = new Stack<uint>();
+            frame_stack = new List<Cell>();
+            globals = new List<Cell>();
+            diagnostics = new Diagnostics();
+            diagnostics.timer = new Stopwatch();
+            options = new CommandLineOptions();
             options = ops;
+            global = new Global(this);
         }
 
+        private int exit_code { get; set; }
         public Bytecode bytecode { get; set; }
-        private Stack<Cell> stack { get; set; }
-        private Stack<int> callstack { get; set; }
-        public int param_recursion_limit { get; set; }
+        public Stack<Cell> stack { get; set; }
+        private Stack<uint> callstack { get; set; }
+        public uint param_recursion_limit { get; set; }
         public List<Cell> frame_stack { get; set; }
         public List<Cell> globals { get; set; }
         public bool enable_assert { get; set; }
         //public Module module { get; set; }
         public Diagnostics diagnostics { get; set; }
         private CommandLineOptions options { get; set; }
+        private uint ip;
+        private Global global;
 
-
-        public void run(bool EnableAssertions)
+        void raise_literal(string exception, ExceptionInfo info)
         {
+            // The fields here must match the declaration of
+            // ExceptionType in ast.cpp.
+            //Cell exceptionvar;
+            //exceptionvar.array_index_for_write(0) = Cell(exception);
+            //exceptionvar.array_index_for_write(1) = Cell(info.info);
+            //exceptionvar.array_index_for_write(2) = Cell(info.code);
+            //exceptionvar.array_index_for_write(3) = Cell(number_from_uint32(static_cast<uint32_t>(ip)));
 
+            //auto tmodule = module;
+            //auto tip = ip;
+            //size_t sp = callstack.size();
+            //for (;;) {
+            //    for (auto e = tmodule->object.exceptions.begin(); e != tmodule->object.exceptions.end(); ++e) {
+            //        if (tip >= e->start && tip < e->end) {
+            //            const std::string handler = tmodule->object.strtable[e->excid];
+            //            if (exception.str() == handler
+            //             || (exception.length() > handler.length() && exception.substr(0, handler.length()) == handler && exception.at(handler.length()) == '.')) {
+            //                module = tmodule;
+            //                ip = e->handler;
+            //                while (stack.depth() > (frames.empty() ? 0 : frames.back().opstack_depth) + e->stack_depth) {
+            //                    stack.pop();
+            //                }
+            //                callstack.resize(sp);
+            //                stack.push(exceptionvar);
+            //                return;
+            //            }
+            //        }
+            //    }
+            //    if (sp == 0) {
+            //        break;
+            //    }
+            //    sp -= 1;
+            //    if (not frames.empty()) {
+            //        frames.pop_back();
+            //    }
+            //    tmodule = callstack[sp].first;
+            //    tip = callstack[sp].second;
+            //}
+
+            //fprintf(stderr, "Unhandled exception %s (%s) (code %d)\n", exception.c_str(), info.info.c_str(), number_to_sint32(info.code));
+            //while (ip < module->object.code.size()) {
+            //    if (module->debug != nullptr) {
+            //        auto line = module->debug->line_numbers.end();
+            //        auto p = ip;
+            //        for (;;) {
+            //            line = module->debug->line_numbers.find(p);
+            //            if (line != module->debug->line_numbers.end()) {
+            //                break;
+            //            }
+            //            if (p == 0) {
+            //                fprintf(stderr, "No matching debug information found.\n");
+            //                break;
+            //            }
+            //            p--;
+            //        }
+            //        if (line != module->debug->line_numbers.end()) {
+            //            fprintf(stderr, "  Stack frame #%lu: file %s line %d address %lu\n", static_cast<unsigned long>(callstack.size()), module->debug->source_path.c_str(), line->second, static_cast<unsigned long>(ip));
+            //            fprintf(stderr, "    %s\n", module->debug->source_lines.at(line->second).c_str());
+            //        } else {
+            //            fprintf(stderr, "  Stack frame #%lu: file %s address %lu (line number not found)\n", static_cast<unsigned long>(callstack.size()), module->debug->source_path.c_str(), static_cast<unsigned long>(ip));
+            //        }
+            //    } else {
+            //        fprintf(stderr, "  Stack frame #%lu: file %s address %lu (no debug info available)\n", static_cast<unsigned long>(callstack.size()), source_path.c_str(), static_cast<unsigned long>(ip));
+            //    }
+            //    if (callstack.empty()) {
+            //        break;
+            //    }
+            //    module = callstack.back().first;
+            //    ip = callstack.back().second;
+            //    callstack.pop_back();
+            //}
+            // Setting exit_code here will cause exec_loop to terminate and return this exit code.
+            exit_code = 1;
         }
 
-        void ENTER()
+        void raise(ExceptionName exception, ExceptionInfo info)
         {
-            throw new NotImplementedException("ENTER");
+            raise_literal(exception.name, info);
         }
 
-        void LEAVE()
+        void raise(RtlException x)
         {
-            throw new NotImplementedException("LEAVE");
+            //raise_literal(x.Name, new ExceptionInfo(x.Info, x.Code));
         }
 
+
+        public int run(bool EnableAssertions)
+        {
+            ip = 0;
+            //invoke(module, 0);
+
+            // This sets up the call stack in such a way as to initialize
+            // each module in the order determined in init_order, followed
+            // by running the code in the main module.
+            //for (int x = init_order; x != init_order.rend(); ++x) {
+            //    invoke(modules[*x], 0);
+            //}
+            for (int g = 0; g < bytecode.global_size; g++) {
+                bytecode.globals.Add(new Cell());
+            }
+
+            int r = Loop();
+            if (r == 0) {
+                System.Diagnostics.Debug.Assert(stack.Count() == 0);
+            }
+            return r;
+        }
+
+        #region Opcode Handlers
         void PUSHB()
         {
             throw new NotImplementedException("PUSHB");
@@ -89,22 +195,30 @@ namespace csnex
 
         void PUSHN()
         {
-            throw new NotImplementedException("PUSHN");
+            ip++;
+            uint val = Bytecode.get_vint(bytecode.code, (uint)bytecode.code.Length, ref ip);
+            stack.Push(new Cell(Number.FromString(bytecode.strtable[(int)val])));
         }
 
         void PUSHS()
         {
-            throw new NotImplementedException("PUSHS");
+            ip++;
+            uint val = Bytecode.get_vint(bytecode.code, (uint)bytecode.code.Length, ref ip);
+            stack.Push(new Cell(bytecode.strtable[(int)val]));
         }
 
-        void PUSHT()
+        void PUSHY()
         {
-            throw new NotImplementedException("PUSHT");
+            throw new NotImplementedException("PUSHY");
         }
 
         void PUSHPG()
         {
-            throw new NotImplementedException("LEAVE");
+            ip++;
+            uint addr = Bytecode.get_vint(bytecode.code, (uint)bytecode.code.Length, ref ip);
+            Debug.Assert(addr < bytecode.global_size);
+            stack.Push(bytecode.globals[(int)addr]);
+
         }
 
         void PUSHPPG()
@@ -139,7 +253,9 @@ namespace csnex
 
         void LOADN()
         {
-            throw new NotImplementedException("LOADN");
+            ip++;
+            Cell addr = stack.Pop().Address;
+            stack.Push(new Cell(addr.Number));
         }
 
         void LOADS()
@@ -147,9 +263,9 @@ namespace csnex
             throw new NotImplementedException("LOADS");
         }
 
-        void LOADT()
+        void LOADY()
         {
-            throw new NotImplementedException("LOADT");
+            throw new NotImplementedException("LOADY");
         }
 
         void LOADA()
@@ -167,6 +283,16 @@ namespace csnex
             throw new NotImplementedException("LOADP");
         }
 
+        void LOADJ()
+        {
+            throw new NotImplementedException("LOADJ");
+        }
+
+        void LOADV()
+        {
+            throw new NotImplementedException("LOADV");
+        }
+
         void STOREB()
         {
             throw new NotImplementedException("STOREB");
@@ -174,7 +300,10 @@ namespace csnex
 
         void STOREN()
         {
-            throw new NotImplementedException("STOREN");
+            ip++;
+            Cell addr = stack.Pop();
+            Number num = stack.Pop().Number;
+            addr.Address = new Cell(num);
         }
 
         void STORES()
@@ -182,9 +311,9 @@ namespace csnex
             throw new NotImplementedException("STORES");
         }
 
-        void STORET()
+        void STOREY()
         {
-            throw new NotImplementedException("STORET");
+            throw new NotImplementedException("STOREY");
         }
 
         void STOREA()
@@ -202,39 +331,78 @@ namespace csnex
             throw new NotImplementedException("STOREP");
         }
 
+        void STOREJ()
+        {
+            throw new NotImplementedException("STOREJ");
+        }
+
+        void STOREV()
+        {
+            throw new NotImplementedException("STOREV");
+        }
+
         void NEGN()
         {
-            throw new NotImplementedException("NEGN");
+            ip++;
+            Number x = stack.Pop().Number;
+            stack.Push(new Cell(Number.Negate(x)));
         }
 
         void ADDN()
         {
-            throw new NotImplementedException("ADDN");
+            ip++;
+            Number b = stack.Pop().Number;
+            Number a = stack.Pop().Number;
+            stack.Push(new Cell(Number.Add(a, b)));
         }
 
         void SUBN()
         {
-            throw new NotImplementedException("SUBN");
+            ip++;
+            Number b = stack.Pop().Number;
+            Number a = stack.Pop().Number;
+            stack.Push(new Cell(Number.Subtract(a, b)));
         }
 
         void MULN()
         {
-            throw new NotImplementedException("MULN");
+            ip++;
+            Number b = stack.Pop().Number;
+            Number a = stack.Pop().Number;
+            stack.Push(new Cell(Number.Multiply(a, b)));
         }
 
         void DIVN()
         {
-            throw new NotImplementedException("DIVN");
+            ip++;
+            Number b = stack.Pop().Number;
+            Number a = stack.Pop().Number;
+            if (b.IsZero()) {
+                throw new NeonDivideByZeroException("DivideByZeroException", "");
+            }
+            stack.Push(new Cell(Number.Divide(a, b)));
         }
 
         void MODN()
         {
-            throw new NotImplementedException("MODN");
+            ip++;
+            Number b = stack.Pop().Number;
+            Number a = stack.Pop().Number;
+            if (b.IsZero()) {
+                throw new NeonDivideByZeroException("DivideByZeroException", "");
+            }
+            stack.Push(new Cell(Number.Modulo(a, b)));
         }
 
         void EXPN()
         {
-            throw new NotImplementedException("EXPN");
+            ip++;
+            Number b = stack.Pop().Number;
+            Number a = stack.Pop().Number;
+            if (b.IsZero()) {
+                throw new NeonDivideByZeroException("DivideByZeroException", "");
+            }
+            stack.Push(new Cell(Number.Powof(a, b)));
         }
 
         void EQB()
@@ -249,32 +417,50 @@ namespace csnex
 
         void EQN()
         {
-            throw new NotImplementedException("EQN");
+            ip++;
+            Number b = stack.Pop().Number;
+            Number a = stack.Pop().Number;
+            stack.Push(new Cell(Number.IsEqual(a, b)));
         }
 
         void NEN()
         {
-            throw new NotImplementedException("NEN");
+            ip++;
+            Number b = stack.Pop().Number;
+            Number a = stack.Pop().Number;
+            stack.Push(new Cell(!Number.IsEqual(a, b)));
         }
 
         void LTN()
         {
-            throw new NotImplementedException("LTN");
+            ip++;
+            Number b = stack.Pop().Number;
+            Number a = stack.Pop().Number;
+            stack.Push(new Cell(Number.IsLessThan(a, b)));
         }
 
         void GTN()
         {
-            throw new NotImplementedException("GTN");
+            ip++;
+            Number b = stack.Pop().Number;
+            Number a = stack.Pop().Number;
+            stack.Push(new Cell(Number.IsGreaterThan(a, b)));
         }
 
         void LEN()
         {
-            throw new NotImplementedException("LEN");
+            ip++;
+            Number b = stack.Pop().Number;
+            Number a = stack.Pop().Number;
+            stack.Push(new Cell(Number.IsLessThanOrEqual(a, b)));
         }
 
         void GEN()
         {
-            throw new NotImplementedException("GEN");
+            ip++;
+            Number b = stack.Pop().Number;
+            Number a = stack.Pop().Number;
+            stack.Push(new Cell(Number.IsGreaterThanOrEqual(a, b)));
         }
 
         void EQS()
@@ -307,34 +493,34 @@ namespace csnex
             throw new NotImplementedException("GES");
         }
 
-        void EQT()
+        void EQY()
         {
-            throw new NotImplementedException("EQT");
+            throw new NotImplementedException("EQY");
         }
 
-        void NET()
+        void NEY()
         {
-            throw new NotImplementedException("NET");
+            throw new NotImplementedException("NEY");
         }
 
-        void LTT()
+        void LTY()
         {
-            throw new NotImplementedException("LTT");
+            throw new NotImplementedException("LTY");
         }
 
-        void GTT()
+        void GTY()
         {
-            throw new NotImplementedException("GTT");
+            throw new NotImplementedException("GTY");
         }
 
-        void LET()
+        void LEY()
         {
-            throw new NotImplementedException("LET");
+            throw new NotImplementedException("LEY");
         }
 
-        void GET()
+        void GEY()
         {
-            throw new NotImplementedException("GET");
+            throw new NotImplementedException("GEY");
         }
 
         void EQA()
@@ -365,6 +551,16 @@ namespace csnex
         void NEP()
         {
             throw new NotImplementedException("NEP");
+        }
+
+        void EQV()
+        {
+            throw new NotImplementedException("EQV");
+        }
+
+        void NEV()
+        {
+            throw new NotImplementedException("NEV");
         }
 
         void ANDB()
@@ -429,7 +625,17 @@ namespace csnex
 
         void CALLP()
         {
-            throw new NotImplementedException("CALLP");
+            uint start_ip = ip;
+            ip++;
+            UInt32 val = Bytecode.get_vint(bytecode.code, bytecode.codelen, ref ip);
+            string func = bytecode.strtable[(int)val];
+            try {
+                global.dispatch(func);
+                //rtl_call(stack, func, rtl_call_tokens[val]);
+            } catch (RtlException x) {
+                ip = start_ip;
+                raise(x);
+            }
         }
 
         void CALLF()
@@ -449,17 +655,29 @@ namespace csnex
 
         void JUMP()
         {
-            throw new NotImplementedException("JUMP");
+            ip++;
+            uint target = Bytecode.get_vint(bytecode.code, bytecode.codelen, ref ip);
+            ip = target;
         }
 
         void JF()
         {
-            throw new NotImplementedException("JF");
+            ip++;
+            UInt32 target = Bytecode.get_vint(bytecode.code, bytecode.codelen, ref ip);
+            bool a = stack.Pop().Bool;
+            if (!a) {
+                ip = target;
+            }
         }
 
         void JT()
         {
-            throw new NotImplementedException("JT");
+            ip++;
+            UInt32 target = Bytecode.get_vint(bytecode.code, bytecode.codelen, ref ip);
+            bool a = stack.Pop().Bool;
+            if (a) {
+                ip = target;
+            }
         }
 
         void JFCHAIN()
@@ -469,7 +687,8 @@ namespace csnex
 
         void DUP()
         {
-            throw new NotImplementedException("DUP");
+            ip++;
+            stack.Push(new Cell(stack.Peek()));
         }
 
         void DUPX1()
@@ -484,7 +703,9 @@ namespace csnex
 
         void RET()
         {
-            throw new NotImplementedException("RET");
+            ip++;
+            // ToDo: Implement Call stack
+            //ip = callstack.Pop();
         }
 
         void CALLE()
@@ -524,7 +745,9 @@ namespace csnex
 
         void RESETC()
         {
-            throw new NotImplementedException("RESETC");
+            ip++;
+            Cell addr = stack.Pop();
+            addr.ResetCell();
         }
 
         void PUSHPEG()
@@ -544,7 +767,11 @@ namespace csnex
 
         void SWAP()
         {
-            throw new NotImplementedException("SWAP");
+            ip++;
+            Cell a = stack.Pop();
+            Cell b = stack.Pop();
+            stack.Push(a);
+            stack.Push(b);
         }
 
         void DROPN()
@@ -552,9 +779,9 @@ namespace csnex
             throw new NotImplementedException("DROPN");
         }
 
-        void PUSHM()
+        void PUSHFP()
         {
-            throw new NotImplementedException("PUSHM");
+            throw new NotImplementedException("PUSHFP");
         }
 
         void CALLV()
@@ -566,120 +793,125 @@ namespace csnex
         {
             throw new NotImplementedException("PUSHCI");
         }
+        #endregion
 
-
-        private int ip { get; set; }
-
-        private void Loop()
+        public void Invoke()
         {
-            while (ip < bytecode.Module.codelen)
+        }
+
+        private int Loop()
+        {
+            while (ip < bytecode.codelen && exit_code == 0)
             {
                 switch (bytecode.code[ip])
                 {
-                    case (byte)Opcode.ENTER: ENTER(); break;
-                    case (byte)Opcode.LEAVE: LEAVE(); break;
-                    case (byte)Opcode.PUSHB: PUSHB(); break;
-                    case (byte)Opcode.PUSHN: PUSHN(); break;
-                    case (byte)Opcode.PUSHS: PUSHS(); break;
-                    case (byte)Opcode.PUSHT: PUSHT(); break;
-                    case (byte)Opcode.PUSHPG: PUSHPG(); break;
-                    case (byte)Opcode.PUSHPPG: PUSHPPG(); break;
-                    case (byte)Opcode.PUSHPMG: PUSHPMG(); break;
-                    case (byte)Opcode.PUSHPL: PUSHPL(); break;
-                    case (byte)Opcode.PUSHPOL: PUSHPOL(); break;
-                    case (byte)Opcode.PUSHI: PUSHI(); break;
-                    case (byte)Opcode.LOADB: LOADB(); break;
-                    case (byte)Opcode.LOADN: LOADN(); break;
-                    case (byte)Opcode.LOADS: LOADS(); break;
-                    case (byte)Opcode.LOADT: LOADT(); break;
-                    case (byte)Opcode.LOADA: LOADA(); break;
-                    case (byte)Opcode.LOADD: LOADD(); break;
-                    case (byte)Opcode.LOADP: LOADP(); break;
-                    case (byte)Opcode.STOREB: STOREB(); break;
-                    case (byte)Opcode.STOREN: STOREN(); break;
-                    case (byte)Opcode.STORES: STORES(); break;
-                    case (byte)Opcode.STORET: STORET(); break;
-                    case (byte)Opcode.STOREA: STOREA(); break;
-                    case (byte)Opcode.STORED: STORED(); break;
-                    case (byte)Opcode.STOREP: STOREP(); break;
-                    case (byte)Opcode.NEGN: NEGN(); break;
-                    case (byte)Opcode.ADDN: ADDN(); break;
-                    case (byte)Opcode.SUBN: SUBN(); break;
-                    case (byte)Opcode.MULN: MULN(); break;
-                    case (byte)Opcode.DIVN: DIVN(); break;
-                    case (byte)Opcode.MODN: MODN(); break;
-                    case (byte)Opcode.EXPN: EXPN(); break;
-                    case (byte)Opcode.EQB: EQB(); break;
-                    case (byte)Opcode.NEB: NEB(); break;
-                    case (byte)Opcode.EQN: EQN(); break;
-                    case (byte)Opcode.NEN: NEN(); break;
-                    case (byte)Opcode.LTN: LTN(); break;
-                    case (byte)Opcode.GTN: GTN(); break;
-                    case (byte)Opcode.LEN: LEN(); break;
-                    case (byte)Opcode.GEN: GEN(); break;
-                    case (byte)Opcode.EQS: EQS(); break;
-                    case (byte)Opcode.NES: NES(); break;
-                    case (byte)Opcode.LTS: LTS(); break;
-                    case (byte)Opcode.GTS: GTS(); break;
-                    case (byte)Opcode.LES: LES(); break;
-                    case (byte)Opcode.GES: GES(); break;
-                    case (byte)Opcode.EQT: EQT(); break;
-                    case (byte)Opcode.NET: NET(); break;
-                    case (byte)Opcode.LTT: LTT(); break;
-                    case (byte)Opcode.GTT: GTT(); break;
-                    case (byte)Opcode.LET: LET(); break;
-                    case (byte)Opcode.GET: GET(); break;
-                    case (byte)Opcode.EQA: EQA(); break;
-                    case (byte)Opcode.NEA: NEA(); break;
-                    case (byte)Opcode.EQD: EQD(); break;
-                    case (byte)Opcode.NED: NED(); break;
-                    case (byte)Opcode.EQP: EQP(); break;
-                    case (byte)Opcode.NEP: NEP(); break;
-                    case (byte)Opcode.ANDB: ANDB(); break;
-                    case (byte)Opcode.ORB: ORB(); break;
-                    case (byte)Opcode.NOTB: NOTB(); break;
-                    case (byte)Opcode.INDEXAR: INDEXAR(); break;
-                    case (byte)Opcode.INDEXAW: INDEXAW(); break;
-                    case (byte)Opcode.INDEXAV: INDEXAV(); break;
-                    case (byte)Opcode.INDEXAN: INDEXAN(); break;
-                    case (byte)Opcode.INDEXDR: INDEXDR(); break;
-                    case (byte)Opcode.INDEXDW: INDEXDW(); break;
-                    case (byte)Opcode.INDEXDV: INDEXDV(); break;
-                    case (byte)Opcode.INA: INA(); break;
-                    case (byte)Opcode.IND: IND(); break;
-                    case (byte)Opcode.CALLP: CALLP(); break;
-                    case (byte)Opcode.CALLF: CALLF(); break;
-                    case (byte)Opcode.CALLMF: CALLMF(); break;
-                    case (byte)Opcode.CALLI: CALLI(); break;
-                    case (byte)Opcode.JUMP: JUMP(); break;
-                    case (byte)Opcode.JF: JF(); break;
-                    case (byte)Opcode.JT: JT(); break;
-                    case (byte)Opcode.JFCHAIN: JFCHAIN(); break;
-                    case (byte)Opcode.DUP: DUP(); break;
-                    case (byte)Opcode.DUPX1: DUPX1(); break;
-                    case (byte)Opcode.DROP: DROP(); break;
-                    case (byte)Opcode.RET: RET(); break;
-                    case (byte)Opcode.CALLE: CALLE(); break;
-                    case (byte)Opcode.CONSA: CONSA(); break;
-                    case (byte)Opcode.CONSD: CONSD(); break;
-                    case (byte)Opcode.EXCEPT: EXCEPT(); break;
-                    case (byte)Opcode.ALLOC: ALLOC(); break;
-                    case (byte)Opcode.PUSHNIL: PUSHNIL(); break;
-                    case (byte)Opcode.JNASSERT: JNASSERT(); break;
-                    case (byte)Opcode.RESETC: RESETC(); break;
-                    case (byte)Opcode.PUSHPEG: PUSHPEG(); break;
-                    case (byte)Opcode.JUMPTBL: JUMPTBL(); break;
-                    case (byte)Opcode.CALLX: CALLX(); break;
-                    case (byte)Opcode.SWAP: SWAP(); break;
-                    case (byte)Opcode.DROPN: DROPN(); break;
-                    case (byte)Opcode.PUSHM: PUSHM(); break;
-                    case (byte)Opcode.CALLV: CALLV(); break;
-                    case (byte)Opcode.PUSHCI: PUSHCI(); break;
+                    case (byte)Opcode.PUSHB: PUSHB(); break;                // push boolean immediate
+                    case (byte)Opcode.PUSHN: PUSHN(); break;                // push number immediate
+                    case (byte)Opcode.PUSHS: PUSHS(); break;                // push string immediate
+                    case (byte)Opcode.PUSHY: PUSHY(); break;                // push bytes immediate
+                    case (byte)Opcode.PUSHPG: PUSHPG(); break;              // push pointer to global
+                    case (byte)Opcode.PUSHPPG: PUSHPPG(); break;            // push pointer to predefined global
+                    case (byte)Opcode.PUSHPMG: PUSHPMG(); break;            // push pointer to module global
+                    case (byte)Opcode.PUSHPL: PUSHPL(); break;              // push pointer to local
+                    case (byte)Opcode.PUSHPOL: PUSHPOL(); break;            // push pointer to outer local
+                    case (byte)Opcode.PUSHI: PUSHI(); break;                // push 32-bit integer immediate
+                    case (byte)Opcode.LOADB: LOADB(); break;                // load boolean
+                    case (byte)Opcode.LOADN: LOADN(); break;                // load number
+                    case (byte)Opcode.LOADS: LOADS(); break;                // load string
+                    case (byte)Opcode.LOADY: LOADY(); break;                // load bytes
+                    case (byte)Opcode.LOADA: LOADA(); break;                // load array
+                    case (byte)Opcode.LOADD: LOADD(); break;                // load dictionary
+                    case (byte)Opcode.LOADP: LOADP(); break;                // load pointer
+                    case (byte)Opcode.LOADJ: LOADJ(); break;                // load object
+                    case (byte)Opcode.LOADV: LOADV(); break;                // load voidptr
+                    case (byte)Opcode.STOREB: STOREB(); break;              // store boolean
+                    case (byte)Opcode.STOREN: STOREN(); break;              // store number
+                    case (byte)Opcode.STORES: STORES(); break;              // store string
+                    case (byte)Opcode.STOREY: STOREY(); break;              // store bytes
+                    case (byte)Opcode.STOREA: STOREA(); break;              // store array
+                    case (byte)Opcode.STORED: STORED(); break;              // store dictionary
+                    case (byte)Opcode.STOREP: STOREP(); break;              // store pointer
+                    case (byte)Opcode.STOREJ: STOREJ(); break;              // store object
+                    case (byte)Opcode.STOREV: STOREV(); break;              // store voidptr
+                    case (byte)Opcode.NEGN: NEGN(); break;                  // negate number
+                    case (byte)Opcode.ADDN: ADDN(); break;                  // add number
+                    case (byte)Opcode.SUBN: SUBN(); break;                  // subtract number
+                    case (byte)Opcode.MULN: MULN(); break;                  // multiply number
+                    case (byte)Opcode.DIVN: DIVN(); break;                  // divide number
+                    case (byte)Opcode.MODN: MODN(); break;                  // modulo number
+                    case (byte)Opcode.EXPN: EXPN(); break;                  // exponentiate number
+                    case (byte)Opcode.EQB: EQB(); break;                    // compare equal boolean
+                    case (byte)Opcode.NEB: NEB(); break;                    // compare unequal boolean
+                    case (byte)Opcode.EQN: EQN(); break;                    // compare equal number
+                    case (byte)Opcode.NEN: NEN(); break;                    // compare unequal number
+                    case (byte)Opcode.LTN: LTN(); break;                    // compare less number
+                    case (byte)Opcode.GTN: GTN(); break;                    // compare greater number
+                    case (byte)Opcode.LEN: LEN(); break;                    // compare less equal number
+                    case (byte)Opcode.GEN: GEN(); break;                    // compare greater equal number
+                    case (byte)Opcode.EQS: EQS(); break;                    // compare equal string
+                    case (byte)Opcode.NES: NES(); break;                    // compare unequal string
+                    case (byte)Opcode.LTS: LTS(); break;                    // compare less string
+                    case (byte)Opcode.GTS: GTS(); break;                    // compare greater string
+                    case (byte)Opcode.LES: LES(); break;                    // compare less equal string
+                    case (byte)Opcode.GES: GES(); break;                    // compare greater equal string
+                    case (byte)Opcode.EQY: EQY(); break;                    // compare equal bytes
+                    case (byte)Opcode.NEY: NEY(); break;                    // compare unequal bytes
+                    case (byte)Opcode.LTY: LTY(); break;                    // compare less bytes
+                    case (byte)Opcode.GTY: GTY(); break;                    // compare greater bytes
+                    case (byte)Opcode.LEY: LEY(); break;                    // compare less equal bytes
+                    case (byte)Opcode.GEY: GEY(); break;                    // compare greater equal bytes
+                    case (byte)Opcode.EQA: EQA(); break;                    // compare equal array
+                    case (byte)Opcode.NEA: NEA(); break;                    // compare unequal array
+                    case (byte)Opcode.EQD: EQD(); break;                    // compare equal dictionary
+                    case (byte)Opcode.NED: NED(); break;                    // compare unequal dictionary
+                    case (byte)Opcode.EQP: EQP(); break;                    // compare equal pointer
+                    case (byte)Opcode.NEP: NEP(); break;                    // compare unequal pointer
+                    case (byte)Opcode.EQV: EQV(); break;                    // compare equal voidptr
+                    case (byte)Opcode.NEV: NEV(); break;                    // compare unequal voidptr
+                    case (byte)Opcode.ANDB: ANDB(); break;                  // and boolean
+                    case (byte)Opcode.ORB: ORB(); break;                    // or boolean
+                    case (byte)Opcode.NOTB: NOTB(); break;                  // not boolean
+                    case (byte)Opcode.INDEXAR: INDEXAR(); break;            // index array for read
+                    case (byte)Opcode.INDEXAW: INDEXAW(); break;            // index array for write
+                    case (byte)Opcode.INDEXAV: INDEXAV(); break;            // index array value
+                    case (byte)Opcode.INDEXAN: INDEXAN(); break;            // index array value, no exception
+                    case (byte)Opcode.INDEXDR: INDEXDR(); break;            // index dictionary for read
+                    case (byte)Opcode.INDEXDW: INDEXDW(); break;            // index dictionary for write
+                    case (byte)Opcode.INDEXDV: INDEXDV(); break;            // index dictionary value
+                    case (byte)Opcode.INA: INA(); break;                    // in array
+                    case (byte)Opcode.IND: IND(); break;                    // in dictionary
+                    case (byte)Opcode.CALLP: CALLP(); break;                // call predefined
+                    case (byte)Opcode.CALLF: CALLF(); break;                // call function
+                    case (byte)Opcode.CALLMF: CALLMF(); break;              // call module function
+                    case (byte)Opcode.CALLI: CALLI(); break;                // call indirect
+                    case (byte)Opcode.JUMP: JUMP(); break;                  // unconditional jump
+                    case (byte)Opcode.JF: JF(); break;                      // jump if false
+                    case (byte)Opcode.JT: JT(); break;                      // jump if true
+                    case (byte)Opcode.DUP: DUP(); break;                    // duplicate
+                    case (byte)Opcode.DUPX1: DUPX1(); break;                // duplicate under second value
+                    case (byte)Opcode.DROP: DROP(); break;                  // drop
+                    case (byte)Opcode.RET: RET(); break;                    // return
+                    case (byte)Opcode.CONSA: CONSA(); break;                // construct array
+                    case (byte)Opcode.CONSD: CONSD(); break;                // construct dictionary
+                    case (byte)Opcode.EXCEPT: EXCEPT(); break;              // throw exception
+                    case (byte)Opcode.ALLOC: ALLOC(); break;                // allocate record
+                    case (byte)Opcode.PUSHNIL: PUSHNIL(); break;            // push nil pointer
+                    case (byte)Opcode.RESETC: RESETC(); break;              // reset cell
+                    case (byte)Opcode.PUSHPEG: PUSHPEG(); break;            // push pointer to external global
+                    case (byte)Opcode.JUMPTBL: JUMPTBL(); break;            // jump table
+                    case (byte)Opcode.CALLX: CALLX(); break;                // call extension
+                    case (byte)Opcode.SWAP: SWAP(); break;                  // swap two top stack elements
+                    case (byte)Opcode.DROPN: DROPN(); break;                // drop element n
+                    case (byte)Opcode.PUSHFP: PUSHFP(); break;              // push function pointer
+                    case (byte)Opcode.CALLV: CALLV(); break;                // call virtual
+                    case (byte)Opcode.PUSHCI: PUSHCI(); break;              // push class info
                     default:
                         throw new NeonInvalidOpcodeException(string.Format("Invalid opcode ({0}) in bytecode file.", bytecode.code[ip]));
                 }
             }
+            return exit_code;
         }
+
     }
 
     static class Program
@@ -743,11 +975,14 @@ namespace csnex
 
         static string GetApplicationName()
         {
-            return System.Diagnostics.Process.GetCurrentProcess().ProcessName;
+            return Process.GetCurrentProcess().ProcessName;
         }
 
         static int Main(string[] args)
         {
+            int retval = 0;
+            Stopwatch sw = new Stopwatch();
+
             if (args.Length > 0)
             {
                 gOptions.ExecutableName = GetApplicationName();
@@ -773,23 +1008,23 @@ namespace csnex
                 Byte[] code = new Byte[nSize];
                 fs.Read(code, 0, (int)nSize);
                 exec.bytecode = new Bytecode();
-                exec.bytecode.LoadBytecode(code, (int)nSize);
+                exec.bytecode.LoadBytecode(gOptions.Filename, code, (uint)nSize); // ToDo: Fix this to be 64 bit, or correct size for program ABI
 
-                exec.diagnostics.time_start = DateTime.Now;
-                exec.run(gOptions.EnableAssertions);
-                exec.diagnostics.time_end = DateTime.Now;
+                exec.diagnostics.timer.Start();
+                retval = exec.run(gOptions.EnableAssertions);
+                exec.diagnostics.timer.Stop();
 
-                //    if (gOptions.ExecutorDebugStats)
-                //    {
-                //        Console.Error.Write("\n*** Neon CS Executor Statistics ***\n----------------------------------\n");
-                //        Console.Error.Write("Total Opcode Executed : {0}\n", exec.diagnostics.total_opcodes);
+                    if (gOptions.ExecutorDebugStats)
+                    {
+                        Console.Error.Write("\n*** Neon CS Executor Statistics ***\n----------------------------------\n");
+                        Console.Error.Write("Total Opcode Executed : {0}\n", exec.diagnostics.total_opcodes);
                 //        Console.Error.Write("Max Opstack Height     : {0}\n", exec.stack.max + 1);
                 //        Console.Error.Write("Opstack Height         : {0}\n", exec.stack.size());
                 //        Console.Error.Write("Max Callstack Height   : %" PRIu32 "\n"
                 //        Console.Error.Write("CallStack Height       : %" PRId32 "\n"
                 //        Console.Error.Write("Global Size            : %" PRIu32 "\n"
                 //        Console.Error.Write("Max Framesets          : %d\n"
-                //        Console.Error.Write("Execution Time         : %fms\n",
+                        Console.Error.Write("Execution Time         : {0}ms\n", exec.diagnostics.timer.ElapsedMilliseconds);
 
                 //                        exec->stack->top,
                 //                        exec->diagnostics.callstack_max_height + 1,
@@ -798,13 +1033,10 @@ namespace csnex
                 //                        exec->framestack->max,
                 //                        (((float)exec->diagnostics.time_end - exec->diagnostics.time_start) / CLOCKS_PER_SEC) * 1000
                 //        );
-                //    }
-                //exec_freeExecutor(exec);
-                //bytecode_freeBytecode(pModule);
+                    }
 
-                //free(bytecode);
             }
-            return 0;
+            return retval;
         }
     }
 }

@@ -5,47 +5,56 @@ namespace csnex
 {
     public class Bytecode
     {
-        public Bytecode Module { get; private set; }
-        public List<Bytecode> Modules { get; private set; }
-        public byte[] source_hash { get; private set; }
-        public int global_size { get; private set; }
-        public int strtablesize { get; private set; }
-        public int strtablelen { get; private set; }
-        public List<String> strings { get; private set; }
-        public int typesize { get; private set; }
-        public int constantsize { get; private set; }
-        public int variablesize { get; private set; }
-        public int export_functionsize { get; private set; }
-        public int functionsize { get; private set; }
-        public int exceptionsize { get; private set; }
-        public int exceptionexportsize { get; private set; }
-        public int interfaceexportsize { get; private set; }
-        public int importsize { get; private set; }
-        public int classsize { get; private set; }
+        public byte[] obj { get; private set; }
+        public string source_path {get; private set; }
+        public byte[] source_hash;
+        public uint version {get; private set; }
+        public uint global_size { get; private set; }
+        public List<String> strtable { get; private set; }
+        public uint strtablesize { get; private set; }
+        public uint strtablelen { get; private set; }
+        //public List<String> strings { get; private set; }
+        public uint typesize { get; private set; }
+        public uint constantsize { get; private set; }
+        public uint variablesize { get; private set; }
+        public uint export_functionsize { get; private set; }
+        public uint functionsize { get; private set; }
+        public uint exceptionsize { get; private set; }
+        public uint exceptionexportsize { get; private set; }
+        public uint interfaceexportsize { get; private set; }
+        public uint importsize { get; private set; }
+        public uint classsize { get; private set; }
         public byte[] code { get; private set; }
-        public int codelen { get; private set; }
+        public uint codelen { get; private set; }
 
         public List<Type> export_types { get; private set; }
-        public List<ExportFunction> export_functions { get; private set; }
-        public List<Function> functions { get; private set; }
-        public List<Import> imports { get; private set; }
-        public List<Exception> exceptions { get; private set; }
+        public List<Constant> export_constants {get; private set; }
+        public List<Variable> export_variables {get; private set; }
+        public List<Function> export_functions { get; private set; }
+        public List<ExceptionExport> export_exceptions { get; private set; }
+        public List<Interface> export_interfaces { get; private set; }
 
+        public List<ModuleImport> imports { get; private set; }
+        public List<FunctionInfo> functions { get; private set; }
+        public List<ExceptionInfo> exceptions { get; private set; }
+        public List<ClassInfo> classes { get; private set; }
+
+        public List<Cell> globals;
 
         public Bytecode()
         {
         }
 
-        private int VInt(Byte[] pobj, int nBuffSize, ref int i)
+        public static UInt32 get_vint(Byte[] pobj, uint nBuffSize, ref uint i)
         {
-            int r = 0;
+            uint r = 0;
             while (i < nBuffSize) {
-                char x = System.Text.Encoding.ASCII.GetChars(pobj)[i];
+                byte x = pobj[i];
                 i++;
-                if ((r & ~(int.MaxValue >> 7)) != 0) {
-                    throw new NeonBytecodeException(string.Format("Integer value exceeds maximum ({0})", int.MaxValue));
+                if ((r & ~(uint.MaxValue >> 7)) != 0) {
+                    throw new BytecodeException(string.Format("Integer value exceeds maximum ({0})", int.MaxValue));
                 }
-                r = (r << 7) | (x & 0x7f);
+                r = (r << 7) | (uint)(x & 0x7f);
                 if ((x & 0x80) == 0) {
                     break;
                 }
@@ -53,97 +62,110 @@ namespace csnex
             return r;
         }
 
-        public List<String> GetStrTable(Byte[] obj, int size, ref int i)
+        public List<String> GetStrTable(Byte[] obj, uint size, ref uint i)
         {
             List<String> r = new List<string>();
 
             while (i < size)
             {
-                int len = VInt(obj, size, ref i);
+                uint len = get_vint(obj, size, ref i);
                 String ts;
-                ts = new string(System.Text.Encoding.UTF8.GetChars(obj, i, len));
+                ts = new string(System.Text.Encoding.UTF8.GetChars(obj, (int)i, (int)len));
                 r.Add(ts);
                 i += len;
             }
             return r;
         }
 
-        public void LoadBytecode(Byte[] code, int len)
+        public void LoadBytecode(string a_source_path, Byte[] bytes, uint len)
         {
-            int i = 0;
+            source_path = a_source_path;
+            obj = bytes;
+            //System.Diagnostics.Debug.Assert((source_hash.ToString() != string.Empty), "Bytecode is not empty!");
 
-            System.Diagnostics.Debug.Assert((Module.source_hash.ToString() != string.Empty), "Bytecode is not empty!");
+            uint i = 0;
 
-            foreach (byte h in code) {
-                Module.source_hash[i++] = h;
-                if (i > 32) {
-                    break;
+            if (i + 4 > obj.Length) {
+                throw new BytecodeException("unexpected end of bytecode");
+            }
+            string sig = new string(System.Text.Encoding.ASCII.GetChars(obj, (int)i, 4));
+            if (sig != "Ne\0n") {
+                throw new BytecodeException("bytecode signature missing");
+            }
+            i += 4;
+
+            version = get_vint(obj, len, ref i);
+            if(version != NeonOpcode.OPCODE_VERSION) {
+                throw new BytecodeException("bytecode version mismatch");
+            }
+
+            if (i + 32 > obj.Length) {
+                throw new BytecodeException("unexpected end of bytecode");
+            }
+
+            //source_hash = System.Text.Encoding.ASCII.GetChars(obj, (int)i, 32);
+            source_hash = obj.CopyFrom(i, 32);
+            i += 32;
+
+            global_size = get_vint(obj, len, ref i);
+            globals = new List<Cell>((int)global_size);
+
+            strtablesize = get_vint(obj, len, ref i);
+            strtable = GetStrTable(obj, strtablesize + i, ref i);
+
+            typesize = get_vint(obj, len, ref i);
+            export_types = new List<Type>();
+            for (int f = 0; f < typesize; f++) {
+                Type t = new Type();
+                t.name = get_vint(obj, len, ref i);
+                t.descriptor = get_vint(obj, len, ref i);
+                export_types.Add(t);
+            }
+
+            constantsize = get_vint(obj, len, ref i);
+            export_constants = new List<Constant>();
+            for (int c = 0; c < constantsize; c++) {
+                Constant cv = new Constant();
+                cv.name = get_vint(obj, len, ref i);
+                cv.type = get_vint(obj, len, ref i);
+                uint size = get_vint(obj, len, ref i);
+                if (i + size > len) {
+                    throw new BytecodeException("unexpected end of bytecode");
                 }
+                cv.value = obj.CopyFrom(i, (int)size);
+                i += size;
+                export_constants.Add(cv);
             }
 
-            Module.global_size = VInt(code, len, ref i);
-
-            Module.strtablesize = VInt(code, len, ref i);
-            Module.strings = GetStrTable(code, Module.strtablesize + i, ref i);
-
-            Module.typesize = VInt(code, len, ref i);
-            /*
-            typesize = struct.unpack(">H", bytecode[i:i+2])[0]
-            i += 2
-            self.export_types = []
-            while typesize > 0:
-            t = Type()
-            t.name = struct.unpack(">H", bytecode[i:i+2])[0]
-            i += 2
-            t.descriptor = struct.unpack(">H", bytecode[i:i+2])[0]
-            i += 2
-            self.export_types.append(t)
-            typesize -= 1
-            */
-            Module.constantsize = VInt(code, len, ref i);
-            /*
-            constantsize = struct.unpack(">H", bytecode[i:i+2])[0]
-            i += 2
-            self.export_constants = []
-            while constantsize > 0:
-            c = Constant()
-            c.name = struct.unpack(">H", bytecode[i:i+2])[0]
-            i += 2
-            c.type = struct.unpack(">H", bytecode[i:i+2])[0]
-            i += 2
-            size = struct.unpack(">H", bytecode[i:i+2])[0]
-            i += 2
-            c.value = bytecode[i:i+size]
-            i += size
-            self.export_constants.append(c)
-            constantsize -= 1;
-            */
-            Module.variablesize = VInt(code, len, ref i);
-            /*
-            variablesize = struct.unpack(">H", bytecode[i:i+2])[0]
-            i += 2
-            self.export_variables = []
-            while variablesize > 0:
-            v = Variable()
-            v.name = struct.unpack(">H", bytecode[i:i+2])[0]
-            i += 2
-            v.type = struct.unpack(">H", bytecode[i:i+2])[0]
-            i += 2
-            v.index = struct.unpack(">H", bytecode[i:i+2])[0]
-            i += 2
-            self.export_variables.append(v)
-            variablesize -= 1
-            */
-            Module.export_functionsize = VInt(code, len, ref i);
-
-            for (int f = 0; f < Module.export_functionsize; f++) {
-                ExportFunction ef = new ExportFunction();
-                ef.name = VInt(code, len, ref i);
-                ef.descriptor = VInt(code, len, ref i);
-                ef.entry = VInt(code, len, ref i);
-                Module.export_functions.Add(ef);
+            variablesize = get_vint(obj, len, ref i);
+            export_variables = new List<Variable>();
+            for (int vs = 0; vs < variablesize; vs++) {
+                Variable v = new Variable();
+                v.name = get_vint(obj, len, ref i);
+                v.type = get_vint(obj, len, ref i);
+                v.index = get_vint(obj, len, ref i);
+                export_variables.Add(v);
             }
-            Module.exceptionexportsize = VInt(code, len, ref i);
+
+            export_functionsize = get_vint(obj, len, ref i);
+            export_functions = new List<Function>();
+            for (int f = 0; f < export_functionsize; f++) {
+                Function ef = new Function();
+                ef.name = get_vint(obj, len, ref i);
+                ef.descriptor = get_vint(obj, len, ref i);
+                ef.index = get_vint(obj, len, ref i);
+                export_functions.Add(ef);
+            }
+
+            exceptionexportsize = get_vint(obj, len, ref i);
+            export_exceptions = new List<ExceptionExport>();
+            while (exceptionexportsize > 0) {
+                ExceptionExport e = new ExceptionExport();
+                e.name = get_vint(obj, len, ref i);
+                export_exceptions.Add(e);
+                exceptionsize--;
+            }
+
             /*
             exceptionexportsize = struct.unpack(">H", bytecode[i:i+2])[0]
             i += 2
@@ -155,110 +177,289 @@ namespace csnex
             self.export_exceptions.append(e)
             exceptionexportsize -= 1
             */
-            Module.interfaceexportsize = VInt(code, len, ref i);
+            interfaceexportsize = get_vint(obj, len, ref i);
             /*
             interfaceexportsize = struct.unpack(">H", bytecode[i:i+2])[0]
             i += 2
             while interfaceexportsize > 0:
             assert False, interfaceexportsize
             */
-            Module.importsize = VInt(code, len, ref i);
-            for (int f = 0; f < Module.importsize; f++) {
-                Import ip = new Import();
-                ip.name = VInt(code, len, ref i);
-                for (int x = i; x < i + 32; i++) {
-                    ip.hash[x - i] = (char)code[x];
+            imports = new List<ModuleImport>();
+            importsize = get_vint(obj, len, ref i);
+            for (int f = 0; f < importsize; f++) {
+                ModuleImport imp = new ModuleImport();
+                imp.name = get_vint(obj, len, ref i);
+                imp.optional = get_vint(obj, len, ref i) != 0;
+                if (i + 32 > obj.Length) {
+                    throw new BytecodeException("unexpected end of bytecode");
                 }
+                imp.hash = obj.CopyFrom(i, 32);
+                imports.Add(imp);
                 i += 32;
             }
 
-            Module.functionsize = VInt(code, len, ref i);
-            for (int f = 0; f < Module.functionsize; f++) {
-                Function fc = new Function();
-                fc.name = VInt(code, len, ref i);
-                fc.entry = VInt(code, len, ref i);
-                Module.functions.Add(fc);
+            functions = new List<FunctionInfo>();
+            functionsize = get_vint(obj, len, ref i);
+            for (int f = 0; f < functionsize; f++) {
+                FunctionInfo fi = new FunctionInfo();
+                fi.name = get_vint(obj, len, ref i);
+                fi.nest = get_vint(obj, len, ref i);
+                fi.args = get_vint(obj, len, ref i);
+                fi.locals = get_vint(obj, len, ref i);
+                fi.entry = get_vint(obj, len, ref i);
+                functions.Add(fi);
             }
 
-            Module.exceptionsize = VInt(code, len, ref i);
-            for (int e = 0; e < Module.exceptionsize; e++) {
-                Exception ex = new Exception();
-                ex.start = VInt(code, len,  ref i);
-                ex.end = VInt(code, len, ref i);
-                ex.exid = VInt(code, len, ref i);
-                ex.handler = VInt(code, len, ref i);
-                Module.exceptions.Add(ex);
+            exceptions = new List<ExceptionInfo>();
+            exceptionsize = get_vint(obj, len, ref i);
+            for (int e = 0; e < exceptionsize; e++) {
+                ExceptionInfo ex = new ExceptionInfo();
+                ex.start = get_vint(obj, len,  ref i);
+                ex.end = get_vint(obj, len, ref i);
+                ex.exid = get_vint(obj, len, ref i);
+                ex.handler = get_vint(obj, len, ref i);
+                ex.stack_depth = get_vint(obj, len, ref i);
+                exceptions.Add(ex);
             }
 
-            Module.classsize = VInt(code, len, ref i);
+            classes = new List<ClassInfo>();
+            classsize = get_vint(obj, len, ref i);
             /*
             classsize = struct.unpack(">H", bytecode[i:i+2])[0]
             i += 2
             while classsize > 0:
             assert False, classsize
             */
-            code.CopyTo(Module.code, i);
-            Module.codelen = len - i;
+            codelen = len - i;
+            //code = new byte[codelen+1];
+            code = obj.CopyFrom(i, (int)codelen);
+
+            //for (int x = 0; x < codelen; x++) {
+            //    code[x] = obj[i+x];
+            //}
+
+    //if (i + 32 > obj.size()) {
+    //    throw BytecodeException("unexpected end of bytecode");
+    //}
+    //source_hash = std::string(&obj[i], &obj[i]+32);
+    //i += 32;
+
+    //global_size = get_vint(obj, i);
+
+    //unsigned int strtablesize = get_vint(obj, i);
+    //if (i+strtablesize > obj.size()) {
+    //    throw BytecodeException("unexpected end of bytecode");
+    //}
+    //strtable = getstrtable(obj, i, strtablesize);
+    //i += strtablesize;
+    /* Done */
+    //unsigned int typesize = get_vint(obj, i);
+    //while (typesize > 0) {
+    //    Type t;
+    //    t.name = get_vint(obj, i);
+    //    t.descriptor = get_vint(obj, i);
+    //    export_types.push_back(t);
+    //    typesize--;
+    //}
+    /* Done */
+    //unsigned int constantsize = get_vint(obj, i);
+    //while (constantsize > 0) {
+    //    Constant c;
+    //    c.name = get_vint(obj, i);
+    //    c.type = get_vint(obj, i);
+    //    unsigned int size = get_vint(obj, i);
+    //    if (i+size > obj.size()) {
+    //        throw BytecodeException("unexpected end of bytecode");
+    //    }
+    //    c.value = Bytes(&obj[i], &obj[i+size]);
+    //    i += size;
+    //    export_constants.push_back(c);
+    //    constantsize--;
+    //}
+    /* Done */
+    //unsigned int variablesize = get_vint(obj, i);
+    //while (variablesize > 0) {
+    //    Variable v;
+    //    v.name = get_vint(obj, i);
+    //    v.type = get_vint(obj, i);
+    //    v.index = get_vint(obj, i);
+    //    export_variables.push_back(v);
+    //    variablesize--;
+    //}
+    /* Done */
+    //unsigned int functionsize = get_vint(obj, i);
+    //while (functionsize > 0) {
+    //    Function f;
+    //    f.name = get_vint(obj, i);
+    //    f.descriptor = get_vint(obj, i);
+    //    f.index = get_vint(obj, i);
+    //    export_functions.push_back(f);
+    //    functionsize--;
+    //}
+    /* Done */
+    //unsigned int exceptionexportsize = get_vint(obj, i);
+    //while (exceptionexportsize > 0) {
+    //    ExceptionExport e;
+    //    e.name = get_vint(obj, i);
+    //    export_exceptions.push_back(e);
+    //    exceptionexportsize--;
+    //}
+
+    //unsigned int interfaceexportsize = get_vint(obj, i);
+    //while (interfaceexportsize > 0) {
+    //    Interface iface;
+    //    iface.name = get_vint(obj, i);
+    //    unsigned int methoddescriptorsize = get_vint(obj, i);
+    //    while (methoddescriptorsize > 0) {
+    //        std::pair<unsigned int, unsigned int> m;
+    //        m.first = get_vint(obj, i);
+    //        m.second = get_vint(obj, i);
+    //        iface.method_descriptors.push_back(m);
+    //        methoddescriptorsize--;
+    //    }
+    //    export_interfaces.push_back(iface);
+    //    interfaceexportsize--;
+    //}
+
+    /* Done */
+    //unsigned int importsize = get_vint(obj, i);
+    //while (importsize > 0) {
+    //    ModuleImport imp;
+    //    imp.name = get_vint(obj, i);
+    //    imp.optional = get_vint(obj, i) != 0;
+    //    if (i+32 > obj.size()) {
+    //        throw BytecodeException("unexpected end of bytecode");
+    //    }
+    //    imp.hash = std::string(&obj[i], &obj[i]+32);
+    //    i += 32;
+    //    imports.push_back(imp);
+    //    importsize--;
+    //}
+
+    /* Done */
+    ///*unsigned int*/ functionsize = get_vint(obj, i);
+    //while (functionsize > 0) {
+    //    FunctionInfo f;
+    //    f.name = get_vint(obj, i);
+    //    f.nest = get_vint(obj, i);
+    //    f.params = get_vint(obj, i);
+    //    f.locals = get_vint(obj, i);
+    //    f.entry = get_vint(obj, i);
+    //    functions.push_back(f);
+    //    functionsize--;
+    //}
+
+    /* Done */
+    //unsigned int exceptionsize = get_vint(obj, i);
+    //while (exceptionsize > 0) {
+    //    ExceptionInfo e;
+    //    e.start = get_vint(obj, i);
+    //    e.end = get_vint(obj, i);
+    //    e.excid = get_vint(obj, i);
+    //    e.handler = get_vint(obj, i);
+    //    e.stack_depth = get_vint(obj, i);
+    //    exceptions.push_back(e);
+    //    exceptionsize--;
+    //}
+
+    //unsigned int classsize = get_vint(obj, i);
+    //while (classsize > 0) {
+    //    ClassInfo c;
+    //    c.name = get_vint(obj, i);
+    //    unsigned int interfacecount = get_vint(obj, i);
+    //    while (interfacecount > 0) {
+    //        std::vector<unsigned int> methods;
+    //        unsigned int methodcount = get_vint(obj, i);
+    //        while (methodcount > 0) {
+    //            methods.push_back(get_vint(obj, i));
+    //            methodcount--;
+    //        }
+    //        c.interfaces.push_back(methods);
+    //        interfacecount--;
+    //    }
+    //    classes.push_back(c);
+    //    classsize--;
+    //}
+
+    //code = Bytes(obj.begin() + i, obj.end());
         }
-    }
 
-    public struct Type
-    {
-        public int name;
-        public int descriptor;
-    }
+        public struct Type
+        {
+            public uint name;
+            public uint descriptor;
+        }
 
-    public struct Function
-    {
-        public int name;
-        public int entry;
-    }
+        public struct Constant
+        {
+            public uint name;
+            public uint type;
+            public byte[] value;
+        }
 
-    public struct ExportFunction
-    {
-        public int name;
-        public int descriptor;
-        public int entry;
-    }
+        public struct Variable
+        {
+            public uint name;
+            public uint type;
+            public uint index;
+        }
 
-    public struct Import
-    {
-        public int name;
-        public char[] hash;
-    }
+        public struct Function
+        {
+            public uint name;
+            public uint descriptor;
+            public uint index;
+        }
 
-    public struct Exception
-    {
-        public int start;
-        public int end;
-        public int exid;
-        public int handler;
-    }
+        public struct ExceptionExport
+        {
+            public uint name;
+            public uint descriptor;
+            public uint index;
+        }
 
-    public class TBytecode
-    {
-        public byte[] source_hash;
-        public int global_size;
-        public int strtablesize;
-        public int strtablelen;
-        public List<String> strings;
-        public int typesize;
-        public int constantsize;
-        public int variablesize;
-        public int export_functionsize;
-        public int functionsize;
-        public int exceptionsize;
-        public int exceptionexportsize;
-        public int interfaceexportsize;
-        public int importsize;
-        public int classsize;
-        public byte[] code;
-        public int codelen;
+        public struct Interface
+        {
+            public uint name;
+            public List<KeyValuePair<uint, uint>> method_descriptors;
+        }
 
-        public List<Type> export_types;
-        public List<ExportFunction> export_functions;
-        public List<Function> functions;
-        public List<Import> imports;
-        public List<Exception> exceptions;
+        public struct ModuleImport
+        {
+            public uint name;
+            public bool optional;
+            public byte[] hash;
+        }
+
+        public struct FunctionInfo
+        {
+            public uint name;
+            public uint nest;
+            public uint args;
+            public uint locals;
+            public uint entry;
+        }
+
+        public struct ExceptionInfo
+        {
+            public uint start;
+            public uint end;
+            public uint exid;
+            public uint handler;
+            public uint stack_depth;
+        }
+
+        public struct ClassInfo
+        {
+            public uint name;
+            public List<List<uint>> interfaces;
+        }
+
+        public struct ExportFunction
+        {
+            public uint name;
+            public uint descriptor;
+            public uint entry;
+        }
     }
 }

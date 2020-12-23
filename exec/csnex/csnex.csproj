@@ -1,59 +1,163 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{022357F8-1D0C-476F-92BB-B4FB255B6971}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>csnex</RootNamespace>
-    <AssemblyName>csnex</AssemblyName>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8D9C01BD-4CB0-3EBD-BC50-2C5B527DF626}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>Win32</Platform>
+    <ProjectName>csnex</ProjectName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFrameworkProfile />
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32' Or '$(Configuration)|$(Platform)'=='Debug|x86'" Label="Configuration">
     <DebugSymbols>true</DebugSymbols>
+    <DefineDebug>true</DefineDebug>
+    <OutputPath>L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\Debug\</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+    <PlatformToolset>v120</PlatformToolset>
+    <AssemblyName>csnex</AssemblyName>
+    <StartAction>Program</StartAction>
+    <StartProgram>L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\Debug\csnex.exe</StartProgram>
     <DebugType>full</DebugType>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningLevel>3</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32' Or '$(Configuration)|$(Platform)'=='Release|x86'" Label="Configuration">
+    <OutputPath>L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\Release\</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+    <PlatformToolset>v120</PlatformToolset>
+    <AssemblyName>csnex</AssemblyName>
+    <StartAction>Program</StartAction>
+    <StartProgram>L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\Release\csnex.exe</StartProgram>
+    <DebugType>none</DebugType>
     <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <ErrorReport>queue</ErrorReport>
+    <Optimize>true</Optimize>
+    <WarningLevel>1</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject>csnex.Program</StartupObject>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32' Or '$(Configuration)|$(Platform)'=='MinSizeRel|x86'" Label="Configuration">
+    <OutputPath>L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\MinSizeRel\</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+    <PlatformToolset>v120</PlatformToolset>
+    <AssemblyName>csnex</AssemblyName>
+    <StartAction>Program</StartAction>
+    <StartProgram>L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\MinSizeRel\csnex.exe</StartProgram>
+    <DebugType>none</DebugType>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32' Or '$(Configuration)|$(Platform)'=='RelWithDebInfo|x86'" Label="Configuration">
+    <DebugSymbols>true</DebugSymbols>
+    <DefineDebug>true</DefineDebug>
+    <OutputPath>L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\RelWithDebInfo\</OutputPath>
+    <PlatformTarget>x64</PlatformTarget>
+    <PlatformToolset>v120</PlatformToolset>
+    <AssemblyName>csnex</AssemblyName>
+    <StartAction>Program</StartAction>
+    <StartProgram>L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\RelWithDebInfo\csnex.exe</StartProgram>
+    <DebugType>full</DebugType>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.CSharp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.CSharp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+    <None Include="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\CMakeLists.txt">
+    </None>
+  </ItemGroup>
+  <Target Condition="'$(Configuration)|$(Platform)'=='Debug|Win32' Or '$(Configuration)|$(Platform)'=='Debug|x86'"
+    Name="CustomCommand_Debug_ef4e6ecde118353defa0055253b9e8a6"
+    Inputs="L:/Dropbox/projects/neon-lang/neon-lang/exec/csnex/CMakeLists.txt;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeCSharpInformation.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeGenericSystem.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeInitializeConfigs.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeSystemSpecificInformation.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeSystemSpecificInitialize.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CSharpUtilities.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\Platform\Windows.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\Platform\WindowsPaths.cmake;L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\CMakeFiles\3.19.2\CMakeCSharpCompiler.cmake;L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\CMakeFiles\3.19.2\CMakeSystem.cmake"
+    Outputs="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\CMakeFiles\generate.stamp">
+    <Exec Command="echo Building Custom Rule L:/Dropbox/projects/neon-lang/neon-lang/exec/csnex/CMakeLists.txt" />
+    <Exec Command="setlocal&#10;&quot;D:\Program Files\CMake\bin\cmake.exe&quot; -SL:/Dropbox/projects/neon-lang/neon-lang/exec/csnex -BL:/Dropbox/projects/neon-lang/neon-lang/exec/csnex --check-stamp-file L:/Dropbox/projects/neon-lang/neon-lang/exec/csnex/CMakeFiles/generate.stamp&#10;if %errorlevel% neq 0 goto :cmEnd&#10;:cmEnd&#10;endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone&#10;:cmErrorLevel&#10;exit /b %1&#10;:cmDone&#10;if %errorlevel% neq 0 goto :VCEnd" />
+  </Target>
+  <Target Condition="'$(Configuration)|$(Platform)'=='Release|Win32' Or '$(Configuration)|$(Platform)'=='Release|x86'"
+    Name="CustomCommand_Release_ef4e6ecde118353defa0055253b9e8a6"
+    Inputs="L:/Dropbox/projects/neon-lang/neon-lang/exec/csnex/CMakeLists.txt;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeCSharpInformation.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeGenericSystem.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeInitializeConfigs.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeSystemSpecificInformation.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeSystemSpecificInitialize.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CSharpUtilities.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\Platform\Windows.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\Platform\WindowsPaths.cmake;L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\CMakeFiles\3.19.2\CMakeCSharpCompiler.cmake;L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\CMakeFiles\3.19.2\CMakeSystem.cmake"
+    Outputs="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\CMakeFiles\generate.stamp">
+    <Exec Command="echo Building Custom Rule L:/Dropbox/projects/neon-lang/neon-lang/exec/csnex/CMakeLists.txt" />
+    <Exec Command="setlocal&#10;&quot;D:\Program Files\CMake\bin\cmake.exe&quot; -SL:/Dropbox/projects/neon-lang/neon-lang/exec/csnex -BL:/Dropbox/projects/neon-lang/neon-lang/exec/csnex --check-stamp-file L:/Dropbox/projects/neon-lang/neon-lang/exec/csnex/CMakeFiles/generate.stamp&#10;if %errorlevel% neq 0 goto :cmEnd&#10;:cmEnd&#10;endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone&#10;:cmErrorLevel&#10;exit /b %1&#10;:cmDone&#10;if %errorlevel% neq 0 goto :VCEnd" />
+  </Target>
+  <Target Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32' Or '$(Configuration)|$(Platform)'=='MinSizeRel|x86'"
+    Name="CustomCommand_MinSizeRel_ef4e6ecde118353defa0055253b9e8a6"
+    Inputs="L:/Dropbox/projects/neon-lang/neon-lang/exec/csnex/CMakeLists.txt;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeCSharpInformation.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeGenericSystem.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeInitializeConfigs.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeSystemSpecificInformation.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeSystemSpecificInitialize.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CSharpUtilities.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\Platform\Windows.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\Platform\WindowsPaths.cmake;L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\CMakeFiles\3.19.2\CMakeCSharpCompiler.cmake;L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\CMakeFiles\3.19.2\CMakeSystem.cmake"
+    Outputs="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\CMakeFiles\generate.stamp">
+    <Exec Command="echo Building Custom Rule L:/Dropbox/projects/neon-lang/neon-lang/exec/csnex/CMakeLists.txt" />
+    <Exec Command="setlocal&#10;&quot;D:\Program Files\CMake\bin\cmake.exe&quot; -SL:/Dropbox/projects/neon-lang/neon-lang/exec/csnex -BL:/Dropbox/projects/neon-lang/neon-lang/exec/csnex --check-stamp-file L:/Dropbox/projects/neon-lang/neon-lang/exec/csnex/CMakeFiles/generate.stamp&#10;if %errorlevel% neq 0 goto :cmEnd&#10;:cmEnd&#10;endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone&#10;:cmErrorLevel&#10;exit /b %1&#10;:cmDone&#10;if %errorlevel% neq 0 goto :VCEnd" />
+  </Target>
+  <Target Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32' Or '$(Configuration)|$(Platform)'=='RelWithDebInfo|x86'"
+    Name="CustomCommand_RelWithDebInfo_ef4e6ecde118353defa0055253b9e8a6"
+    Inputs="L:/Dropbox/projects/neon-lang/neon-lang/exec/csnex/CMakeLists.txt;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeCSharpInformation.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeGenericSystem.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeInitializeConfigs.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeSystemSpecificInformation.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CMakeSystemSpecificInitialize.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\CSharpUtilities.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\Platform\Windows.cmake;D:\Program Files\CMake\share\cmake-3.19\Modules\Platform\WindowsPaths.cmake;L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\CMakeFiles\3.19.2\CMakeCSharpCompiler.cmake;L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\CMakeFiles\3.19.2\CMakeSystem.cmake"
+    Outputs="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\CMakeFiles\generate.stamp">
+    <Exec Command="echo Building Custom Rule L:/Dropbox/projects/neon-lang/neon-lang/exec/csnex/CMakeLists.txt" />
+    <Exec Command="setlocal&#10;&quot;D:\Program Files\CMake\bin\cmake.exe&quot; -SL:/Dropbox/projects/neon-lang/neon-lang/exec/csnex -BL:/Dropbox/projects/neon-lang/neon-lang/exec/csnex --check-stamp-file L:/Dropbox/projects/neon-lang/neon-lang/exec/csnex/CMakeFiles/generate.stamp&#10;if %errorlevel% neq 0 goto :cmEnd&#10;:cmEnd&#10;endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone&#10;:cmErrorLevel&#10;exit /b %1&#10;:cmDone&#10;if %errorlevel% neq 0 goto :VCEnd" />
+  </Target>
+  <ItemGroup>
+    <None Include="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\App.config">
+    </None>
+    <Compile Include="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\Bytecode.cs" />
+    <Compile Include="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\Cell.cs" />
+    <Compile Include="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\Exceptions.cs" />
+    <Compile Include="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\exec.cs" />
+    <Compile Include="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\Global.cs" />
+    <Compile Include="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\Number.cs" />
+    <Compile Include="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\opcode.cs" />
+    <Compile Include="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\Program.cs" />
+    <Compile Include="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Bytecode.cs" />
-    <Compile Include="Cell.cs" />
-    <Compile Include="Exceptions.cs" />
-    <Compile Include="opcode.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Reference Include="System">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+    <Reference Include="System.Core">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+    <Reference Include="System.Data">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <ProjectReference Include="L:\Dropbox\projects\neon-lang\neon-lang\exec\csnex\ZERO_CHECK.vcxproj">
+      <Project>{7089748C-B0D9-3AF2-B5E4-775371D907DB}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'MinSizeRel'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'RelWithDebInfo'">
+  </PropertyGroup>
+  <PropertyGroup>
+    <BuildDependsOn>
+      CustomCommand_Debug_ef4e6ecde118353defa0055253b9e8a6;
+      CustomCommand_MinSizeRel_ef4e6ecde118353defa0055253b9e8a6;
+      CustomCommand_RelWithDebInfo_ef4e6ecde118353defa0055253b9e8a6;
+      CustomCommand_Release_ef4e6ecde118353defa0055253b9e8a6;
+      $(BuildDependsOn)
+</BuildDependsOn>
+  </PropertyGroup>
 </Project>
