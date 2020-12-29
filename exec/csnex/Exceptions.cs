@@ -46,6 +46,21 @@ namespace csnex
         }
     }
 
+    public class NeonArrayIndexException : NeonException {
+
+        public NeonArrayIndexException() {
+        }
+
+        public NeonArrayIndexException(string message) : base(message) {
+        }
+
+        public NeonArrayIndexException(string message, params object[] args) : base(string.Format(message, args)) {
+        }
+
+        public NeonArrayIndexException(string message, Exception innerException) : base(message, innerException) {
+        }
+    }
+
     public class NeonNotImplementedException : NeonException {
 
         //public InvalidNeonOpcodeException()
@@ -90,6 +105,20 @@ namespace csnex
         }
 
         public NeonDivideByZeroException(string message, Exception innerException) : base(message, innerException) {
+        }
+    }
+
+    public class RtlException : NeonException {
+        public RtlException() {
+        }
+
+        public RtlException(string message) : base(message) {
+        }
+
+        public RtlException(string message, params object[] args) : base(string.Format(message, args)) {
+        }
+
+        public RtlException(string message, Exception innerException) : base(message, innerException) {
         }
     }
 

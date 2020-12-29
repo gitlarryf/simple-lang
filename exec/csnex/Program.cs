@@ -177,7 +177,7 @@ namespace csnex
             //    invoke(modules[*x], 0);
             //}
             for (int g = 0; g < bytecode.global_size; g++) {
-                bytecode.globals.Add(new Cell());
+                bytecode.globals.Add(new Cell(Cell.Types.Address));
             }
 
             int r = Loop();
@@ -187,10 +187,13 @@ namespace csnex
             return r;
         }
 
-        #region Opcode Handlers
+#region Opcode Handlers
+#region PUSHx Opcodes
         void PUSHB()
         {
-            throw new NotImplementedException("PUSHB");
+            bool val = bytecode.code[ip+1] != 0;
+            ip += 2;
+            stack.Push(new Cell(val));
         }
 
         void PUSHN()
@@ -218,7 +221,6 @@ namespace csnex
             uint addr = Bytecode.get_vint(bytecode.code, (uint)bytecode.code.Length, ref ip);
             Debug.Assert(addr < bytecode.global_size);
             stack.Push(bytecode.globals[(int)addr]);
-
         }
 
         void PUSHPPG()
@@ -245,10 +247,13 @@ namespace csnex
         {
             throw new NotImplementedException("PUSHI");
         }
-
+#endregion
+#region LOADx Opcodes
         void LOADB()
         {
-            throw new NotImplementedException("LOADB");
+            ip++;
+            Cell addr = stack.Pop().Address;
+            stack.Push(new Cell(addr.Boolean));
         }
 
         void LOADN()
@@ -260,7 +265,9 @@ namespace csnex
 
         void LOADS()
         {
-            throw new NotImplementedException("LOADS");
+            ip++;
+            Cell addr = stack.Pop().Address;
+            stack.Push(new Cell(addr.String));
         }
 
         void LOADY()
@@ -270,7 +277,9 @@ namespace csnex
 
         void LOADA()
         {
-            throw new NotImplementedException("LOADA");
+            ip++;
+            Cell addr = stack.Pop().Address;
+            stack.Push(new Cell(addr.Array));
         }
 
         void LOADD()
@@ -292,23 +301,29 @@ namespace csnex
         {
             throw new NotImplementedException("LOADV");
         }
-
+#endregion
+#region STOREx Opcodes
         void STOREB()
         {
-            throw new NotImplementedException("STOREB");
+            ip++;
+            Cell addr = stack.Pop();
+            addr.Address = stack.Pop();
         }
 
         void STOREN()
         {
             ip++;
             Cell addr = stack.Pop();
-            Number num = stack.Pop().Number;
-            addr.Address = new Cell(num);
+            //Number num = stack.Pop().Number;
+            //Cell num = stack.Pop();
+            addr.Address = stack.Pop();
         }
 
         void STORES()
         {
-            throw new NotImplementedException("STORES");
+            ip++;
+            Cell addr = stack.Pop();
+            addr.Address = stack.Pop();
         }
 
         void STOREY()
@@ -318,7 +333,9 @@ namespace csnex
 
         void STOREA()
         {
-            throw new NotImplementedException("STOREA");
+            ip++;
+            Cell addr = stack.Pop();
+            addr.Address = stack.Pop();
         }
 
         void STORED()
@@ -340,7 +357,8 @@ namespace csnex
         {
             throw new NotImplementedException("STOREV");
         }
-
+        #endregion
+#region Arithmetic Opcodes
         void NEGN()
         {
             ip++;
@@ -404,7 +422,8 @@ namespace csnex
             }
             stack.Push(new Cell(Number.Powof(a, b)));
         }
-
+        #endregion
+#region Comparison Opcodes
         void EQB()
         {
             throw new NotImplementedException("EQB");
@@ -480,7 +499,10 @@ namespace csnex
 
         void GTS()
         {
-            throw new NotImplementedException("GTS");
+            ip++;
+            Cell b = stack.Pop();
+            Cell a = stack.Pop();
+            stack.Push(new Cell(String.Compare(a.String, b.String) > 0));
         }
 
         void LES()
@@ -562,7 +584,8 @@ namespace csnex
         {
             throw new NotImplementedException("NEV");
         }
-
+        #endregion
+#region Logic Opcodes
         void ANDB()
         {
             throw new NotImplementedException("ANDB");
@@ -575,17 +598,47 @@ namespace csnex
 
         void NOTB()
         {
-            throw new NotImplementedException("NOTB");
+            ip++;
+            bool x = stack.Pop().Boolean;
+            stack.Push(new Cell(!x));
         }
-
+        #endregion
+#region Index Opcodes
         void INDEXAR()
         {
-            throw new NotImplementedException("INDEXAR");
+            ip++;
+            Number index = stack.Pop().Number;
+            Cell addr = stack.Pop().Address;
+            if (!index.IsInteger()) {
+                throw new NeonArrayIndexException(index.ToString());
+            }
+            Int64 i = (Int64)index;
+            if (i < 0) {
+                throw new NeonArrayIndexException(((Int64)index).ToString());
+            }
+            UInt64 j = (UInt64)i;
+
+            if (j >= (uint)addr.Array.Count) {
+                throw new NeonArrayIndexException(((UInt64)index).ToString());
+            }
+            stack.Push(addr.ArrayIndexForRead((uint)j));
         }
 
         void INDEXAW()
         {
-            throw new NotImplementedException("INDEXAW");
+            ip++;
+            Number index = stack.Pop().Number;
+            Cell addr = stack.Pop().Address;
+
+            if (!index.IsInteger()) {
+                throw new NeonArrayIndexException(index.ToString());
+            }
+            Int64 i = (Int64)index;
+            if (i < 0) {
+                throw new NeonArrayIndexException(((Int64)index).ToString());
+            }
+            UInt64 j = (UInt64)i;
+            stack.Push(addr.ArrayIndexForWrite((uint)j));
         }
 
         void INDEXAV()
@@ -612,7 +665,8 @@ namespace csnex
         {
             throw new NotImplementedException("INDEXDV");
         }
-
+        #endregion
+#region INx Opcdes
         void INA()
         {
             throw new NotImplementedException("INA");
@@ -622,20 +676,21 @@ namespace csnex
         {
             throw new NotImplementedException("IND");
         }
-
+#endregion
+#region CALLx Opcodes
         void CALLP()
         {
             uint start_ip = ip;
             ip++;
             UInt32 val = Bytecode.get_vint(bytecode.code, bytecode.codelen, ref ip);
             string func = bytecode.strtable[(int)val];
-            try {
+            //try {
                 global.dispatch(func);
                 //rtl_call(stack, func, rtl_call_tokens[val]);
-            } catch (RtlException x) {
-                ip = start_ip;
-                raise(x);
-            }
+            //} catch (RtlException x) {
+            //    ip = start_ip;
+            //    raise(x);
+            //}
         }
 
         void CALLF()
@@ -652,7 +707,8 @@ namespace csnex
         {
             throw new NotImplementedException("CALLI");
         }
-
+        #endregion
+#region JUMP Opcodes
         void JUMP()
         {
             ip++;
@@ -664,7 +720,7 @@ namespace csnex
         {
             ip++;
             UInt32 target = Bytecode.get_vint(bytecode.code, bytecode.codelen, ref ip);
-            bool a = stack.Pop().Bool;
+            bool a = stack.Pop().Boolean;
             if (!a) {
                 ip = target;
             }
@@ -674,7 +730,7 @@ namespace csnex
         {
             ip++;
             UInt32 target = Bytecode.get_vint(bytecode.code, bytecode.codelen, ref ip);
-            bool a = stack.Pop().Bool;
+            bool a = stack.Pop().Boolean;
             if (a) {
                 ip = target;
             }
@@ -684,11 +740,13 @@ namespace csnex
         {
             throw new NotImplementedException("JFCHAIN");
         }
-
+#endregion
+#region Stack Handler Opcodes
         void DUP()
         {
             ip++;
-            stack.Push(new Cell(stack.Peek()));
+            Cell top = stack.Peek();
+            stack.Push(top);
         }
 
         void DUPX1()
@@ -698,7 +756,8 @@ namespace csnex
 
         void DROP()
         {
-            throw new NotImplementedException("DROP");
+            ip++;
+            stack.Pop();
         }
 
         void RET()
@@ -707,7 +766,7 @@ namespace csnex
             // ToDo: Implement Call stack
             //ip = callstack.Pop();
         }
-
+#endregion
         void CALLE()
         {
             throw new NotImplementedException("CALLE");
@@ -715,7 +774,14 @@ namespace csnex
 
         void CONSA()
         {
-            throw new NotImplementedException("CONSA");
+            ip++;
+            int val = (int)Bytecode.get_vint(bytecode.code, bytecode.codelen, ref ip);
+            List<Cell> a = new List<Cell>(val);
+            while (val > 0) {
+                a[a.Count - val] = stack.Pop();
+                val--;
+            }
+            stack.Push(new Cell(a));
         }
 
         void CONSD()
@@ -757,7 +823,19 @@ namespace csnex
 
         void JUMPTBL()
         {
-            throw new NotImplementedException("JUMPTBL");
+            ip++;
+            UInt32 val = Bytecode.get_vint(bytecode.code, bytecode.codelen, ref ip);
+            Number n = stack.Pop().Number;
+            if (n.IsInteger() && !n.IsNegative()) {
+                UInt32 i = (UInt32)n;
+                if(i < val) {
+                    ip += 6 * i;
+                } else {
+                    ip += 6 * val;
+                }
+            } else {
+                ip += 6 * val;
+            }
         }
 
         void CALLX()
@@ -911,7 +989,6 @@ namespace csnex
             }
             return exit_code;
         }
-
     }
 
     static class Program
@@ -924,7 +1001,7 @@ namespace csnex
             Console.Error.Write("   {0} [options] program.neonx\n", gOptions.ExecutableName);
             Console.Error.Write("\n Where [options] is one or more of the following:\n");
             Console.Error.Write("     -d       Display executor debug stats.\n");
-            Console.Error.Write("     -D       Display executor disassembly during run.\n");
+            Console.Error.Write("     -t       Trace execution disassembly during run.\n");
             Console.Error.Write("     -h       Display this help screen.\n");
             Console.Error.Write("     -n       No Assertions\n");
         }
@@ -941,7 +1018,7 @@ namespace csnex
                         ShowUsage();
                         Environment.Exit(1);
                     }
-                    else if (args[nIndex][1] == 'D')
+                    else if (args[nIndex][1] == 't')
                     {
                         gOptions.ExecutorDisassembly = true;
                     }
@@ -996,12 +1073,11 @@ namespace csnex
                 {
                     fs = new System.IO.FileStream(gOptions.Filename, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read);
                 }
-                catch (System.IO.FileNotFoundException ex)
+                catch (Exception ex)
                 {
                     Console.Error.Write("Could not open Neon executable: {0}\nError: {1}.\n", gOptions.Filename, ex.Message);
                     return 2;
                 }
-
 
                 long nSize = fs.Length;
                 Executor exec = new Executor(gOptions);
@@ -1034,7 +1110,6 @@ namespace csnex
                 //                        (((float)exec->diagnostics.time_end - exec->diagnostics.time_start) / CLOCKS_PER_SEC) * 1000
                 //        );
                     }
-
             }
             return retval;
         }

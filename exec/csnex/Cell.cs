@@ -24,22 +24,28 @@ namespace csnex
 
         public Cell Address;
         public List<Cell> Array;
-        public Boolean Bool;
+        public Boolean Boolean;
         public Dictionary<String, Cell> Dictionary;
         public Number Number;
+        public Object Object;
         public String String;
 
         public Types type { get; private set; }
+
+        public Cell()
+        {
+            type = Types.None;
+        }
+
+        public Cell(Types t)
+        {
+            type = t;
+        }
 
         public Cell(Cell c)
         {
             Address = c;
             type = Types.Address;
-        }
-
-        public Cell()
-        {
-            type = Types.None;
         }
 
         public Cell(List<Cell> a)
@@ -50,7 +56,7 @@ namespace csnex
 
         public Cell(Boolean b)
         {
-            Bool = b;
+            Boolean = b;
             type = Types.Boolean;
         }
 
@@ -66,22 +72,17 @@ namespace csnex
             type = Types.Number;
         }
 
+        public Cell(Object o)
+        {
+            Object = o;
+            type = Types.Object;
+        }
+
         public Cell(String s)
         {
             String = s;
             type = Types.String;
         }
-
-        
-        //public Cell Address
-        //{
-        //    get {
-        //        return _Address;
-        //    }
-        //    set {
-        //        _Address = value;
-        //    }
-        //}
 
         public void FromCell(Cell c)
         {
@@ -108,13 +109,21 @@ namespace csnex
 
         public void ResetCell()
         {
-            Address = new Cell();
-            Array = new List<Cell>();
-            Bool = false;
-            Dictionary = new Dictionary<string, Cell>();
-            Number = new Number();
-            String = "";
+            Address = null;
+            Boolean = false;
+            Dictionary = null;
+            Number = null;
+            Object = null;
+            String = null;
             type = Types.None;
+            //if (Address != null) {
+            //    Address = new Cell();
+            //}
+            //Array = new List<Cell>();
+            //Bool = false;
+            //Dictionary = new Dictionary<string, Cell>();
+            //Number = new Number();
+            //String = "";
             //switch (type) {
             //    case Types.Address:
             //        Address = null;
@@ -143,10 +152,45 @@ namespace csnex
         static public string toString(Cell c)
         {
             switch (c.type) {
+                case Types.Boolean:
+                    if (c.Boolean) {
+                        return "TRUE";
+                    }
+                    return "FALSE";
                 case Types.Number:
                     return c.Number.ToString();
+                default:
+                    return "null";
             }
-            return "null";
+            throw new NeonNotImplementedException();
         }
+
+        public Cell ArrayIndexForWrite(uint i)
+        {
+            if (type == Types.None) {
+                type = Types.Array;
+            }
+            Debug.Assert(type == Types.Array);
+            if (Array == null) {
+                Array = new List<Cell>();
+            }
+            if (i >= Array.Count) {
+                int s = Array.Count;
+                for (int n = s; n < i+1; n++) {
+                    Array.Insert(n, new Cell());
+                }
+            }
+            return Array.ElementAt((int)i);
+        }
+
+        public Cell ArrayIndexForRead(uint i)
+        {
+            if (type == Types.None) {
+                type = Types.Array;
+            }
+            Debug.Assert(type == Types.Array);
+            return Array.ElementAt((int)i);
+        }
+
     }
 }
