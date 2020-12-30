@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 
 namespace csnex
 {
     public class Cell
     {
-        public enum Types
+        public enum Type
         {
             None,
             Address,
@@ -30,14 +29,14 @@ namespace csnex
         public Object Object;
         public String String;
 
-        public Types type { get; private set; }
+        public Type type { get; private set; }
 
         public Cell()
         {
-            type = Types.None;
+            type = Type.None;
         }
 
-        public Cell(Types t)
+        public Cell(Type t)
         {
             type = t;
         }
@@ -45,63 +44,63 @@ namespace csnex
         public Cell(Cell c)
         {
             Address = c;
-            type = Types.Address;
+            type = Type.Address;
         }
 
         public Cell(List<Cell> a)
         {
             Array = a;
-            type = Types.Array;
+            type = Type.Array;
         }
 
         public Cell(Boolean b)
         {
             Boolean = b;
-            type = Types.Boolean;
+            type = Type.Boolean;
         }
 
         public Cell(Dictionary<String, Cell> d)
         {
             Dictionary = d;
-            type = Types.Dictionary;
+            type = Type.Dictionary;
         }
 
         public Cell(Number d)
         {
             Number = d;
-            type = Types.Number;
+            type = Type.Number;
         }
 
         public Cell(Object o)
         {
             Object = o;
-            type = Types.Object;
+            type = Type.Object;
         }
 
         public Cell(String s)
         {
             String = s;
-            type = Types.String;
+            type = Type.String;
         }
 
         public void FromCell(Cell c)
         {
             switch (c.type) {
-                case Types.Address:
+                case Type.Address:
                     Address = c.Address;
                     break;
-                case Types.Array:
+                case Type.Array:
                     throw new NeonNotImplementedException();
-                case Types.Boolean:
+                case Type.Boolean:
                     throw new NeonNotImplementedException();
-                case Types.Dictionary:
+                case Type.Dictionary:
                     throw new NeonNotImplementedException();
-                case Types.Number:
+                case Type.Number:
                     Number = c.Number;
                     break;
-                case Types.String:
+                case Type.String:
                     throw new NeonNotImplementedException();
-                case Types.None:
+                case Type.None:
                     throw new NeonNotImplementedException();
             }
             type = c.type;
@@ -115,62 +114,29 @@ namespace csnex
             Number = null;
             Object = null;
             String = null;
-            type = Types.None;
-            //if (Address != null) {
-            //    Address = new Cell();
-            //}
-            //Array = new List<Cell>();
-            //Bool = false;
-            //Dictionary = new Dictionary<string, Cell>();
-            //Number = new Number();
-            //String = "";
-            //switch (type) {
-            //    case Types.Address:
-            //        Address = null;
-            //        break;
-            //    case Types.Array:
-            //        _Array = new List<Cell>();
-            //        break;
-            //    case Types.Boolean:
-            //        _Bool = false;
-            //        break;
-            //    case Types.Dictionary:
-            //        _Dictionary = new Dictionary<string, Cell>();
-            //        break;
-            //    case Types.Number:
-            //        Number = 0;
-            //        break;
-            //    case Types.String:
-            //        String = "";
-            //        break;
-            //    case Types.None:
-            //        //Debug.Assert(this.type != Types.None, "Cell type is Cell::Types::None");
-            //        break;
-            //}
+            type = Type.None;
         }
 
         static public string toString(Cell c)
         {
             switch (c.type) {
-                case Types.Boolean:
+                case Type.Boolean:
                     if (c.Boolean) {
                         return "TRUE";
                     }
                     return "FALSE";
-                case Types.Number:
+                case Type.Number:
                     return c.Number.ToString();
-                default:
-                    return "null";
             }
             throw new NeonNotImplementedException();
         }
 
         public Cell ArrayIndexForWrite(uint i)
         {
-            if (type == Types.None) {
-                type = Types.Array;
+            if (type == Type.None) {
+                type = Type.Array;
             }
-            Debug.Assert(type == Types.Array);
+            Debug.Assert(type == Type.Array);
             if (Array == null) {
                 Array = new List<Cell>();
             }
@@ -185,12 +151,11 @@ namespace csnex
 
         public Cell ArrayIndexForRead(uint i)
         {
-            if (type == Types.None) {
-                type = Types.Array;
+            if (type == Type.None) {
+                type = Type.Array;
             }
-            Debug.Assert(type == Types.Array);
+            Debug.Assert(type == Type.Array);
             return Array.ElementAt((int)i);
         }
-
     }
 }

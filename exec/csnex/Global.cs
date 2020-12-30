@@ -1,8 +1,7 @@
 ﻿using System;
 
-namespace csnex {
-
-
+namespace csnex
+{
     public class Global
     {
         private Executor Exec;

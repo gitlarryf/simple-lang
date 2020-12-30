@@ -1,10 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Xml;
-using System.Collections.Generic;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.InteropServices;
-using System.Reflection;
 
 internal static partial class CodeExtensions
 {

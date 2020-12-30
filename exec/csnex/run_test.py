@@ -4,17 +4,11 @@ import os
 import subprocess
 import sys
 
-csnex = os.path.join("exec", "csnex", "csnex")
-
 i = 1
-while i < len(sys.argv):
-    if sys.argv[i] == "--csnex":
-        i += 1
-        csnex = sys.argv[i]
-    else:
-        break
-    i += 1
 
 fullname = sys.argv[i]
 
-subprocess.check_call([csnex, fullname + "x"] + sys.argv[i+1:])
+if sys.platform == "win32":
+    subprocess.check_call(["exec/csnex/csnex.exe", fullname + "x"] + sys.argv[i+1:])
+else:
+    subprocess.check_call(["mono", "exec/csnex/csnex.exe", fullname + "x"] + sys.argv[i+1:])

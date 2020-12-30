@@ -15,7 +15,7 @@ namespace csnex
     public class Exceptions {
     }
 
-    public class NeonException : System.ApplicationException {
+    public class NeonException : ApplicationException {
 
         public NeonException() {
         }
