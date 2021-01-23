@@ -39,6 +39,50 @@ namespace csnex
             return exit_code;
         }
 
+        private void RaiseLiteral(string exce)
+        {
+            Cell *exceptionvar = cell_createArrayCell(3);
+            cell_setString(&exceptionvar->array->data[0], string_fromString(name));
+            cell_copyCell(&exceptionvar->array->data[1], info);
+            cell_setNumber(&exceptionvar->array->data[2], number_from_uint64(self->ip));
+            uint64_t tip = self->ip;
+            TModule *tmodule = self->module;
+            uint32_t sp = self->callstacktop;
+            for (;;) {
+                uint64_t i;
+                for (i = 0; i < tmodule->bytecode->exceptionsize; i++) {
+                    if ((tmodule->bytecode->exceptions[i].start <= tip) && (tip < tmodule->bytecode->exceptions[i].end)) {
+                        TString *handler = tmodule->bytecode->strings[tmodule->bytecode->exceptions[i].exid];
+                        if ((string_compareString(name, handler) == 0) || (name->length > handler->length && string_startsWith(name, handler) && name->data[handler->length] == '.')) {
+                            self->ip = tmodule->bytecode->exceptions[i].handler;
+                            self->module = tmodule;
+                            while (self->stack->top > (((framestack_isEmpty(self->framestack) ? -1 : framestack_topFrame(self->framestack)->opstack_depth) + (int32_t)self->module->bytecode->exceptions[i].stack_depth))) {
+                                pop(self->stack);
+                            }
+                            self->callstacktop = sp;
+                            push(self->stack, exceptionvar);
+                            cell_freeCell(info);
+                            return;
+                        }
+                    }
+                }
+                if (sp == 0) {
+                    break;
+                }
+                if (!framestack_isEmpty(self->framestack)) {
+                    framestack_popFrame(self->framestack);
+                }
+                tip = self->callstack[sp].ip;
+                tmodule = self->callstack[sp].mod;
+                sp -= 1;
+            }
+            Cell *inf = object_toString(info->object);
+            fprintf(stderr, "Unhandled exception %s (%s)\n", TCSTR(name), TCSTR(inf->string));
+            cell_freeCell(exceptionvar);
+            cell_freeCell(info);
+            cell_freeCell(inf);
+        }
+
 #region Opcode Handlers
 #region PUSHx Opcodes
         void PUSHB()
@@ -662,7 +706,12 @@ namespace csnex
 #region Exception Opcodes
         void EXCEPT()
         {
-            throw new NotImplementedException(string.Format("{0} not implemented.", MethodBase.GetCurrentMethod().Name));
+            int start_ip = ip;
+            ip++;
+            int val = Bytecode.Get_VInt(bytecode.code, ref ip);
+            ip = start_ip;
+            Cell info = stack.Pop();
+            RaiseLiteral(bytecode.strtable[val], info);
         }
 #endregion
 #region Memory Opcodes
