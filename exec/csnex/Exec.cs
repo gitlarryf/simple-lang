@@ -44,29 +44,27 @@ namespace csnex
             return exit_code;
         }
 
-        private void RaiseLiteral(string exce)
+        private void RaiseLiteral(string name, Cell info)
         {
-            Cell *exceptionvar = cell_createArrayCell(3);
-            cell_setString(&exceptionvar->array->data[0], string_fromString(name));
-            cell_copyCell(&exceptionvar->array->data[1], info);
-            cell_setNumber(&exceptionvar->array->data[2], number_from_uint64(self->ip));
-            uint64_t tip = self->ip;
-            TModule *tmodule = self->module;
-            uint32_t sp = self->callstacktop;
+            List<Cell> exceptionvar = new List<Cell>();
+            exceptionvar.Add(new Cell(name));
+            exceptionvar.Add(info);
+            exceptionvar.Add(new Cell(new Number(ip)));
+            int tip = ip;
+            int sp = Callstack.Count;
             for (;;) {
-                uint64_t i;
-                for (i = 0; i < tmodule->bytecode->exceptionsize; i++) {
-                    if ((tmodule->bytecode->exceptions[i].start <= tip) && (tip < tmodule->bytecode->exceptions[i].end)) {
-                        TString *handler = tmodule->bytecode->strings[tmodule->bytecode->exceptions[i].exid];
-                        if ((string_compareString(name, handler) == 0) || (name->length > handler->length && string_startsWith(name, handler) && name->data[handler->length] == '.')) {
-                            self->ip = tmodule->bytecode->exceptions[i].handler;
-                            self->module = tmodule;
-                            while (self->stack->top > (((framestack_isEmpty(self->framestack) ? -1 : framestack_topFrame(self->framestack)->opstack_depth) + (int32_t)self->module->bytecode->exceptions[i].stack_depth))) {
-                                pop(self->stack);
-                            }
-                            self->callstacktop = sp;
-                            push(self->stack, exceptionvar);
-                            cell_freeCell(info);
+                int i;
+                for (i = 0; i < bytecode.exceptions.Count; i++) {
+                    if ((bytecode.exceptions[i].start <= tip) && (tip < bytecode.exceptions[i].end)) {
+                        string handler = bytecode.strtable[bytecode.exceptions[i].exid];
+                        if ((string.Compare(name, handler) == 0) || (name.Length > handler.Length && name.StartsWith(handler) && name[handler.Length] == '.')) {
+                            ip = bytecode.exceptions[i].handler;
+                            // ToDo: Implement FramekStack / Stack leveling
+                            //while (self->stack->top > (((framestack_isEmpty(self->framestack) ? -1 : framestack_topFrame(self->framestack)->opstack_depth) + (int32_t)self->module->bytecode->exceptions[i].stack_depth))) {
+                            //    pop(self->stack);
+                            //}
+                            Callstack.Push(sp);
+                            stack.Push(new Cell(exceptionvar));
                             return;
                         }
                     }
@@ -74,18 +72,11 @@ namespace csnex
                 if (sp == 0) {
                     break;
                 }
-                if (!framestack_isEmpty(self->framestack)) {
-                    framestack_popFrame(self->framestack);
-                }
-                tip = self->callstack[sp].ip;
-                tmodule = self->callstack[sp].mod;
+                tip = Callstack.Peek();
                 sp -= 1;
             }
-            Cell *inf = object_toString(info->object);
-            fprintf(stderr, "Unhandled exception %s (%s)\n", TCSTR(name), TCSTR(inf->string));
-            cell_freeCell(exceptionvar);
-            cell_freeCell(info);
-            cell_freeCell(inf);
+            string inf = info.Object.toString();
+            Console.Error.WriteLine(string.Format("Unhandled exception {0} ({1})\n", name, inf));
         }
 
 #region Opcode Handlers
@@ -695,7 +686,15 @@ namespace csnex
 #region Construct Opcodes
         void CONSA()
         {
-            throw new NotImplementedException(string.Format("{0} not implemented.", MethodBase.GetCurrentMethod().Name));
+            ip++;
+            int val = Bytecode.Get_VInt(bytecode.code, ref ip);
+            List<Cell> a = new List<Cell>();
+
+            while (val > 0) {
+                a.Add(stack.Pop());
+                val--;
+            }
+            stack.Push(new Cell(a));
         }
 
         void CONSD()
