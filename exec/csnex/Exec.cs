@@ -15,7 +15,11 @@ namespace csnex
             global = new Global(this);
             bytecode = bc;
             ParamRecursionLimit = 2000; // ToDo: Add runtime$setRecursionLimit()
+            library = new List<KeyValuePair<string, object>>();
+            library.Add(new KeyValuePair<string, object>("sys", new rtl.sys(this)));
         }
+
+        private List<KeyValuePair<string, object>> library;
 
         private int exit_code;
         private readonly Bytecode bytecode;
@@ -44,7 +48,7 @@ namespace csnex
             return exit_code;
         }
 
-        private void RaiseLiteral(string name, Cell info)
+        public void RaiseLiteral(string name, Cell info)
         {
             List<Cell> exceptionvar = new List<Cell>();
             exceptionvar.Add(new Cell(name));
@@ -117,7 +121,12 @@ namespace csnex
 
         void PUSHPPG()
         {
-            throw new NotImplementedException(string.Format("{0} not implemented.", MethodBase.GetCurrentMethod().Name));
+            ip++;
+            int addr = Bytecode.Get_VInt(bytecode.code, ref ip);
+            string var = bytecode.strtable[addr];
+            object obj = library.Find(a => a.Key == var.Substring(0, var.IndexOf('$'))).Value;
+            PropertyInfo pi = obj.GetType().GetProperty(var.Substring(var.IndexOf('$')+1));
+            stack.Push(new Cell((Cell)pi.GetValue(obj)));
         }
 
         void PUSHPMG()
@@ -380,12 +389,18 @@ namespace csnex
 
         void LEN()
         {
-            throw new NotImplementedException(string.Format("{0} not implemented.", MethodBase.GetCurrentMethod().Name));
+            ip++;
+            Number b = stack.Pop().Number;
+            Number a = stack.Pop().Number;
+            stack.Push(new Cell(Number.IsLessOrEqual(a, b)));
         }
 
         void GEN()
         {
-            throw new NotImplementedException(string.Format("{0} not implemented.", MethodBase.GetCurrentMethod().Name));
+            ip++;
+            Number b = stack.Pop().Number;
+            Number a = stack.Pop().Number;
+            stack.Push(new Cell(Number.IsGreaterOrEqual(a, b)));
         }
 
         void EQS()
@@ -405,7 +420,10 @@ namespace csnex
 
         void GTS()
         {
-            throw new NotImplementedException(string.Format("{0} not implemented.", MethodBase.GetCurrentMethod().Name));
+            ip++;
+            string b = stack.Pop().String;
+            string a = stack.Pop().String;
+            stack.Push(new Cell(string.Compare(a, b) > 0));
         }
 
         void LES()
@@ -559,7 +577,17 @@ namespace csnex
             ip++;
             int val = Bytecode.Get_VInt(bytecode.code, ref ip);
             string func = bytecode.strtable[val];
-            global.Dispatch(func);
+
+            if (func.IndexOf('$') > 0) {
+                // Call a module function from our csnex.rtl namspace
+                object lib = library.Find(a => a.Key == func.Substring(0, func.IndexOf('$'))).Value;
+                MethodInfo mi = lib.GetType().GetMethod(func.Substring(func.IndexOf('$')+1));
+                mi.Invoke(lib, null);
+            } else {
+                // Call a global function
+                MethodInfo mi = global.GetType().GetMethod(func);
+                mi.Invoke(global, null);
+            }
         }
 
         void CALLF()
@@ -617,7 +645,12 @@ namespace csnex
 
         void JT()
         {
-            throw new NotImplementedException(string.Format("{0} not implemented.", MethodBase.GetCurrentMethod().Name));
+            ip++;
+            int target = Bytecode.Get_VInt(bytecode.code, ref ip);
+            bool a = stack.Pop().Boolean;
+            if (a) {
+                ip = target;
+            }
         }
 
         void JFCHAIN()
@@ -666,7 +699,8 @@ namespace csnex
 
         void DROP()
         {
-            throw new NotImplementedException(string.Format("{0} not implemented.", MethodBase.GetCurrentMethod().Name));
+            ip++;
+            stack.Pop();
         }
 
         void DROPN()

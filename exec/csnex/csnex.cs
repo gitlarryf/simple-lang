@@ -38,8 +38,8 @@ namespace csnex
                         return false;
                     }
                 } else {
-                    Retval = true;
                     gOptions.Filename = args[nIndex];
+                    return true;
                 }
             }
             if (gOptions.Filename.Length == 0) {

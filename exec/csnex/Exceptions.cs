@@ -5,13 +5,22 @@ namespace csnex
     [Serializable()]
     public class NeonException: ApplicationException
     {
+        public string name;
+        public Cell info;
+
         public NeonException() {
         }
 
-        public NeonException(string message) : base(message) {
+        public NeonException(string message) : base(message)
+        {
+            name = message;
+            info = new Cell(new ObjectString(""));
         }
 
-        public NeonException(string message, params object[] args) : base(string.Format(message, args)) {
+        public NeonException(string message, params object[] args) : base(string.Format(message, args))
+        {
+            name = message;
+            info = ((Cell)args[0]);
         }
 
         public NeonException(string message, System.Exception innerException) : base(message, innerException) {

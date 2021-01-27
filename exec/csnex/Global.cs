@@ -1,4 +1,7 @@
-﻿namespace csnex
+﻿using System.Diagnostics;
+using System.Reflection;
+
+namespace csnex
 {
     public class Global
     {
@@ -7,34 +10,6 @@
         public Global(Executor exec)
         {
             Exec = exec;
-        }
-
-        public void Dispatch(string name)
-        {
-            // ToDo: Use System.Reflection to call functions out of
-            //       the assembly.
-            // Globals
-            switch (name) {
-                case "print":
-                    print();
-                    break;
-                case "str":
-                    str();
-                    break;
-
-                // Boolean
-                case "boolean__toString":
-                    boolean__toString();
-                    break;
-
-                // Object
-                case "object__makeString":
-                    object__makeString();
-                    break;
-
-                default:
-                    throw new NotImplementedException(string.Format("Global::Dispatch(\"{0}\"); - invalid or unsupported predefined function call.", name));
-            }
         }
 
         public void print()
@@ -71,6 +46,14 @@
         {
             Cell o = Exec.stack.Pop();
             Exec.stack.Push(new Cell(new ObjectString(o.String)));
+        }
+
+        public void string__concat()
+        {
+            Cell b = Exec.stack.Pop();
+            Cell a = Exec.stack.Pop();
+
+            Exec.stack.Push(new Cell(a.String + b.String));
         }
 
     }

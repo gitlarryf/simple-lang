@@ -68,8 +68,54 @@ File: textio  (textio.neon)
 File: time  (time.neon)
 File: xml  (xml.neon)
 
+Group: Aspell  {
+
+   Group: Auto  {
+
+      File: $master_data  (aspell\external\aspell-0.60.8\auto\mk-src.pl)
+      File: mk-doc.pl  (aspell\external\aspell-0.60.8\auto\mk-doc.pl)
+
+      Group: MkSrc  {
+
+         File: CcHelper  (aspell\external\aspell-0.60.8\auto\MkSrc\CcHelper.pm)
+         File: Create  (aspell\external\aspell-0.60.8\auto\MkSrc\Create.pm)
+         File: Info  (aspell\external\aspell-0.60.8\auto\MkSrc\Info.pm)
+         File: Methods  (aspell\external\aspell-0.60.8\auto\MkSrc\Methods.pm)
+         File: ProcCc  (aspell\external\aspell-0.60.8\auto\MkSrc\ProcCc.pm)
+         File: ProcCxx  (aspell\external\aspell-0.60.8\auto\MkSrc\ProcCxx.pm)
+         File: ProcImpl  (aspell\external\aspell-0.60.8\auto\MkSrc\ProcImpl.pm)
+         File: ProcNative  (aspell\external\aspell-0.60.8\auto\MkSrc\ProcNative.pm)
+         File: ProcNativeImpl  (aspell\external\aspell-0.60.8\auto\MkSrc\ProcNativeImpl.pm)
+         File: Read  (aspell\external\aspell-0.60.8\auto\MkSrc\Read.pm)
+         File: Type  (aspell\external\aspell-0.60.8\auto\MkSrc\Type.pm)
+         File: Util  (aspell\external\aspell-0.60.8\auto\MkSrc\Util.pm)
+         }  # Group: MkSrc
+
+      }  # Group: Auto
+
+   Group: Gen  {
+
+      File: def  (aspell\external\aspell-0.60.8\gen\mk-dirs_h.pl)
+      File: prep_str  (aspell\external\aspell-0.60.8\gen\mk-filter-pot.pl)
+      File: prep_str  (aspell\external\aspell-0.60.8\gen\mk-static-filter.pl)
+      }  # Group: Gen
+
+   File: lock.hpp  (aspell\external\aspell-0.60.8\common\lock.hpp)
+
+   Group: Test  {
+
+      File: filter-test  (aspell\external\aspell-0.60.8\test\filter-test)
+      File: misc\commonmark-proc  (aspell\external\aspell-0.60.8\test\misc\commonmark-proc)
+      File: suggest\comp  (aspell\external\aspell-0.60.8\test\suggest\comp)
+      File: suggest\mkmk  (aspell\external\aspell-0.60.8\test\suggest\mkmk)
+      File: suggest\run-batch  (aspell\external\aspell-0.60.8\test\suggest\run-batch)
+      }  # Group: Test
+
+   }  # Group: Aspell
+
 Group: Index  {
 
+   Class Index: Classes
    Constant Index: Constants
    Index: Everything
    Exception Index: Exceptions
