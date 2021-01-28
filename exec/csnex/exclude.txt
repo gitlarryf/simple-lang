@@ -247,7 +247,6 @@ return-nothing.neon
 return-try.neon
 retval-index.neon
 rtl.neon
-runtime-test.neon
 shebang.neon
 shortcut.neon
 sql-connect.neon
@@ -269,6 +268,7 @@ string-test.neon
 strings.neon
 struct-test.neon
 structure.neon
+sys-exit.neon
 tail-call.neon
 textio-test.neon
 time-stopwatch.neon

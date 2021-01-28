@@ -17,6 +17,7 @@ namespace csnex
             ParamRecursionLimit = 2000; // ToDo: Add runtime$setRecursionLimit()
             library = new List<KeyValuePair<string, object>>();
             library.Add(new KeyValuePair<string, object>("sys", new rtl.sys(this)));
+            library.Add(new KeyValuePair<string, object>("runtime", new rtl.runtime(this)));
         }
 
         private List<KeyValuePair<string, object>> library;
@@ -28,7 +29,7 @@ namespace csnex
         public bool enable_assert;
         private int ip;
         private Global global;
-        private Int32 ParamRecursionLimit;
+        public Int32 ParamRecursionLimit;
 
         public int Run(bool EnableAssertions)
         {

@@ -10,9 +10,14 @@ set(CSNEX_SOURCES
     Opcode.cs
 )
 
+set(CSNEX_RTL
+    lib/runtime.cs
+    lib/sys.cs
+)
+
 add_custom_command(
     OUTPUT csnex.exe
-    COMMAND ${CSC} -warn:4 -warnaserror+ -debug+ -d:DEBUG -appconfig:App.config -out:csnex.exe ${CSNEX_SOURCES}
+    COMMAND ${CSC} -warn:4 -warnaserror+ -debug+ -d:DEBUG -appconfig:App.config -out:csnex.exe ${CSNEX_SOURCES} ${CSNEX_RTL}
     DEPENDS ${CSNEX_SOURCES}
 )
 
