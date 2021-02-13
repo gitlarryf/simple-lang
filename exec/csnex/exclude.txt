@@ -27,7 +27,7 @@ bytes-literal.neon
 bytes-slice.neon
 bytes-tostring.neon
 bytes-value-index.neon
-bytes.neon
+#bytes.neon
 cformat-test.neon
 check-if.neon
 check-valid.neon

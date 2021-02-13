@@ -9,7 +9,7 @@ namespace csnex
         private const int BYTECODE_VERSION = 3;
         private byte[] obj;
         public string source_path;
-        public List<String> strtable;
+        public List<byte[]> strtable;
         public byte[] code;
 
         public List<ModuleImport> imports;
@@ -38,18 +38,58 @@ namespace csnex
             return r;
         }
 
-        public List<String> GetStrTable(byte[] obj, int size, ref int i)
+        //public List<String> GetStrTable(byte[] obj, int size, ref int i)
+        //{
+        //    List<String> r = new List<string>();
+
+        //    while (i < size) {
+        //        int len = Get_VInt(obj, ref i);
+        //        string ts = new string(System.Text.Encoding.UTF8.GetChars(obj, i, len));
+        //        r.Add(ts);
+        //        i += len;
+        //    }
+        //    return r;
+        //}
+        public List<byte[]> GetStrTable(byte[] obj, int size, ref int i)
         {
-            List<String> r = new List<string>();
+            List<byte[]> r = new List<byte[]>();
 
             while (i < size) {
                 int len = Get_VInt(obj, ref i);
-                string ts = new string(System.Text.Encoding.UTF8.GetChars(obj, i, len));
+                byte[] ts = new byte[len];
+                Array.Copy(obj, i, ts, 0, len);
+                //string ts = new string(System.Text.Encoding.UTF8.GetChars(obj, i, len));
                 r.Add(ts);
                 i += len;
             }
             return r;
         }
+
+        public string GetString(int index)
+        {
+            return new string(System.Text.Encoding.UTF8.GetChars(strtable[index], 0, strtable[index].Length));
+        }
+        //public byte[] GetBytesTable(int index)
+        //{
+        //    List<byte[]> bytes = new List<byte[]>();
+
+        //    List<String> r = new List<string>();
+        //    int start = strings_start;
+        //    int i = 0;
+
+        //    while (start < strings_length) {
+        //        int len = Get_VInt(obj, ref start);
+        //        if (i == index) {
+
+        //        }
+
+        //        string ts = new string(System.Text.Encoding.UTF8.GetChars(obj, i, len));
+        //        r.Add(ts);
+        //        i += len;
+        //    }
+        //    return r;
+        //}
+
 
         public void LoadBytecode(string a_source_path, byte[] bytes)
         {

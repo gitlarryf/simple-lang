@@ -56,7 +56,7 @@ namespace csnex
                 int i;
                 for (i = 0; i < bytecode.exceptions.Count; i++) {
                     if ((bytecode.exceptions[i].start <= tip) && (tip < bytecode.exceptions[i].end)) {
-                        string handler = bytecode.strtable[bytecode.exceptions[i].exid];
+                        string handler = bytecode.GetString(bytecode.exceptions[i].exid);
                         if ((string.Compare(name, handler) == 0) || (name.Length > handler.Length && name.StartsWith(handler) && name[handler.Length] == '.')) {
                             ip = bytecode.exceptions[i].handler;
                             while (stack.Count > bytecode.exceptions[i].stack_depth) {
@@ -101,19 +101,21 @@ namespace csnex
         {
             ip++;
             int val = Bytecode.Get_VInt(bytecode.code, ref ip);
-            stack.Push(new Cell(Number.FromString(bytecode.strtable[val])));
+            stack.Push(new Cell(Number.FromString(bytecode.GetString(val))));
         }
 
         void PUSHS()
         {
             ip++;
             int val = Bytecode.Get_VInt(bytecode.code, ref ip);
-            stack.Push(new Cell(bytecode.strtable[val]));
+            stack.Push(new Cell(bytecode.GetString(val)));
         }
 
         void PUSHY()
         {
-            throw new NotImplementedException(string.Format("{0} not implemented.", MethodBase.GetCurrentMethod().Name));
+            ip++;
+            int val = Bytecode.Get_VInt(bytecode.code, ref ip);
+            stack.Push(new Cell(bytecode.strtable[val]));
         }
 
         void PUSHPG()
@@ -193,7 +195,9 @@ namespace csnex
 
         void LOADY()
         {
-            throw new NotImplementedException(string.Format("{0} not implemented.", MethodBase.GetCurrentMethod().Name));
+            ip++;
+            Cell addr = stack.Pop().Address;
+            stack.Push(new Cell(addr.Bytes));
         }
 
         void LOADA()
@@ -250,7 +254,10 @@ namespace csnex
 
         void STOREY()
         {
-            throw new NotImplementedException(string.Format("{0} not implemented.", MethodBase.GetCurrentMethod().Name));
+            ip++;
+            Cell addr = stack.Pop().Address;
+            byte[] b = stack.Pop().Bytes;
+            addr.Set(b);
         }
 
         void STOREA()
@@ -634,7 +641,7 @@ namespace csnex
         {
             ip++;
             int val = Bytecode.Get_VInt(bytecode.code, ref ip);
-            string func = bytecode.strtable[val];
+            string func = bytecode.GetString(val);
             global.Dispatch(func);
         }
 
@@ -803,7 +810,7 @@ namespace csnex
             int val = Bytecode.Get_VInt(bytecode.code, ref ip);
             ip = start_ip;
             Cell info = stack.Pop();
-            RaiseLiteral(bytecode.strtable[val], info);
+            RaiseLiteral(bytecode.GetString(val), info);
         }
 #endregion
 #region Memory Opcodes
