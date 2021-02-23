@@ -442,7 +442,10 @@ namespace csnex
 
         void EQS()
         {
-            throw new NotImplementedException(string.Format("{0} not implemented.", MethodBase.GetCurrentMethod().Name));
+            ip++;
+            string b = stack.Pop().String;
+            string a = stack.Pop().String;
+            stack.Push(new Cell(a.CompareTo(b) == 0));
         }
 
         void NES()

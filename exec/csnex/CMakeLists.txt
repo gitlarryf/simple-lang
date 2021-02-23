@@ -20,7 +20,7 @@ set(CSNEX_RUNTIME
 
 add_custom_command(
     OUTPUT csnex.exe
-    COMMAND ${CSC} -warn:4 -warnaserror+ -debug+ -d:DEBUG -appconfig:App.config -out:csnex.exe ${CSNEX_SOURCES} ${CSNEX_RUNTIME}
+    COMMAND ${CSC} -warn:4 -warnaserror+ -debug+ -d:DEBUG -appconfig:App.config -reference:System.Numerics.dll -out:csnex.exe ${CSNEX_SOURCES} ${CSNEX_RUNTIME}
     DEPENDS ${CSNEX_SOURCES}
 )
 
