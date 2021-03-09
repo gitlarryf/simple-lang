@@ -34,16 +34,16 @@ exception-tostring.neon                         # exceptiontype__toString
 export-function-indent.neon
 export-inline.neon
 export.neon
-file-exists.neon                                # file module
-file-filecopied.neon                            # file module
-file-filecopied1.neon                           # file module
-file-filecopied2.neon                           # file module
-file-filecopied3.neon                           # file module
-file-linelength.neon                            # file module
-file-symlink.neon                               # file module
-file-test.neon                                  # file module
-file-writebytes.neon                            # file module
-file-writelines.neon                            # file module
+#file-exists.neon                                # file module
+#file-filecopied.neon                            # file module
+#file-filecopied1.neon                           # file module
+#file-filecopied2.neon                           # file module
+#file-filecopied3.neon                           # file module
+#file-linelength.neon                            # file module
+#file-symlink.neon                               # file module
+#file-test.neon                                  # file module
+#file-writebytes.neon                            # file module
+#file-writelines.neon                            # file module
 format.neon                                     # CALLMF
 forward.neon                                    # PUSHPL
 function-args.neon                              # PUSHPL
@@ -77,7 +77,7 @@ local-clear.neon                                # PUSHPL
 math-test.neon                                  # math module
 methods-declare.neon                            # PUSHPL
 methods.neon                                    # PUSHPL
-mkdir.neon                                      # file module
+#mkdir.neon                                      # file module
 mmap-test.neon                                  # mmap module
 module-alias.neon                               # PUSHPMG
 module-alias2.neon                              # PUSHPMG

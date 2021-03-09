@@ -13,12 +13,27 @@ set(CSNEX_SOURCES
 )
 
 set(CSNEX_RUNTIME
+    lib/file.cs
     lib/random.cs
     lib/runtime.cs
     lib/string.cs
     lib/sys.cs
     lib/textio.cs
 )
+
+set(CSNEX_RUNTIME_POSIX
+    lib/file_posix.cs
+)
+
+set(CSNEX_RUNTIME_WIN32
+    lib/file_win32.cs
+)
+
+if (WIN32)
+    list(APPEND CSNEX_RUNTIME "${CSNEX_RUNTIME_WIN32}")
+else (WIN32)
+    list(APPEND CSNEX_RUNTIME "${CMAKE_RUNTIME_POSIX}")
+endif (WIN32)
 
 add_custom_command(
     OUTPUT csnex.exe
