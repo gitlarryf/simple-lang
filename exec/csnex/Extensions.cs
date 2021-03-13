@@ -47,5 +47,28 @@ namespace csnex
             }
             return r;
         }
+
+        public static int StrSpn(this string self, int index, string pattern)
+        {
+            int count = index;
+            string srch = self.Substring(index);
+            foreach (char c in srch) {
+                bool bFound = false;
+                foreach (char p in pattern) {
+                    if (c == p) {
+                        count++;
+                        bFound = true;
+                        break;
+                    }
+                }
+                if (!bFound) {
+                    if (count == srch.Length) {
+                        return -1;
+                    }
+                    break;
+                }
+            }
+            return count;
+        }
     }
 }

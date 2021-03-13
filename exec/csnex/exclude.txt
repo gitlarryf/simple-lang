@@ -50,7 +50,6 @@ gc3.neon                                        # garbage collection
 import-optional.neon                            # runtime$isModuleImported
 import.neon
 input.neon                                      # console module
-intdiv.neon                                     # math$intdiv
 interface-multiple.neon
 interface-parameter-export.neon
 interface-parameter-export2.neon
@@ -61,7 +60,7 @@ io-test.neon                                    # io module
 json-test.neon                                  # object__makeNull
 literal-array.neon                              # array__range
 literal-method.neon                             # string__toBytes
-math-test.neon                                  # math module
+#math-test.neon                                  # math module
 mkdir.neon                                      # file module
 mmap-test.neon                                  # mmap module
 module-alias.neon                               # PUSHPMG
@@ -79,7 +78,7 @@ net-test-udp.neon                               # net module
 net-test.neon                                   # net module
 new-init-module.neon                            # PUSHNIL
 new-init.neon                                   # Classes
-number-ceil.neon                                # math module
+#number-ceil.neon                                # math module
 object-isa-case.neon                            # object__makeNumber
 object-isa.neon                                 # object__makeBoolean
 object-null.neon                                # object__makeNull

@@ -83,16 +83,16 @@ namespace csnex
             fs.Read(code, 0, (int)nSize);
             fs.Close();
 
-            try {
+            //try {
                 Bytecode bc = new Bytecode();
                 bc.LoadBytecode(gOptions.Filename, code);
 
                 Executor exec = new Executor(bc);
                 retval = exec.Run(gOptions.EnableAssertions);
-            } catch (Exception ex) {
-                Console.Error.WriteLine(ex.Message);
-                return 1;
-            }
+            //} catch (Exception ex) {
+            //    Console.Error.WriteLine(ex.Message);
+            //    return 1;
+            //}
             return retval;
         }
     }

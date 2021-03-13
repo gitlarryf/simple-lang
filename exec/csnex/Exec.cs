@@ -35,6 +35,7 @@ namespace csnex
             bytecode = bc;
             param_recursion_limit = 1000;
             library = new List<KeyValuePair<string, object>>();
+            library.Add(new KeyValuePair<string, object>("math", new rtl.math(this)));
             library.Add(new KeyValuePair<string, object>("random", new rtl.random(this)));
             library.Add(new KeyValuePair<string, object>("runtime", new rtl.runtime(this)));
             library.Add(new KeyValuePair<string, object>("string", new rtl.@string(this)));
@@ -673,7 +674,7 @@ namespace csnex
             }
             uint j = (uint)i;
             if (j >= array.Array.Count) {
-                RaiseLiteral("ArrayIndexException", new Cell(new Number(j).ToString()));
+                RaiseLiteral("ArrayIndexException", new Cell(new Number((Decimal)j).ToString()));
                 return;
             }
             Debug.Assert(j < array.Array.Count);

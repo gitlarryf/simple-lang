@@ -20,7 +20,7 @@ namespace csnex.rtl
             rng.GetBytes(r);
             uint val = BitConverter.ToUInt32(r, 0);
 
-            Exec.stack.Push(new Cell(new Number(val)));
+            Exec.stack.Push(new Cell(new Number((Decimal)val)));
         }
 
         public void bytes()
