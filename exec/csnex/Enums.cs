@@ -12,4 +12,10 @@
         relative = 1,
         fromEnd  = 2,
     }
+
+    public enum Platform
+    {
+        posix   = 0,
+        win32   = 1,
+    }
 }

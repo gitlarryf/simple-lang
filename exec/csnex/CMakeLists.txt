@@ -14,6 +14,7 @@ set(CSNEX_SOURCES
 
 set(CSNEX_RUNTIME
     lib/io.cs
+    lib/os.cs
     lib/random.cs
     lib/runtime.cs
     lib/string.cs
