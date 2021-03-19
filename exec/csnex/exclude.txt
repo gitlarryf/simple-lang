@@ -109,8 +109,8 @@ string-format.neon                              # CALLMF
 string-test.neon                                # CALLMF
 struct-test.neon                                # struct module
 textio-random.neon                              # random module
-time-stopwatch.neon                             # time module
-time-test.neon                                  # time module
+#time-stopwatch.neon                             # time module
+#time-test.neon                                  # time module
 tostring.neon                                   # array__toString__string
 valid-pointer.neon                              # Classes
 value-index.neon                                # INDEXDV

@@ -19,6 +19,7 @@ set(CSNEX_RUNTIME
     lib/string.cs
     lib/sys.cs
     lib/textio.cs
+    lib/time.cs
 )
 
 add_custom_command(

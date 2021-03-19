@@ -41,6 +41,7 @@ namespace csnex
             library.Add(new KeyValuePair<string, object>("string", new rtl.@string(this)));
             library.Add(new KeyValuePair<string, object>("sys", new rtl.sys(this)));
             library.Add(new KeyValuePair<string, object>("textio", new rtl.textio(this)));
+            library.Add(new KeyValuePair<string, object>("time", new rtl.time(this)));
         }
 
         private List<KeyValuePair<string, object>> library;
