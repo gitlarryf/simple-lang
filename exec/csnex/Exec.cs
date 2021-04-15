@@ -55,6 +55,7 @@ namespace csnex
             EnableTrace = trace;
             library = new List<KeyValuePair<string, object>>();
             library.Add(new KeyValuePair<string, object>("io", new rtl.io(this)));
+            library.Add(new KeyValuePair<string, object>("net", new rtl.net(this)));
             library.Add(new KeyValuePair<string, object>("random", new rtl.random(this)));
             library.Add(new KeyValuePair<string, object>("runtime", new rtl.runtime(this)));
             library.Add(new KeyValuePair<string, object>("string", new rtl.@string(this)));

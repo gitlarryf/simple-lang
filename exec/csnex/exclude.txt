@@ -38,8 +38,6 @@ module-alias.neon                               # math module
 module-import-name-alias.neon                   # math$sqrt
 module-import-name.neon                         # math module
 modulo.neon                                     # incorrect results
-net-test-udp.neon                               # net module
-net-test.neon                                   # net module
 number-ceil.neon                                # math module
 number-exception.neon
 object-record.neon                              # EQA
