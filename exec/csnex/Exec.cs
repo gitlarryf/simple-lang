@@ -229,25 +229,23 @@ namespace csnex
 
         void PUSHPMG()
         {
-            throw new NotImplementedException(string.Format("{0} not implemented.", MethodBase.GetCurrentMethod().Name));
-            //ip++;
-            //int mod = Bytecode.Get_VInt(module.Bytecode.code, ref ip);
-            //int name = Bytecode.Get_VInt(module.Bytecode.code, ref ip);
+            ip++;
+            int mod = Bytecode.Get_VInt(module.Bytecode.code, ref ip);
+            int name = Bytecode.Get_VInt(module.Bytecode.code, ref ip);
 
-            //if (!modules.ContainsKey(module.Bytecode.strtable[mod])) {
-            //    throw new NeonException(string.Format("module not found: {0}\n", module.Bytecode.strtable[mod]));
-            //}
-            //Module m = modules[module.Bytecode.strtable[mod]];
+            if (!modules.ContainsKey(module.Bytecode.strtable[mod])) {
+                throw new NeonException(string.Format("module not found: {0}\n", module.Bytecode.strtable[mod]));
+            }
+            Module m = modules[module.Bytecode.strtable[mod]];
 
-            //for (int v = 0; v < m.Bytecode.variables.Count; v++) {
-            //    if (string.Compare(m.Bytecode.strtable[m.Bytecode.variables[v].name], module.Bytecode.strtable[name]) == 0) {
-            //        int addr = m.Bytecode.variables[v].index;
-            //        Debug.Assert(addr < m.Bytecode.globals.Count);
-            //        stack.Push(Cell.CreateAddressCell(m.Bytecode.globals[addr]));
-            //        return;
-            //    }
-            //}
-            //throw new NeonException(string.Format("variable not found: {0}\n", module.Bytecode.strtable[name]));
+            for (int v = 0; v < m.Bytecode.variables.Count; v++) {
+                if (string.Compare(m.Bytecode.strtable[m.Bytecode.variables[v].name], module.Bytecode.strtable[name]) == 0) {
+                    int addr = m.Bytecode.variables[v].index;
+                    Debug.Assert(addr < m.Bytecode.globals.Count);
+                    stack.Push(Cell.CreateAddressCell(m.Bytecode.globals[addr]));
+                    return;
+                }
+            }
         }
 
         void PUSHPL()
