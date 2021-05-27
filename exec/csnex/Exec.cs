@@ -95,6 +95,11 @@ namespace csnex
         public UInt64 Allocations;
         private readonly bool EnableTrace;
 
+        public bool ModuleIsMain()
+        {
+            return module.Equals(modules[""]);
+        }
+
         public int Run(bool EnableAssertions)
         {
             frames = new Stack<ActivationFrame>();
