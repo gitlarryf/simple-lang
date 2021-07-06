@@ -1,0 +1,19 @@
+TYPE Cls IS CLASS
+    n: Number
+    s: String
+END CLASS
+
+test_n()
+test_i()
+
+FUNCTION test_n()
+    LET p: POINTER TO Cls := NEW Cls
+    TESTCASE p->n = 0
+    TESTCASE p->s = ""
+END FUNCTION
+
+FUNCTION test_i()
+    LET p: POINTER TO Cls := NEW Cls(n WITH 5, s WITH "foo")
+    TESTCASE p->n = 5
+    TESTCASE p->s = "foo"
+END FUNCTION

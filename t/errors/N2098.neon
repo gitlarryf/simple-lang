@@ -1,0 +1,5 @@
+TRY
+    print("hello")
+TRAP InvalidValue THEN
+                  --<
+END TRY

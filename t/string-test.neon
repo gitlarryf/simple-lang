@@ -1,0 +1,101 @@
+IMPORT string
+
+FUNCTION bstr(z: Boolean): String
+    RETURN (IF z THEN "TRUE" ELSE "FALSE")
+END FUNCTION
+
+print(str(string.find("hello world", "world")))
+--= 6
+
+print(string.fromCodePoint(65))
+--= A
+
+TRY
+    print(string.fromCodePoint(1.5))
+TRAP ValueRangeException AS x DO
+    print(x.info)
+END TRY
+--= fromCodePoint() argument not an integer
+
+TRY
+    print(string.fromCodePoint(0x110000))
+TRAP ValueRangeException AS x DO
+    print(x.info)
+END TRY
+--= fromCodePoint() argument out of range 0-0x10ffff
+
+print(string.join(["hello", "world"], " "))
+--= hello world
+
+print(string.lower("Hello World"))
+--= hello world
+
+LET a: Array<String> := string.split("Hello World Everybody", " ")
+print("\(a.size())")
+--= 3
+print(a[0])
+--= Hello
+print(a[1])
+--= World
+print(a[2])
+--= Everybody
+
+TESTCASE string.splitLines("").size() = 0
+TESTCASE string.splitLines("\n") = [""]
+TESTCASE string.splitLines("\n\n") = ["", ""]
+TESTCASE string.splitLines("a\n") = ["a"]
+TESTCASE string.splitLines("a\nb") = ["a", "b"]
+TESTCASE string.splitLines("a\nb\n") = ["a", "b"]
+TESTCASE string.splitLines("hello\nworld\r\neverybody\n") = ["hello", "world", "everybody"]
+
+print(str(string.toCodePoint("B")))
+--= 66
+
+TESTCASE string.toCodePoint("AB") EXPECT StringIndexException
+
+print(string.trimCharacters("  Hello World  ", " ", " "))
+--= Hello World
+
+print(string.trimCharacters("  Hello World  ", " ", ""))
+--= Hello World  
+
+print(string.trimCharacters("  Hello World  ", "", " "))
+--=   Hello World
+
+print(string.trimCharacters(" ", " ", " "))
+--= 
+
+print(string.upper("Hello World"))
+--= HELLO WORLD
+
+print(bstr(string.hasPrefix("Hello World", "He")))
+print(bstr(string.hasPrefix("Hello World", "he")))
+--= TRUE
+--= FALSE
+
+print(bstr(string.hasSuffix("Hello World", "orld")))
+print(bstr(string.hasSuffix("Hello World", "old")))
+--= TRUE
+--= FALSE
+
+print(string.quoted("abc"))
+--= "abc"
+print(string.quoted("hello" & string.fromCodePoint(9) & "world"))
+--= "hello\tworld"
+print(string.quoted("hello" & string.fromCodePoint(92) & "world"))
+--= "hello\\world"
+print(string.quoted("hello\u{atom symbol}world"))
+--= "hello\u269bworld"
+print(string.quoted("hello\u{open book}world"))
+--= "hello\U0001f4d6world"
+
+TESTCASE string.repeat("*", 5) = "*****"
+TESTCASE string.repeat("XY", 2) = "XYXY"
+
+TESTCASE string.replaceOne("hello world", "l", "xxx") = "hexxxlo world"
+TESTCASE string.replaceAll("hello world", "l", "xxx") = "hexxxxxxo worxxxd"
+TESTCASE string.replaceAll("hello world", "l", "") = "heo word"
+TESTCASE string.replaceAll("hello world", "l", "ell") = "heellello worelld"
+TESTCASE string.replaceAll("hello world", "d", "") = "hello worl"
+TESTCASE string.replaceAll("hello world", "xxx", "") = "hello world"
+TESTCASE string.replaceAll("hello world", "", "xxx") = "hello world"

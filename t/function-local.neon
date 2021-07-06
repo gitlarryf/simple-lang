@@ -1,0 +1,18 @@
+VAR x: Number
+VAR y: Number
+x := 5
+y := 10
+
+FUNCTION sq(): Number
+    VAR t: Number
+    VAR z: Number
+    t := x * x
+    z := 999
+    RETURN t
+END FUNCTION
+
+print(str(sq()))
+print(str(y))
+
+--= 25
+--= 10

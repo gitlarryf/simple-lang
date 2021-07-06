@@ -1,0 +1,6 @@
+EXCEPTION FooException
+
+TRY
+TRAP FooException.Bar DO
+                  --<
+END TRY

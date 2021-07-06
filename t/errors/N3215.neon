@@ -1,0 +1,7 @@
+LOOP LABEL foo
+           --<1
+END LOOP
+
+FUNCTION foo()
+         --<2
+END FUNCTION

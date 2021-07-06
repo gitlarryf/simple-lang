@@ -1,0 +1,30 @@
+IMPORT runtime
+
+TYPE Node IS CLASS
+    next: POINTER TO Node
+    value: Number
+END CLASS
+
+FUNCTION make(next: POINTER TO Node): POINTER TO Node
+    LET n: POINTER TO Node := NEW Node
+    n->next := next
+    RETURN n
+END FUNCTION
+
+VAR a, b: POINTER TO Node
+
+runtime.setGarbageCollectionInterval(1)
+
+-- Cycle collection, without needing to mark the cycle.
+TESTCASE runtime.getAllocatedObjectCount() = 0
+a := make(NIL)
+TESTCASE runtime.getAllocatedObjectCount() = 1
+IF VALID a THEN
+    a->next := make(a)
+END IF
+TESTCASE runtime.getAllocatedObjectCount() = 2
+a := NIL
+runtime.garbageCollect()
+TESTCASE runtime.getAllocatedObjectCount() = 0
+b := NEW Node
+TESTCASE runtime.getAllocatedObjectCount() = 1

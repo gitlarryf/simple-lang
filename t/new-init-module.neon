@@ -1,0 +1,21 @@
+IMPORT module
+
+TYPE Rec IS RECORD
+    n: Number
+    s: String
+END RECORD
+
+test_n()
+test_i()
+
+FUNCTION test_n()
+    LET p: POINTER TO module.class := NEW module.class
+    TESTCASE p->number = 0
+    TESTCASE p->string = ""
+END FUNCTION
+
+FUNCTION test_i()
+    LET p: POINTER TO module.class := NEW module.class(number WITH 6, string WITH "bar")
+    TESTCASE p->number = 6
+    TESTCASE p->string = "bar"
+END FUNCTION

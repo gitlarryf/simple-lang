@@ -1,0 +1,30 @@
+image: debian/stable
+packages:
+- python3
+- cmake
+- ncurses-dev
+- libgmp-dev
+- zlib1g-dev
+# optional
+- default-jdk
+- mono-mcs
+- nodejs
+- rustc
+- golang
+sources:
+- https://git.sr.ht/~ghewgill/neon-lang
+triggers:
+- action: email
+  condition: failure
+  to: ~ghewgill/neon-builds@lists.sr.ht
+tasks:
+- prep: |
+    cd neon-lang
+    git submodule deinit .
+- build: |
+    cd neon-lang
+    cmake .
+    cmake --build .
+- test: |
+    cd neon-lang
+    echo NOT RUNNING: ctest

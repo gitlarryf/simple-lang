@@ -1,0 +1,11 @@
+TYPE Node IS CLASS
+    value: Number
+END CLASS
+
+VAR a: POINTER TO Node
+
+a := NIL
+IF a = NIL THEN
+    print("nil")
+END IF
+--= nil

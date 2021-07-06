@@ -1,0 +1,11 @@
+TYPE Cls IS CLASS
+  a: Number
+END CLASS
+
+VAR a: POINTER TO Cls := NIL
+VAR b: POINTER TO Cls := NIL
+
+IF a <= b THEN
+     --<
+    print("bad")
+END IF

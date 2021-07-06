@@ -1,0 +1,13 @@
+VAR a: Number
+a := 5
+WHILE a > 0 DO
+    print(str(a))
+    IF a = 3 THEN
+        EXIT WHILE
+    END IF
+    a := a - 1
+END WHILE
+
+--= 5
+--= 4
+--= 3

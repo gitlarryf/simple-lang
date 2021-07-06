@@ -1,0 +1,4 @@
+VAR a: Number := 0
+a = 5
+
+--! ':=' expected

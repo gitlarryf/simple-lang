@@ -1,0 +1,48 @@
+EXCEPTION TestException
+EXCEPTION TestException.Foo
+EXCEPTION TestException.Bar
+EXCEPTION TestException.Bar.Baz
+
+TRY
+    RAISE TestException
+TRAP TestException DO
+    print("TestException")
+END TRY
+
+--= TestException
+
+TRY
+    RAISE TestException.Foo
+TRAP TestException DO
+    print("TestException")
+TRAP TestException.Foo DO
+    print("TestException.Foo")
+END TRY
+
+--= TestException
+
+TRY
+    RAISE TestException.Foo
+TRAP TestException.Foo DO
+    print("TestException.Foo")
+TRAP TestException DO
+    print("TestException")
+END TRY
+
+--= TestException.Foo
+
+TRY
+    RAISE TestException.Bar.Baz
+TRAP TestException.Bar DO
+    print("TestException.Bar")
+END TRY
+
+--= TestException.Bar
+
+TRY
+    RAISE TestException.Bar.Baz
+TRAP TestException.Bar.Baz DO
+    print("TestException.Bar.Baz")
+END TRY
+
+--= TestException.Bar.Baz

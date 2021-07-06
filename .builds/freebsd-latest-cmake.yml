@@ -1,0 +1,28 @@
+image: freebsd/latest
+packages:
+- cmake
+- python3
+- gmp
+# optional
+- openjdk # version 1.7, needs 1.8
+- mono
+- node
+- rust
+#- go (cannot find main module)
+sources:
+- https://git.sr.ht/~ghewgill/neon-lang
+triggers:
+- action: email
+  condition: failure
+  to: ~ghewgill/neon-builds@lists.sr.ht
+tasks:
+- prep: |
+    cd neon-lang
+    git submodule deinit .
+- build: |
+    cd neon-lang
+    cmake .
+    cmake --build .
+- test: |
+    cd neon-lang
+    echo NOT RUNNING: ctest

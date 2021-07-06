@@ -1,0 +1,7 @@
+TYPE Cls IS CLASS
+    name: String
+END CLASS
+
+VAR p: POINTER TO Cls
+p->hello()
+--<

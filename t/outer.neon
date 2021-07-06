@@ -1,0 +1,15 @@
+FUNCTION foo()
+    VAR outer: String
+        FUNCTION bar()
+            outer := "two"
+        END FUNCTION
+    outer := "one"
+    print(outer)
+    bar()
+    print(outer)
+END FUNCTION
+
+foo()
+
+--= one
+--= two

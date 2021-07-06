@@ -1,0 +1,7 @@
+VAR a, b: Number := 0
+
+CASE a
+    WHEN b DO
+END CASE
+
+--! WHEN condition must be constant

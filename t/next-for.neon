@@ -1,0 +1,12 @@
+FOR a := 0 TO 5 DO
+    IF a = 3 THEN
+        NEXT FOR
+    END IF
+    print(str(a))
+END FOR
+
+--= 0
+--= 1
+--= 2
+--= 4
+--= 5

@@ -1,0 +1,4 @@
+VAR a: Array<Number> := []
+print(a[-1].toString())
+
+--! ArrayIndexException (-1)

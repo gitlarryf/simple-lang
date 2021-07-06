@@ -1,0 +1,13 @@
+FUNCTION foo(x: Number): Number
+    VAR y: Number
+    y := x
+    LOOP
+        IF y = 3 THEN
+            RETURN y
+        END IF
+        y := y - 1
+    END LOOP
+END FUNCTION
+
+print(str(foo(5)))
+--= 3

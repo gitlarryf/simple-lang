@@ -1,0 +1,5 @@
+FUNCTION foo()
+    EXIT FUNCTION
+END FUNCTION
+
+foo()

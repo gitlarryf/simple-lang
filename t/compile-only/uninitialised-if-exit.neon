@@ -1,0 +1,11 @@
+VAR s: String
+REPEAT
+    IF TRUE THEN
+        s := "hello"
+    ELSE
+        EXIT REPEAT
+    END IF
+UNTIL TRUE
+print(s)
+
+--! Uninitialised

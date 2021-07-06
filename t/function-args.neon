@@ -1,0 +1,20 @@
+FUNCTION four(): Number
+    RETURN 4
+END FUNCTION
+
+FUNCTION sq(x: Number): Number
+    RETURN x * x
+END FUNCTION
+
+FUNCTION add(x: Number, y: Number): Number
+    RETURN x + y
+END FUNCTION
+
+print(str(four()))
+--= 4
+
+print(str(sq(5)))
+--= 25
+
+print(str(add(4, 5)))
+--= 9

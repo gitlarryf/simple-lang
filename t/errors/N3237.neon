@@ -1,0 +1,3 @@
+EXCEPTION FooException
+EXCEPTION FooException.Bar.Baz
+                       --<

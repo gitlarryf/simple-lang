@@ -1,0 +1,16 @@
+TYPE Node IS CLASS
+    next: POINTER TO Node
+    value: Number
+END CLASS
+
+VAR a: POINTER TO Node
+
+a := NEW Node
+IF VALID a AS p THEN
+    p->next := NEW Node
+    IF VALID p->next AS q THEN
+        q->value := 5
+        print(str(q->value))
+    END IF
+END IF
+--= 5

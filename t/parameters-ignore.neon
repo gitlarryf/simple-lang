@@ -1,0 +1,6 @@
+FUNCTION f(OUT x: Number)
+    x := 0
+END FUNCTION
+
+f(OUT _)
+f(OUT x WITH _)

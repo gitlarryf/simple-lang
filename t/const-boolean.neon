@@ -1,0 +1,3 @@
+CONSTANT b: Boolean := TRUE
+print(b.toString())
+--= TRUE

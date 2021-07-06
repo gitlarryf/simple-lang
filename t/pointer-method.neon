@@ -1,0 +1,12 @@
+TYPE Cls IS CLASS
+    name: String
+END CLASS
+
+FUNCTION Cls.getName(self: VALID POINTER TO Cls): String
+    RETURN self->name
+END FUNCTION
+
+LET p: POINTER TO Cls := NEW Cls
+p->name := "hello"
+print(p->getName())
+--= hello

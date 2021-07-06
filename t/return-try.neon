@@ -1,0 +1,12 @@
+EXCEPTION FileNotFoundException
+
+FUNCTION foo(): Number
+    TRY
+        RETURN 1
+    TRAP FileNotFoundException DO
+        RETURN -1
+    END TRY
+END FUNCTION
+
+print(str(foo()))
+--= 1

@@ -1,0 +1,2 @@
+TESTCASE "foo" IN "foobar"
+TESTCASE "foobar" NOT IN "foo"

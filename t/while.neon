@@ -1,0 +1,12 @@
+VAR a: Number
+a := 5
+WHILE a > 0 DO
+    print(str(a))
+    a := a - 1
+END WHILE
+
+--= 5
+--= 4
+--= 3
+--= 2
+--= 1

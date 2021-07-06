@@ -1,0 +1,4 @@
+FUNCTION foo(x: Number)
+    RETURN x
+    --<
+END FUNCTION

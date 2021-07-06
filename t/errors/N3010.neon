@@ -1,0 +1,9 @@
+TYPE Suit IS ENUM
+    Heart
+    --<2
+    Heart
+    --<1
+    Club
+    Spade
+    Diamond
+END ENUM

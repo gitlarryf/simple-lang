@@ -1,0 +1,6 @@
+TYPE Rec IS RECORD
+    x: FUNCTION()
+END RECORD
+
+TESTCASE NOT ([] ISA Array<Rec>)
+TESTCASE NOT ({} ISA Dictionary<Rec>)

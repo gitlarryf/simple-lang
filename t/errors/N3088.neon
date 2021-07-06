@@ -1,0 +1,6 @@
+VAR foo: String
+    --<2
+TRY
+TRAP foo DO
+     --<1
+END TRY

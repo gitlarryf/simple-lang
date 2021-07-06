@@ -1,0 +1,16 @@
+IMPORT posix
+IMPORT sys
+
+LET p: Number := posix.fork()
+IF p <> 0 THEN
+    VAR stat: Number := 0
+    _ := posix.wait(OUT stat)
+    print(str(stat INTDIV 256))
+    print("parent")
+ELSE
+    print("child")
+    sys.exit(5)
+END IF
+--= child
+--= 5
+--= parent

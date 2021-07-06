@@ -1,0 +1,21 @@
+version: 2
+jobs:
+    build:
+        docker:
+            - image: debian:stretch
+        steps:
+            - run:
+                name: update packages
+                command: apt update
+            - run:
+                name: install packages
+                command: apt install -y python3 cmake make g++ libgmp-dev zlib1g-dev openjdk-8-jdk-headless mono-mcs nodejs rustc golang
+            - checkout
+            - run:
+                name: Build
+                command: cmake . && make
+            - run:
+                name: Test
+                command: ctest --output-on-failure
+                environment:
+                    PYTHONIOENCODING: utf8

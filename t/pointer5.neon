@@ -1,0 +1,10 @@
+TYPE Node IS CLASS
+    value: Number
+END CLASS
+
+VAR a: POINTER TO Node := NIL
+
+IF VALID a AS p THEN
+END IF
+IF VALID a AS p THEN
+END IF

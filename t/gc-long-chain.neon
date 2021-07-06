@@ -1,0 +1,23 @@
+IMPORT runtime
+
+TYPE Node IS CLASS
+    next: POINTER TO Node
+    value: Number
+END CLASS
+
+FUNCTION make(next: POINTER TO Node): POINTER TO Node
+    LET n: POINTER TO Node := NEW Node
+    n->next := next
+    RETURN n
+END FUNCTION
+
+VAR a: POINTER TO Node := NIL
+
+TESTCASE runtime.getAllocatedObjectCount() = 0
+FOR i := 1 TO 10000 DO
+    a := make(a)
+    TESTCASE i = runtime.getAllocatedObjectCount()
+END FOR
+a := NIL
+runtime.garbageCollect()
+TESTCASE runtime.getAllocatedObjectCount() = 0

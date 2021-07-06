@@ -1,0 +1,8 @@
+VAR a: Number := 0
+
+CASE a
+    WHEN 1 DO
+    WHEN 1 DO
+END CASE
+
+--! overlapping case

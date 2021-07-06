@@ -1,0 +1,4 @@
+VAR x: Object := NIL
+TESTCASE x = NIL
+x := 5
+TESTCASE x <> NIL

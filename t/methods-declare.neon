@@ -1,0 +1,15 @@
+TYPE Rec IS RECORD
+    name: String
+    value: Number
+END RECORD
+
+VAR r: Rec := Rec()
+r.name := "foo"
+r.value := 5
+print(r.toString())
+
+FUNCTION Rec.toString(self: Rec): String
+    RETURN self.name & self.value.toString()
+END FUNCTION
+
+--= foo5

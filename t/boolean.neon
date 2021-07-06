@@ -1,0 +1,9 @@
+VAR a: Boolean
+VAR s: String := ""
+a := TRUE
+IF a THEN
+    s := "true"
+END IF
+print(s)
+
+--= true

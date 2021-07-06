@@ -1,0 +1,7 @@
+CASE TRUE
+     --<
+    WHEN FALSE DO
+        print("False...")
+    WHEN TRUE DO
+        print("True...")
+END CASE

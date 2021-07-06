@@ -1,0 +1,11 @@
+VAR a: Number
+a := 1
+print(a.toString())
+INC a
+print(a.toString())
+DEC a
+print(a.toString())
+
+--= 1
+--= 2
+--= 1

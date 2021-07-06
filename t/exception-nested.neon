@@ -1,0 +1,15 @@
+EXCEPTION PrinterOnFireException
+
+TRY
+    print("one")
+    TRY
+        RAISE PrinterOnFireException
+    TRAP PrinterOnFireException DO
+        print("two")
+    END TRY
+TRAP PrinterOnFireException DO
+    print("three")
+END TRY
+
+--= one
+--= two

@@ -1,5 +1,0 @@
-VAR a: number
-a := 42
-print(str(a))
-
-%= 42

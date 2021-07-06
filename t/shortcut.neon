@@ -1,0 +1,22 @@
+FUNCTION a(): Boolean
+    print("a")
+    RETURN FALSE
+END FUNCTION
+
+FUNCTION b(): Boolean
+    print("b")
+    RETURN TRUE
+END FUNCTION
+
+IF a() AND b() THEN
+    print("hi")
+END IF
+
+--= a
+
+IF b() OR a() THEN
+    print("hi")
+END IF
+
+--= b
+--= hi

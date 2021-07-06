@@ -1,0 +1,12 @@
+FUNCTION foo(x, y, z: Number): Number
+    RETURN x * (y - z)
+END FUNCTION
+
+print(foo(1, 2, 3).toString())
+--= -1
+
+print(foo(x WITH 1, y WITH 2, z WITH 3).toString())
+--= -1
+
+print(foo(y WITH 2, z WITH 3, x WITH 1).toString())
+--= -1

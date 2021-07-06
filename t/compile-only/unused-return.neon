@@ -1,0 +1,7 @@
+FUNCTION foo(x: Number): Number
+    RETURN x + 1
+END FUNCTION
+
+foo(5)
+
+--! return value unused

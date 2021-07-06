@@ -1,4 +1,0 @@
-VAR a: number
-a := 0#40#0
-
-%! invalid base

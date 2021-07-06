@@ -1,0 +1,5 @@
+TYPE Cls IS CLASS
+    num: Number
+END CLASS
+
+VAR p: POINTER TO Cls := NIL

@@ -1,0 +1,17 @@
+IMPORT net
+
+LET server: net.Socket := net.udpSocket()
+server.bind("", 21012)
+
+LET client: net.Socket := net.udpSocket()
+client.connect("127.0.0.1", 21012)
+
+LET s: String := "UDP packet."
+client.send(s.toBytes())
+VAR buf: Bytes
+_ := server.recv(1000, OUT buf)
+print(buf.decodeToString())
+--= UDP packet.
+
+client.close()
+server.close()

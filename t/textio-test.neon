@@ -1,0 +1,15 @@
+IMPORT textio
+
+textio.writeLine(textio.stdout, "Hello World")
+--= Hello World
+
+TESTCASE textio.open("nonexistent.file", textio.Mode.read) EXPECT textio.TextioException.Open
+
+VAR f: textio.TextFile := textio.open("LICENSE.txt", textio.Mode.read)
+VAR s: String := ""
+print("\(textio.readLine(f, OUT s))")
+--= TRUE
+print(s)
+--= The MIT License (MIT)
+
+textio.close(f)

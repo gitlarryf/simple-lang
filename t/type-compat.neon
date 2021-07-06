@@ -1,0 +1,6 @@
+FUNCTION foo(x: Array<String>)
+    -- ...
+END FUNCTION
+
+VAR a: Array<String> := []
+foo(a)

@@ -1,4 +1,0 @@
-VAR a: number
-a := 0x2a.0
-
-%! non-decimal fraction not supported

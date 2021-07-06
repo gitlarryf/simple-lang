@@ -1,0 +1,73 @@
+EXPORT TestException
+EXPORT Interface
+
+EXPORT Record
+EXPORT Class
+EXPORT Class2
+EXPORT Enum
+
+EXPORT cb
+EXPORT cn
+EXPORT cs
+EXPORT ca
+EXPORT cd
+EXPORT cr
+EXPORT ce
+
+EXPORT vb
+EXPORT vn
+EXPORT vs
+EXPORT vy
+EXPORT va
+EXPORT vd
+EXPORT vr
+EXPORT ve
+--EXPORT vp
+
+EXCEPTION TestException
+
+INTERFACE Interface
+    FUNCTION f(self: Interface)
+END INTERFACE
+
+TYPE Record IS RECORD
+    n: Number
+    r: RECORD
+        s: String
+    END RECORD
+END RECORD
+
+TYPE Class IS CLASS
+    n: Number
+END CLASS
+
+TYPE Class2 IS CLASS IMPLEMENTS Interface
+END CLASS
+
+FUNCTION Class2.f(self: VALID POINTER TO Class2)
+    print("f")
+END FUNCTION
+
+TYPE Enum IS ENUM
+    red
+    green
+    blue
+END ENUM
+
+CONSTANT cb: Boolean := TRUE
+CONSTANT cn: Number := 1
+CONSTANT cs: String := "a"
+CONSTANT ca: Array<Number> := [1]
+CONSTANT cd: Dictionary<Number> := {"a": 1}
+CONSTANT cr: Record := Record(n WITH 1)
+CONSTANT ce: Enum := Enum.green
+
+VAR vb: Boolean
+VAR vn: Number
+VAR vs: String
+VAR vy: Bytes
+VAR va: Array<Number>
+VAR vd: Dictionary<Number>
+VAR vr: Record
+VAR ve: Enum
+--VAR vp: POINTER TO Record

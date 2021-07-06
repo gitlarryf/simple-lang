@@ -1,0 +1,72 @@
+LET a: Object := 3
+LET b: Object := 4
+
+TESTCASE a + -b = -1
+
+TESTCASE a + 4 = 7
+TESTCASE 3 + b = 7
+TESTCASE a + b = 7
+
+TESTCASE a - 4 = -1
+TESTCASE 3 - b = -1
+TESTCASE a - b = -1
+
+TESTCASE a * 4 = 12
+TESTCASE 3 * b = 12
+TESTCASE a * b = 12
+
+TESTCASE a / 4 = 0.75
+TESTCASE 3 / b = 0.75
+TESTCASE a / b = 0.75
+
+TESTCASE a MOD 4 = 3
+TESTCASE 3 MOD b = 3
+TESTCASE a MOD b = 3
+
+TESTCASE a ^ 4 = 81
+TESTCASE 3 ^ b = 81
+TESTCASE a ^ b = 81
+
+LET p: Object := TRUE
+LET q: Object := FALSE
+
+TESTCASE p
+TESTCASE NOT q
+
+TESTCASE p AND TRUE
+TESTCASE TRUE AND p
+
+TESTCASE p OR FALSE
+TESTCASE FALSE OR p
+
+TESTCASE p = TRUE
+TESTCASE TRUE = p
+
+TESTCASE p <> FALSE
+TESTCASE FALSE <> p
+
+TESTCASE a = 3
+TESTCASE 3 = a
+
+TESTCASE a <> 5
+TESTCASE 5 <> a
+
+TESTCASE a < 5
+TESTCASE 2 < a
+
+TESTCASE a <= 5
+TESTCASE 2 <= a
+
+TESTCASE a > 2
+TESTCASE 5 > a
+
+TESTCASE a >= 2
+TESTCASE 5 >= a
+
+LET t: Array<Number> := [0, 1, 2, 3]
+TESTCASE t[a] = 3
+
+LET s: Object := "hello"
+
+LET u: Dictionary<Number> := {"hello": 5}
+TESTCASE u[s] = 5

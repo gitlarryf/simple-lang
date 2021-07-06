@@ -1,0 +1,30 @@
+IMPORT net
+
+VAR clients: Array<net.Socket> := []
+
+LET server: net.Socket := net.tcpSocket()
+server.listen(10007)
+LOOP
+    VAR read: Array<net.Socket> := [server]
+    FOREACH c IN clients DO
+        read.append(c)
+    END FOREACH
+    VAR write: Array<net.Socket> := []
+    VAR error: Array<net.Socket> := []
+    IF net.select(INOUT read, INOUT write, INOUT error, -1) THEN
+        IF server IN read THEN
+            clients.append(server.accept())
+        END IF
+        FOR i := clients.size()-1 TO 0 STEP -1 DO
+            IF clients[i] IN read THEN
+                VAR buf: Bytes
+                IF clients[i].recv(1000, OUT buf) THEN
+                    clients[i].send(buf)
+                ELSE
+                    clients[i].close()
+                    clients.remove(i)
+                END IF
+            END IF
+        END FOR
+    END IF
+END LOOP

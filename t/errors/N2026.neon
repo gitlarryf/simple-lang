@@ -1,0 +1,4 @@
+IF (TRUE) DO
+          --<
+    print("TRUE")
+END IF

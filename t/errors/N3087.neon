@@ -1,0 +1,4 @@
+TRY
+TRAP Foo DO
+     --<
+END TRY

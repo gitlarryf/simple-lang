@@ -1,0 +1,94 @@
+IMPORT json
+
+VAR s: String
+VAR v: Object
+
+s := json.encode(NIL)
+print(s)
+--= null
+v := json.decode(s)
+print("\(v = NIL)")
+--= TRUE
+
+s := json.encode(TRUE)
+print(s)
+--= true
+v := json.decode(s)
+print("\(v)")
+--= TRUE
+
+s := json.encode(5)
+print(s)
+--= 5
+v := json.decode(s)
+print("\(v)")
+--= 5
+
+s := json.encode("fork")
+print(s)
+--= "fork"
+v := json.decode(s)
+print("\(v)")
+--= fork
+
+TESTCASE json.decode(@@""\"\\\/\b\n\f\r\t""@@) = "\"\\/\b\n\f\r\t"
+TESTCASE json.decode(@@""\u0021""@@) = "!"
+
+s := json.encode([5, "fork"])
+print(s)
+--= [5,"fork"]
+v := json.decode(s)
+print("\(v[0]) \(v[1])")
+--= 5 fork
+
+s := json.encode({
+    "null": NIL,
+    "boolean": TRUE
+    "number": 5
+    "string": "fork"
+})
+print(s)
+--= {"boolean":true,"null":null,"number":5,"string":"fork"}
+v := json.decode(s)
+print((v["null"] = NIL).toString())
+--= TRUE
+print((IF v["boolean"] THEN "TRUE" ELSE "FALSE"))
+--= TRUE
+print(str(v["number"]))
+--= 5
+print(v["string"])
+--= fork
+
+v := json.decode(@@"{"foo": "bar\"baz"}"@@)
+print(v.foo)
+--= bar"baz
+
+LET a: Object := json.decode(@@"
+    {
+        "z": null,
+        "b": true,
+        "s": "one",
+        "n": 5,
+        "a": [
+            "zero",
+            "one",
+            "two"
+        ],
+        "o": {
+            "foo": "bar"
+        }
+    }
+"@@)
+TESTCASE a.z = NIL
+TESTCASE a.b = TRUE
+TESTCASE a.s = "one"
+TESTCASE a.n = 5
+TESTCASE a.a[1] = "one"
+TESTCASE a.o.foo = "bar"
+
+--TESTCASE a.atPath("z") = TRUE
+--TESTCASE a.atPath("b") = TRUE
+--TESTCASE a.atPath("s") = "one"
+--TESTCASE a.atPath("n") = 5
+--TESTCASE a.atPath("a/1") = "one"
+--TESTCASE a.atPath("o/foo") = "bar"

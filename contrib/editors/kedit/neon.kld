@@ -1,0 +1,124 @@
+* neon.kld - KEDIT Language Definition for the Neon Programming Language.
+* Version 1.7 - May, 2016
+
+:case
+ respect
+:number
+ c
+:identifier
+ [a-zA-Z_]  [a-zA-Z0-9_]
+:string
+ single backslash
+ double backslash
+:comment
+ paired   /*   */
+ line     --       any
+:match
+ (     )
+ [     ]
+ <     >
+ {     }
+ @@"   "@@
+:keyword
+* Language Keywords
+ AS
+ ASSERT
+ BEGIN
+ CASE
+ CHECK
+ CONSTANT
+ DEC
+ DECLARE
+ DO
+ ELSE
+ ELSIF
+ EMBED
+ END
+ ENUM
+ EXIT
+ EXPORT
+ FOR
+ FOREACH
+ FUNCTION
+ GIVES
+ IF
+ IMPORT
+ INC
+ INDEX
+ INTDIV
+ IS
+ LET
+ LOOP
+ MAIN
+ NATIVE
+ NEW
+ NEXT
+ OF
+ POINTER
+ PRIVATE
+ RECORD
+ REPEAT
+ RETURN
+ STEP
+ THEN
+ TO
+ TYPE
+ UNTIL
+ VALID
+ VAR
+ WHEN
+ WHILE
+* Exception Handling
+ EXCEPTION
+ TRY
+ RAISE          alternate 1
+* Parameter Control
+ DEFAULT        alternate 4
+ IN             alternate 4
+ INOUT          alternate 4
+ OUT            alternate 4
+ WITH           alternate 4
+* Binary Operations
+ AND            alternate 1
+ NOT            alternate 1
+ OR             alternate 1
+* Data Types and Storage containers
+ Array          alternate 6
+ Boolean        alternate 2
+ Bytes          alternate 2
+ Dictionary     alternate 6
+ HEXBYTES       alternate 2
+ Number         alternate 2
+ String         alternate 2
+* NIL is actually a unique value literal, used only with pointer operations.
+ NIL            alternate 2
+ NOWHERE        alternate 2
+* Boolean literals
+ FALSE          alternate 2
+ TRUE           alternate 2
+
+:postcompare
+ text INTDIV    alternate 1
+ text MOD       alternate 1
+ text #         alternate 1
+ text :=        alternate 1
+ text <         alternate 1
+ text >         alternate 1
+ text <=        alternate 1
+ text >=        alternate 1
+ text ^         alternate 1
+ text =         alternate 1
+ text +         alternate 1
+ text -         alternate 1
+ text /         alternate 1
+ text *         alternate 1
+ text ,         alternate 1
+ text :         alternate 1
+ text .         alternate 1
+ text ->        alternate 1
+ text FIRST     alternate 6
+ text LAST      alternate 6
+ text IS        alternate 1
+ text MAIN      alternate 3
+ text _         alternate 2
+ text @"        alternate 2

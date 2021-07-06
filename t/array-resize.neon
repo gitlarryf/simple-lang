@@ -1,0 +1,13 @@
+VAR a: Array<Number> := []
+
+a[0] := 0
+TESTCASE a.size() = 1
+
+a.resize(3)
+TESTCASE a.size() = 3
+TESTCASE a[2] = 0
+
+a.resize(2)
+TESTCASE a.size() = 2
+TESTCASE a[2] EXPECT ArrayIndexException
+TESTCASE a.resize(1.5) EXPECT ArrayIndexException

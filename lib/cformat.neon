@@ -1,0 +1,72 @@
+/*  File: cformat
+ *
+ *  Provide printf-like formatting similar to the C standard library.
+ */
+
+EXPORT printf
+EXPORT sprintf
+
+/*  Function: sprintf
+ *
+ *  Given a format string and an array of parameters, format the
+ *  string and return the result.
+ *
+ *  Parameters:
+ *      fmt - the format string
+ *      value - the values to format
+ *
+ *  Description:
+ *      The available formatting codes are
+ *
+ *          #d - decimal number
+ *          #s - string
+ *
+ *  Exceptions:
+ *      - <TypeMismatch> - if the wrong type is supplied for a parameter
+ *
+ *  See Also:
+ *      <printf>
+ */
+FUNCTION sprintf(fmt: String, value: Object...): String
+    -- TODO: This needs a lot more functionality, it is intended
+    -- as a functional equivalent to the C sprintf function.
+    VAR r: String := ""
+    VAR a: Number := 0
+    VAR i: Number := 0
+    WHILE i < fmt.length() DO
+        IF fmt[i] = "#" THEN
+            INC i
+            CASE fmt[i]
+                WHEN "d" DO
+                    r.append(str(value[a]))
+                    INC a
+                WHEN "s" DO
+                    r.append(value[a])
+                    INC a
+            END CASE
+        ELSE
+            r.append(fmt[i])
+        END IF
+        INC i
+    END WHILE
+    RETURN r
+END FUNCTION
+
+/*  Function: printf
+ *
+ *  Given a format string and an array of parameters, format the
+ *  string and print the result.
+ *
+ *  Parameters:
+ *      fmt - the format string
+ *      value - the values to format
+ *
+ *  Exceptions:
+ *      - <TypeMismatch> - if the wrong type is supplied for a parameter
+ *
+ *  See Also:
+ *      <sprintf>
+ */
+FUNCTION printf(fmt: String, value: Object...)
+    print(sprintf(fmt, value...))
+END FUNCTION

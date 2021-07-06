@@ -1,0 +1,14 @@
+VAR a: Boolean
+VAR b: Boolean
+VAR c: Boolean
+
+a := TRUE
+b := TRUE
+c := TRUE
+
+print("\(a AND b AND c)")
+--= TRUE
+
+b := FALSE
+print("\(a OR b OR c)")
+--= TRUE

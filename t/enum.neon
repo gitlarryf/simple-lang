@@ -1,0 +1,15 @@
+TYPE Colour IS ENUM
+    red
+    orange
+    yellow
+    green
+    blue
+    indigo
+    violet
+END ENUM
+
+VAR a: Colour
+
+a := Colour.red
+print(a.toString())
+--= red

@@ -1,5 +1,0 @@
-VAR d: DICTIONARY<string>
-d["hello"] := "world"
-print(d["hello"])
-
-%= world

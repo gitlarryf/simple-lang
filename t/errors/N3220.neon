@@ -1,0 +1,7 @@
+TYPE Cls IS CLASS
+    name: String
+END CLASS
+
+LET p: POINTER TO Cls := NEW Cls
+p->hello()
+   --<

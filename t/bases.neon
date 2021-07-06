@@ -1,0 +1,17 @@
+VAR a: Number
+
+a := 0b101010
+print(str(a))
+--= 42
+
+a := 0o52
+print(str(a))
+--= 42
+
+a := 0x2a
+print(str(a))
+--= 42
+
+a := 042
+print(str(a))
+--= 42

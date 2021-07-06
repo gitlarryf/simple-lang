@@ -1,0 +1,1394 @@
+/*  File: forth
+ *
+ *  Implementation of the Forth programming language.
+ */
+
+IMPORT binary
+IMPORT console
+IMPORT io
+IMPORT math
+IMPORT regex
+IMPORT string
+IMPORT sys
+
+CONSTANT NUMBER_BUFFER_MAX: Number := 80
+CONSTANT Digits: String := "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+TYPE Stack IS RECORD
+    stack: Array<Number>
+END RECORD
+
+FUNCTION Stack.drop(INOUT self: Stack, n: Number DEFAULT 1)
+    self.stack.resize(self.stack.size() - n)
+END FUNCTION
+
+FUNCTION Stack.peek(self: Stack, n: Number DEFAULT 0): Number
+    RETURN self.stack[LAST-n]
+END FUNCTION
+
+FUNCTION Stack.pop(INOUT self: Stack): Number
+    LET x: Number := self.stack[LAST]
+    self.stack.resize(self.stack.size()-1)
+    RETURN x
+END FUNCTION
+
+FUNCTION Stack.push(INOUT self: Stack, x: Number)
+    self.stack.append(x MOD 0x100000000)
+END FUNCTION
+
+FUNCTION Stack.size(self: Stack): Number
+    RETURN self.stack.size()
+END FUNCTION
+
+FUNCTION signed32(n: Number): Number
+    RETURN (IF n >= 0x80000000 THEN n - 0x100000000 ELSE n)
+END FUNCTION
+
+TYPE ReturnEntry IS RECORD
+    ip: Number
+    limit: Number
+    index: Number
+    leave: Number
+END RECORD
+
+CONSTANT CORE_STORE        : Number := -1
+CONSTANT CORE_NUMBER       : Number := -2
+CONSTANT CORE_NUMBER_GT    : Number := -3
+CONSTANT CORE_NUMBER_S     : Number := -4
+CONSTANT CORE_TICK         : Number := -5
+CONSTANT CORE_COMMENT      : Number := -6
+CONSTANT CORE_MUL          : Number := -7
+CONSTANT CORE_MUL_DIV      : Number := -8
+CONSTANT CORE_MUL_DIV_MOD  : Number := -9
+CONSTANT CORE_ADD          : Number := -10
+CONSTANT CORE_ADD_STORE    : Number := -11
+CONSTANT CORE_PLUS_LOOP    : Number := -12
+CONSTANT CORE_COMMA        : Number := -13
+CONSTANT CORE_SUB          : Number := -14
+CONSTANT CORE_PRINT        : Number := -15
+CONSTANT CORE_PRINT_QUOTE  : Number := -16
+CONSTANT CORE_DIV          : Number := -17
+CONSTANT CORE_DIV_MOD      : Number := -18
+CONSTANT CORE_0_LESS       : Number := -19
+CONSTANT CORE_0_EQUAL      : Number := -20
+CONSTANT CORE_1_PLUS       : Number := -21
+CONSTANT CORE_1_MINUS      : Number := -22
+CONSTANT CORE_2_STORE      : Number := -23
+CONSTANT CORE_2_TIMES      : Number := -24
+CONSTANT CORE_2_DIVIDE     : Number := -25
+CONSTANT CORE_2_FETCH      : Number := -26
+CONSTANT CORE_2DROP        : Number := -27
+CONSTANT CORE_2DUP         : Number := -28
+CONSTANT CORE_2OVER        : Number := -29
+CONSTANT CORE_2SWAP        : Number := -30
+CONSTANT CORE_DEFINE       : Number := -31
+CONSTANT CORE_SEMICOLON    : Number := -32
+CONSTANT CORE_LESS         : Number := -33
+CONSTANT CORE_LESS_NUMBER  : Number := -34
+CONSTANT CORE_NOT_EQUAL    : Number := -35
+CONSTANT CORE_EQUAL        : Number := -36
+CONSTANT CORE_GREATER      : Number := -37
+CONSTANT CORE_TO_BODY      : Number := -38
+CONSTANT CORE_TO_IN        : Number := -39
+CONSTANT CORE_TO_NUMBER    : Number := -40
+CONSTANT CORE_TO_R         : Number := -41
+CONSTANT CORE_Q_DUP        : Number := -42
+CONSTANT CORE_FETCH        : Number := -43
+CONSTANT CORE_ABS          : Number := -44
+CONSTANT CORE_ACCEPT       : Number := -45
+CONSTANT CORE_ALIGN        : Number := -46
+CONSTANT CORE_ALIGNED      : Number := -47
+CONSTANT CORE_ALLOT        : Number := -48
+CONSTANT CORE_AND          : Number := -49
+CONSTANT CORE_BASE         : Number := -50
+CONSTANT CORE_BEGIN        : Number := -51
+CONSTANT CORE_BL           : Number := -52
+CONSTANT CORE_C_STORE      : Number := -53
+CONSTANT CORE_C_COMMA      : Number := -54
+CONSTANT CORE_C_FETCH      : Number := -55
+CONSTANT CORE_CELL_PLUS    : Number := -56
+CONSTANT CORE_CELLS        : Number := -57
+CONSTANT CORE_CHAR         : Number := -58
+CONSTANT CORE_CHAR_PLUS    : Number := -59
+CONSTANT CORE_CHARS        : Number := -60
+CONSTANT CORE_CONSTANT     : Number := -61
+CONSTANT CORE_COUNT        : Number := -62
+CONSTANT CORE_CR           : Number := -63
+CONSTANT CORE_CREATE       : Number := -64
+CONSTANT CORE_DECIMAL      : Number := -65
+CONSTANT CORE_DEPTH        : Number := -66
+CONSTANT CORE_DO           : Number := -67
+CONSTANT CORE_DOES         : Number := -68
+CONSTANT CORE_DROP         : Number := -69
+CONSTANT CORE_DUP          : Number := -70
+CONSTANT CORE_ELSE         : Number := -71
+CONSTANT CORE_EMIT         : Number := -72
+CONSTANT CORE_ENVIRONMENT_Q: Number := -73
+CONSTANT CORE_EVALUATE     : Number := -74
+CONSTANT CORE_EXECUTE      : Number := -75
+CONSTANT CORE_EXIT         : Number := -76
+CONSTANT CORE_FALSE        : Number := -77
+CONSTANT CORE_FILL         : Number := -78
+CONSTANT CORE_FIND         : Number := -79
+CONSTANT CORE_FM_MOD       : Number := -80
+CONSTANT CORE_HERE         : Number := -81
+CONSTANT CORE_HEX          : Number := -82
+CONSTANT CORE_HOLD         : Number := -83
+CONSTANT CORE_I            : Number := -84
+CONSTANT CORE_IF           : Number := -85
+CONSTANT CORE_IMMEDIATE    : Number := -86
+CONSTANT CORE_INVERT       : Number := -87
+CONSTANT CORE_J            : Number := -88
+CONSTANT CORE_LEAVE        : Number := -89
+CONSTANT CORE_LITERAL      : Number := -90
+CONSTANT CORE_LOOP         : Number := -91
+CONSTANT CORE_LSHIFT       : Number := -92
+CONSTANT CORE_M_MUL        : Number := -93
+CONSTANT CORE_MAX          : Number := -94
+CONSTANT CORE_MIN          : Number := -95
+CONSTANT CORE_MOD          : Number := -96
+CONSTANT CORE_MOVE         : Number := -97
+CONSTANT CORE_NEGATE       : Number := -98
+CONSTANT CORE_NOT          : Number := -99
+CONSTANT CORE_OR           : Number := -100
+CONSTANT CORE_OVER         : Number := -101
+CONSTANT CORE_PAD          : Number := -102
+CONSTANT CORE_POSTPONE     : Number := -103
+CONSTANT CORE_R_FROM       : Number := -104
+CONSTANT CORE_R_FETCH      : Number := -105
+CONSTANT CORE_RECURSE      : Number := -106
+CONSTANT CORE_REPEAT       : Number := -107
+CONSTANT CORE_ROT          : Number := -108
+CONSTANT CORE_RSHIFT       : Number := -109
+CONSTANT CORE_S_QUOTE      : Number := -110
+CONSTANT CORE_S_TO_D       : Number := -111
+CONSTANT CORE_SIGN         : Number := -112
+CONSTANT CORE_SM_REM       : Number := -113
+CONSTANT CORE_SOURCE       : Number := -114
+CONSTANT CORE_SPACE        : Number := -115
+CONSTANT CORE_SPACES       : Number := -116
+CONSTANT CORE_STATE        : Number := -117
+CONSTANT CORE_SWAP         : Number := -118
+CONSTANT CORE_THEN         : Number := -119
+CONSTANT CORE_TRUE         : Number := -120
+CONSTANT CORE_TUCK         : Number := -121
+CONSTANT CORE_TYPE         : Number := -122
+CONSTANT CORE_U_PRINT      : Number := -123
+CONSTANT CORE_U_LESS       : Number := -124
+CONSTANT CORE_UM_MOD       : Number := -125
+CONSTANT CORE_UM_MUL       : Number := -126
+CONSTANT CORE_UNLOOP       : Number := -127
+CONSTANT CORE_UNTIL        : Number := -128
+CONSTANT CORE_VARIABLE     : Number := -129
+CONSTANT CORE_WHILE        : Number := -130
+CONSTANT CORE_WORD         : Number := -131
+CONSTANT CORE_XOR          : Number := -132
+CONSTANT CORE_INTERPRET    : Number := -133
+CONSTANT CORE_IMM_TICK     : Number := -134
+CONSTANT CORE_IMM_CHAR     : Number := -135
+CONSTANT CORE_BACKSLASH    : Number := -136
+CONSTANT CORE_COMPILE      : Number := -137
+
+CONSTANT TOOLS_PRINT_S     : Number := -201
+CONSTANT TOOLS_QUESTION    : Number := -202
+CONSTANT TOOLS_DUMP        : Number := -203
+CONSTANT TOOLS_SEE         : Number := -204
+CONSTANT TOOLS_WORDS       : Number := -205
+
+CONSTANT TOOLS_EXT_BYE     : Number := -301
+CONSTANT TOOLS_EXT_ELSE    : Number := -302
+CONSTANT TOOLS_EXT_IF      : Number := -303
+CONSTANT TOOLS_EXT_THEN    : Number := -304
+
+CONSTANT INT_BRANCH        : Number := -1001
+CONSTANT INT_DO            : Number := -1002
+CONSTANT INT_DOES          : Number := -1003
+CONSTANT INT_EXIT          : Number := -1004
+CONSTANT INT_LEAVE         : Number := -1005
+CONSTANT INT_LITERAL       : Number := -1006
+CONSTANT INT_LOOP          : Number := -1007
+CONSTANT INT_PLUS_LOOP     : Number := -1008
+CONSTANT INT_POSTPONE      : Number := -1009
+CONSTANT INT_POSTPONE_IMM  : Number := -1010
+CONSTANT INT_PRINT_QUOTE   : Number := -1011
+CONSTANT INT_Q_BRANCH      : Number := -1012
+CONSTANT INT_S_QUOTE       : Number := -1013
+CONSTANT INT_UNLOOP        : Number := -1014
+
+TYPE Word IS RECORD
+    xt: Number
+    immediate: Boolean
+END RECORD
+
+VAR words: Dictionary<Word> := {
+    "!": Word(xt WITH CORE_STORE)
+    "#": Word(xt WITH CORE_NUMBER)
+    "#>": Word(xt WITH CORE_NUMBER_GT)
+    "#S": Word(xt WITH CORE_NUMBER_S)
+    "'": Word(xt WITH CORE_TICK)
+    "(": Word(xt WITH CORE_COMMENT)
+    "*": Word(xt WITH CORE_MUL)
+    "*/": Word(xt WITH CORE_MUL_DIV)
+    "*/MOD": Word(xt WITH CORE_MUL_DIV_MOD)
+    "+": Word(xt WITH CORE_ADD)
+    "+!": Word(xt WITH CORE_ADD_STORE)
+    "+LOOP": Word(xt WITH CORE_PLUS_LOOP)
+    ",": Word(xt WITH CORE_COMMA)
+    "-": Word(xt WITH CORE_SUB)
+    ".": Word(xt WITH CORE_PRINT)
+    ".\"": Word(xt WITH CORE_PRINT_QUOTE)
+    ".S": Word(xt WITH TOOLS_PRINT_S)
+    "/": Word(xt WITH CORE_DIV)
+    "/MOD": Word(xt WITH CORE_DIV_MOD)
+    "0<": Word(xt WITH CORE_0_LESS)
+    "0=": Word(xt WITH CORE_0_EQUAL)
+    "1+": Word(xt WITH CORE_1_PLUS)
+    "1-": Word(xt WITH CORE_1_MINUS)
+    "2!": Word(xt WITH CORE_2_STORE)
+    "2*": Word(xt WITH CORE_2_TIMES)
+    "2/": Word(xt WITH CORE_2_DIVIDE)
+    "2@": Word(xt WITH CORE_2_FETCH)
+    "2DROP": Word(xt WITH CORE_2DROP)
+    "2DUP": Word(xt WITH CORE_2DUP)
+    "2OVER": Word(xt WITH CORE_2OVER)
+    "2SWAP": Word(xt WITH CORE_2SWAP)
+    ":": Word(xt WITH CORE_DEFINE)
+    ";": Word(xt WITH CORE_SEMICOLON)
+    "<": Word(xt WITH CORE_LESS)
+    "<#": Word(xt WITH CORE_LESS_NUMBER)
+    "<>": Word(xt WITH CORE_NOT_EQUAL)
+    "=": Word(xt WITH CORE_EQUAL)
+    ">": Word(xt WITH CORE_GREATER)
+    ">BODY": Word(xt WITH CORE_TO_BODY)
+    ">IN": Word(xt WITH CORE_TO_IN)
+    ">NUMBER": Word(xt WITH CORE_TO_NUMBER)
+    ">R": Word(xt WITH CORE_TO_R)
+    "?": Word(xt WITH TOOLS_QUESTION)
+    "?DUP": Word(xt WITH CORE_Q_DUP)
+    "@": Word(xt WITH CORE_FETCH)
+    "ABS": Word(xt WITH CORE_ABS)
+    "ACCEPT": Word(xt WITH CORE_ACCEPT)
+    "ALIGN": Word(xt WITH CORE_ALIGN)
+    "ALIGNED": Word(xt WITH CORE_ALIGNED)
+    "ALLOT": Word(xt WITH CORE_ALLOT)
+    "AND": Word(xt WITH CORE_AND)
+    "BASE": Word(xt WITH CORE_BASE)
+    "BEGIN": Word(xt WITH CORE_BEGIN)
+    "BL": Word(xt WITH CORE_BL)
+    "BYE": Word(xt WITH TOOLS_EXT_BYE)
+    "C!": Word(xt WITH CORE_C_STORE)
+    "C,": Word(xt WITH CORE_C_COMMA)
+    "C@": Word(xt WITH CORE_C_FETCH)
+    "CELL+": Word(xt WITH CORE_CELL_PLUS)
+    "CELLS": Word(xt WITH CORE_CELLS)
+    "CHAR": Word(xt WITH CORE_CHAR)
+    "CHAR+": Word(xt WITH CORE_CHAR_PLUS)
+    "CHARS": Word(xt WITH CORE_CHARS)
+    "CONSTANT": Word(xt WITH CORE_CONSTANT)
+    "COUNT": Word(xt WITH CORE_COUNT)
+    "CR": Word(xt WITH CORE_CR)
+    "CREATE": Word(xt WITH CORE_CREATE)
+    "DECIMAL": Word(xt WITH CORE_DECIMAL)
+    "DEPTH": Word(xt WITH CORE_DEPTH)
+    "DO": Word(xt WITH CORE_DO)
+    "DOES>": Word(xt WITH CORE_DOES)
+    "DROP": Word(xt WITH CORE_DROP)
+    "DUMP": Word(xt WITH TOOLS_DUMP)
+    "DUP": Word(xt WITH CORE_DUP)
+    "ELSE": Word(xt WITH CORE_ELSE)
+    "EMIT": Word(xt WITH CORE_EMIT)
+    "ENVIRONMENT?": Word(xt WITH CORE_ENVIRONMENT_Q)
+    "EVALUATE": Word(xt WITH CORE_EVALUATE)
+    "EXECUTE": Word(xt WITH CORE_EXECUTE)
+    "EXIT": Word(xt WITH CORE_EXIT)
+    "FALSE": Word(xt WITH CORE_FALSE)
+    "FILL": Word(xt WITH CORE_FILL)
+    "FIND": Word(xt WITH CORE_FIND)
+    "FM/MOD": Word(xt WITH CORE_FM_MOD)
+    "HERE": Word(xt WITH CORE_HERE)
+    "HEX": Word(xt WITH CORE_HEX)
+    "HOLD": Word(xt WITH CORE_HOLD)
+    "I": Word(xt WITH CORE_I)
+    "IF": Word(xt WITH CORE_IF)
+    "IMMEDIATE": Word(xt WITH CORE_IMMEDIATE)
+    "INVERT": Word(xt WITH CORE_INVERT)
+    "J": Word(xt WITH CORE_J)
+    "LEAVE": Word(xt WITH CORE_LEAVE)
+    "LITERAL": Word(xt WITH CORE_LITERAL)
+    "LOOP": Word(xt WITH CORE_LOOP)
+    "LSHIFT": Word(xt WITH CORE_LSHIFT)
+    "M*": Word(xt WITH CORE_M_MUL)
+    "MAX": Word(xt WITH CORE_MAX)
+    "MIN": Word(xt WITH CORE_MIN)
+    "MOD": Word(xt WITH CORE_MOD)
+    "MOVE": Word(xt WITH CORE_MOVE)
+    "NEGATE": Word(xt WITH CORE_NEGATE)
+    "NOT": Word(xt WITH CORE_NOT)
+    "OR": Word(xt WITH CORE_OR)
+    "OVER": Word(xt WITH CORE_OVER)
+    "PAD": Word(xt WITH CORE_PAD)
+    "POSTPONE": Word(xt WITH CORE_POSTPONE)
+    "R>": Word(xt WITH CORE_R_FROM)
+    "R@": Word(xt WITH CORE_R_FETCH)
+    "RECURSE": Word(xt WITH CORE_RECURSE)
+    "REPEAT": Word(xt WITH CORE_REPEAT)
+    "ROT": Word(xt WITH CORE_ROT)
+    "RSHIFT": Word(xt WITH CORE_RSHIFT)
+    "S\"": Word(xt WITH CORE_S_QUOTE)
+    "S>D": Word(xt WITH CORE_S_TO_D)
+    "SEE": Word(xt WITH TOOLS_SEE)
+    "SIGN": Word(xt WITH CORE_SIGN)
+    "SM/REM": Word(xt WITH CORE_SM_REM)
+    "SOURCE": Word(xt WITH CORE_SOURCE)
+    "SPACE": Word(xt WITH CORE_SPACE)
+    "SPACES": Word(xt WITH CORE_SPACES)
+    "STATE": Word(xt WITH CORE_STATE)
+    "SWAP": Word(xt WITH CORE_SWAP)
+    "THEN": Word(xt WITH CORE_THEN)
+    "TRUE": Word(xt WITH CORE_TRUE)
+    "TUCK": Word(xt WITH CORE_TUCK)
+    "TYPE": Word(xt WITH CORE_TYPE)
+    "U.": Word(xt WITH CORE_U_PRINT)
+    "U<": Word(xt WITH CORE_U_LESS)
+    "UM/MOD": Word(xt WITH CORE_UM_MOD)
+    "UM*": Word(xt WITH CORE_UM_MUL)
+    "UNLOOP": Word(xt WITH CORE_UNLOOP)
+    "UNTIL": Word(xt WITH CORE_UNTIL)
+    "VARIABLE": Word(xt WITH CORE_VARIABLE)
+    "WHILE": Word(xt WITH CORE_WHILE)
+    "WORD": Word(xt WITH CORE_WORD)
+    "WORDS": Word(xt WITH TOOLS_WORDS)
+    "XOR": Word(xt WITH CORE_XOR)
+    "[": Word(xt WITH CORE_INTERPRET)
+    "[']": Word(xt WITH CORE_IMM_TICK)
+    "[CHAR]": Word(xt WITH CORE_IMM_CHAR)
+    "[ELSE]": Word(xt WITH TOOLS_EXT_ELSE)
+    "[IF]": Word(xt WITH TOOLS_EXT_IF)
+    "[THEN]": Word(xt WITH TOOLS_EXT_THEN)
+    @"\": Word(xt WITH CORE_BACKSLASH)
+    "]": Word(xt WITH CORE_COMPILE)
+}
+VAR code: Array<Number> := [0]
+VAR stack: Stack
+VAR storage: Array<Number> := []
+VAR defining: String
+VAR define_start: Number
+VAR compilation: Stack
+VAR return: Array<ReturnEntry>
+
+FUNCTION alloc(n: Number, INOUT i: Number): Number
+    LET r: Number := i
+    i := i + n
+    RETURN r
+END FUNCTION
+
+VAR index: Number := 0
+LET cell_state: Number := alloc(1, INOUT index)
+LET cell_normal_input: Number := alloc(200, INOUT index)
+LET cell_normal_input_length: Number := alloc(1, INOUT index)
+LET cell_normal_in: Number := alloc(1, INOUT index)
+LET cell_eval_input_length: Number := alloc(1, INOUT index)
+LET cell_eval_in: Number := alloc(1, INOUT index)
+LET cell_base: Number := alloc(1, INOUT index)
+LET cell_pad: Number := alloc(84, INOUT index)
+LET cell_number_buffer: Number := alloc(NUMBER_BUFFER_MAX, INOUT index)
+VAR number_buffer_size: Number
+storage[cell_base] := 10
+storage[index] := 0
+
+VAR cell_input: Number := cell_normal_input
+VAR cell_input_length: Number := cell_normal_input_length
+VAR cell_in: Number := cell_normal_in
+
+FUNCTION get_string_len(addr, len: Number): String
+    VAR r: String := ""
+    FOR i := 0 TO len-1 DO
+        r.append(string.fromCodePoint(storage[addr+i]))
+    END FOR
+    RETURN r
+END FUNCTION
+
+FUNCTION get_string(addr: Number): String
+    LET len: Number := storage[addr]
+    RETURN get_string_len(addr+1, len)
+END FUNCTION
+
+FUNCTION run_instruction(instr: Number, INOUT ip: Number)
+    IF instr > 0 THEN
+        return.append(ReturnEntry(ip WITH ip+1))
+        ip := instr
+        EXIT FUNCTION
+    END IF
+    CASE instr
+        WHEN 0 DO
+            ip := return[LAST].ip
+            return.resize(return.size()-1)
+        WHEN CORE_STORE DO
+            LET addr: Number := stack.pop()
+            LET x: Number := stack.pop()
+            storage[addr] := x
+        WHEN CORE_NUMBER DO
+            LET ud1h: Number := stack.pop()
+            LET ud1l: Number := stack.pop()
+            LET ud1: Number := ud1h * 0x100000000 + ud1l
+            LET dig: Number := ud1 MOD storage[cell_base]
+            LET ud2: Number := math.floor(ud1 / storage[cell_base])
+            stack.push(ud2 MOD 0x100000000)
+            stack.push(math.floor(ud2 / 0x100000000))
+            INC number_buffer_size
+            storage[cell_number_buffer + NUMBER_BUFFER_MAX - number_buffer_size] := string.toCodePoint(Digits[dig])
+        WHEN CORE_NUMBER_GT DO
+            stack.drop(2)
+            stack.push(cell_number_buffer + NUMBER_BUFFER_MAX - number_buffer_size)
+            stack.push(number_buffer_size)
+        WHEN CORE_NUMBER_S DO
+            LET ud1h: Number := stack.pop()
+            LET ud1l: Number := stack.pop()
+            VAR ud1: Number := ud1h * 0x100000000 + ud1l
+            REPEAT
+                LET dig: Number := ud1 MOD storage[cell_base]
+                ud1 := math.floor(ud1 / storage[cell_base])
+                INC number_buffer_size
+                storage[cell_number_buffer + NUMBER_BUFFER_MAX - number_buffer_size] := string.toCodePoint(Digits[dig])
+            UNTIL ud1 = 0
+            stack.push(0)
+            stack.push(0)
+        WHEN CORE_MUL DO
+            LET n2: Number := signed32(stack.pop())
+            LET n1: Number := signed32(stack.pop())
+            stack.push(n1 * n2)
+        WHEN CORE_MUL_DIV DO
+            LET n3: Number := signed32(stack.pop())
+            LET n2: Number := signed32(stack.pop())
+            LET n1: Number := signed32(stack.pop())
+            stack.push(math.floor(n1 * n2 / n3))
+        WHEN CORE_MUL_DIV_MOD DO
+            LET n3: Number := signed32(stack.pop())
+            LET n2: Number := signed32(stack.pop())
+            LET n1: Number := signed32(stack.pop())
+            LET p: Number := n1 * n2
+            stack.push(p MOD n3)
+            stack.push(math.floor(p / n3))
+        WHEN CORE_ADD DO
+            LET n2: Number := signed32(stack.pop())
+            LET n1: Number := signed32(stack.pop())
+            stack.push(n1 + n2)
+        WHEN CORE_ADD_STORE DO
+            LET addr: Number := stack.pop()
+            LET n: Number := signed32(stack.pop())
+            storage[addr] := storage[addr] + n
+        WHEN CORE_COMMA DO
+            LET x: Number := stack.pop()
+            storage.append(x)
+        WHEN CORE_SUB DO
+            LET n2: Number := signed32(stack.pop())
+            LET n1: Number := signed32(stack.pop())
+            stack.push(n1 - n2)
+        WHEN CORE_PRINT DO
+            LET n: Number := signed32(stack.pop())
+            io.write(io.stdout, "\(n) ")
+        WHEN CORE_DIV DO
+            LET n2: Number := signed32(stack.pop())
+            LET n1: Number := signed32(stack.pop())
+            stack.push(math.floor(n1 / n2))
+        WHEN CORE_DIV_MOD DO
+            LET n2: Number := signed32(stack.pop())
+            LET n1: Number := signed32(stack.pop())
+            stack.push(n1 MOD n2)
+            stack.push(math.floor(n1 / n2))
+        WHEN CORE_0_LESS DO
+            LET n: Number := signed32(stack.pop())
+            stack.push((IF n < 0 THEN -1 ELSE 0))
+        WHEN CORE_0_EQUAL DO
+            LET n: Number := stack.pop()
+            stack.push((IF n = 0 THEN -1 ELSE 0))
+        WHEN CORE_1_PLUS DO
+            LET n1: Number := signed32(stack.pop())
+            stack.push(n1 + 1)
+        WHEN CORE_1_MINUS DO
+            LET n1: Number := signed32(stack.pop())
+            stack.push(n1 - 1)
+        WHEN CORE_2_STORE DO
+            LET addr: Number := stack.pop()
+            LET x2: Number := stack.pop()
+            LET x1: Number := stack.pop()
+            storage[addr] := x2
+            storage[addr+1] := x1
+        WHEN CORE_2_TIMES DO
+            LET n1: Number := stack.pop()
+            stack.push(binary.shiftLeft32(n1, 1))
+        WHEN CORE_2_DIVIDE DO
+            LET n1: Number := signed32(stack.pop())
+            stack.push(binary.shiftRightSigned32(n1, 1))
+        WHEN CORE_2_FETCH DO
+            LET addr: Number := stack.pop()
+            stack.push(storage[addr+1])
+            stack.push(storage[addr])
+        WHEN CORE_2DROP DO
+            stack.drop(2)
+        WHEN CORE_2DUP DO
+            LET x2: Number := stack.pop()
+            LET x1: Number := stack.pop()
+            stack.push(x1)
+            stack.push(x2)
+            stack.push(x1)
+            stack.push(x2)
+        WHEN CORE_2OVER DO
+            LET x4: Number := stack.pop()
+            LET x3: Number := stack.pop()
+            LET x2: Number := stack.pop()
+            LET x1: Number := stack.pop()
+            stack.push(x1)
+            stack.push(x2)
+            stack.push(x3)
+            stack.push(x4)
+            stack.push(x1)
+            stack.push(x2)
+        WHEN CORE_2SWAP DO
+            LET x4: Number := stack.pop()
+            LET x3: Number := stack.pop()
+            LET x2: Number := stack.pop()
+            LET x1: Number := stack.pop()
+            stack.push(x3)
+            stack.push(x4)
+            stack.push(x1)
+            stack.push(x2)
+        WHEN CORE_DEFINE DO
+            defining := next_word()
+            define_start := code.size()
+            storage[cell_state] := -1
+        WHEN CORE_LESS DO
+            LET n2: Number := signed32(stack.pop())
+            LET n1: Number := signed32(stack.pop())
+            stack.push((IF n1 < n2 THEN -1 ELSE 0))
+        WHEN CORE_LESS_NUMBER DO
+            number_buffer_size := 0
+        WHEN CORE_NOT_EQUAL DO
+            LET n2: Number := signed32(stack.pop())
+            LET n1: Number := signed32(stack.pop())
+            stack.push((IF n1 <> n2 THEN -1 ELSE 0))
+        WHEN CORE_EQUAL DO
+            LET n2: Number := signed32(stack.pop())
+            LET n1: Number := signed32(stack.pop())
+            stack.push((IF n1 = n2 THEN -1 ELSE 0))
+        WHEN CORE_GREATER DO
+            LET n2: Number := signed32(stack.pop())
+            LET n1: Number := signed32(stack.pop())
+            stack.push((IF n1 > n2 THEN -1 ELSE 0))
+        WHEN CORE_TO_BODY DO
+            LET xt: Number := stack.pop()
+            ASSERT code[xt] = INT_LITERAL
+            ASSERT code[xt+2] = 0 OR code[xt+2] = INT_BRANCH
+            ASSERT code[xt+4] = 0
+            stack.push(code[xt+1])
+        WHEN CORE_TO_IN DO
+            stack.push(cell_in)
+        WHEN CORE_TO_NUMBER DO
+            VAR u: Number := stack.pop()
+            VAR addr: Number := stack.pop()
+            LET ud1h: Number := stack.pop()
+            LET ud1l: Number := stack.pop()
+            VAR ud1: Number := ud1h * 0x100000000 + ud1l
+            WHILE u > 0 DO
+                LET char: String := string.fromCodePoint(storage[addr])
+                VAR dig: Number := 0 -- FIXME: shouldn't need init here
+                IF "0" <= char <= "9" THEN
+                    dig := string.toCodePoint(char) - string.toCodePoint("0")
+                ELSIF "A" <= char <= "Z" THEN
+                    dig := string.toCodePoint(char) - string.toCodePoint("A") + 10
+                ELSE
+                    EXIT WHILE
+                END IF
+                IF dig >= storage[cell_base] THEN
+                    EXIT WHILE
+                END IF
+                ud1 := ud1 * storage[cell_base] + dig
+                INC addr
+                DEC u
+            END WHILE
+            stack.push(ud1 MOD 0x100000000)
+            stack.push(math.floor(ud1 / 0x100000000))
+            stack.push(addr)
+            stack.push(u)
+        WHEN CORE_TO_R DO
+            LET x: Number := stack.pop()
+            return.append(ReturnEntry(ip WITH x))
+        WHEN CORE_Q_DUP DO
+            LET x: Number := stack.pop()
+            stack.push(x)
+            IF x <> 0 THEN
+                stack.push(x)
+            END IF
+        WHEN CORE_FETCH DO
+            LET addr: Number := stack.pop()
+            stack.push(storage[addr])
+        WHEN CORE_ABS DO
+            LET n: Number := signed32(stack.pop())
+            stack.push(math.abs(n))
+        WHEN CORE_ACCEPT DO
+            LET n: Number := signed32(stack.pop())
+            LET addr: Number := stack.pop()
+            LET s: String := console.input("")
+            FOR i := 0 TO math.min(n-1, s.length()-1) DO
+                storage[addr+i] := string.toCodePoint(s[i])
+            END FOR
+            stack.push(s.length())
+        WHEN CORE_ALIGN DO
+            -- no action required
+        WHEN CORE_ALIGNED DO
+            -- no action required
+        WHEN CORE_ALLOT DO
+            LET n: Number := signed32(stack.pop())
+            storage.resize(storage.size() + n)
+        WHEN CORE_AND DO
+            LET x2: Number := stack.pop()
+            LET x1: Number := stack.pop()
+            stack.push(binary.and32(x1, x2))
+        WHEN CORE_BASE DO
+            stack.push(cell_base)
+        WHEN CORE_BL DO
+            stack.push(string.toCodePoint(" "))
+        WHEN CORE_C_STORE DO
+            LET addr: Number := stack.pop()
+            LET x: Number := stack.pop()
+            storage[addr] := x
+        WHEN CORE_C_COMMA DO
+            LET x: Number := stack.pop()
+            storage.append(x)
+        WHEN CORE_C_FETCH DO
+            LET addr: Number := stack.pop()
+            stack.push(storage[addr])
+        WHEN CORE_CELL_PLUS DO
+            LET addr: Number := stack.pop()
+            stack.push(addr+1)
+        WHEN CORE_CELLS DO
+            LET n: Number := signed32(stack.pop())
+            stack.push(n)
+        WHEN CORE_CHAR DO
+            LET s: String := next_word()
+            stack.push(string.toCodePoint(s[FIRST]))
+        WHEN CORE_CHAR_PLUS DO
+            LET addr: Number := stack.pop()
+            stack.push(addr+1)
+        WHEN CORE_CHARS DO
+            LET n: Number := signed32(stack.pop())
+            stack.push(n)
+        WHEN CORE_CONSTANT DO
+            LET x: Number := stack.pop()
+            LET s: String := next_word()
+            words[s] := Word(xt WITH code.size())
+            code.append(INT_LITERAL)
+            code.append(x)
+            code.append(0)
+        WHEN CORE_COUNT DO
+            LET addr: Number := stack.pop()
+            stack.push(addr+1)
+            stack.push(storage[addr])
+        WHEN CORE_CR DO
+            print("")
+        WHEN CORE_CREATE DO
+            LET s: String := next_word()
+            words[s] := Word(xt WITH code.size())
+            code.append(INT_LITERAL)
+            code.append(storage.size())
+            code.append(0)
+            code.append(0)
+            code.append(0)
+        WHEN CORE_DECIMAL DO
+            storage[cell_base] := 10
+        WHEN CORE_DEPTH DO
+            stack.push(stack.size())
+        WHEN CORE_DROP DO
+            stack.drop()
+        WHEN CORE_DUP DO
+            LET x: Number := stack.pop()
+            stack.push(x)
+            stack.push(x)
+        WHEN CORE_EMIT DO
+            LET x: Number := stack.pop()
+            io.write(io.stdout, string.fromCodePoint(x))
+        WHEN CORE_ENVIRONMENT_Q DO
+            LET u: Number := stack.pop()
+            LET addr: Number := stack.pop()
+            CASE get_string_len(addr, u)
+                WHEN "FLOATING" DO
+                    stack.push(0)
+                WHEN OTHERS DO
+                    stack.push(0)
+            END CASE
+        WHEN CORE_EVALUATE DO
+            LET u: Number := stack.pop()
+            LET addr: Number := stack.pop()
+            storage[cell_eval_input_length] := u
+            storage[cell_eval_in] := 0
+            cell_input := addr
+            cell_input_length := cell_eval_input_length
+            cell_in := cell_eval_in
+            interpret()
+        WHEN CORE_EXECUTE DO
+            LET xt: Number := stack.pop()
+            IF xt > 0 THEN
+                run_compiled(xt)
+            ELSE
+                run_instruction(xt, INOUT ip)
+            END IF
+        WHEN CORE_FALSE DO
+            stack.push(0)
+        WHEN CORE_FILL DO
+            LET char: Number := stack.pop()
+            VAR u: Number := stack.pop()
+            VAR addr: Number := stack.pop()
+            WHILE u > 0 DO
+                storage[addr] := char
+                INC addr
+                DEC u
+            END WHILE
+        WHEN CORE_FIND DO
+            LET addr: Number := stack.pop()
+            LET s: String := get_string(addr)
+            IF s IN words THEN
+                stack.push(words[s].xt)
+                stack.push((IF words[s].immediate THEN 1 ELSE -1))
+            ELSE
+                stack.push(addr)
+                stack.push(0)
+            END IF
+        WHEN CORE_FM_MOD DO
+            LET n1: Number := signed32(stack.pop())
+            LET d1h: Number := signed32(stack.pop())
+            LET d1l: Number := stack.pop()
+            LET d1: Number := d1h * 0x100000000 + d1l
+            stack.push(d1 MOD n1)
+            stack.push(math.floor(d1 / n1))
+        WHEN CORE_HERE DO
+            stack.push(storage.size())
+        WHEN CORE_HEX DO
+            storage[cell_base] := 0x10
+        WHEN CORE_HOLD DO
+            LET char: Number := stack.pop()
+            INC number_buffer_size
+            storage[cell_number_buffer + NUMBER_BUFFER_MAX - number_buffer_size] := char
+        WHEN CORE_I DO
+            stack.push(return[LAST].index)
+        WHEN CORE_IMMEDIATE DO
+            words[defining].immediate := TRUE
+        WHEN CORE_INVERT DO
+            LET x1: Number := stack.pop()
+            stack.push(binary.not32(x1))
+        WHEN CORE_J DO
+            stack.push(return[LAST-1].index)
+        WHEN CORE_LSHIFT DO
+            LET u: Number := stack.pop()
+            LET x1: Number := stack.pop()
+            stack.push(binary.shiftLeft32(x1, u))
+        WHEN CORE_M_MUL DO
+            LET n2: Number := signed32(stack.pop())
+            LET n1: Number := signed32(stack.pop())
+            LET p: Number := n1 * n2
+            stack.push(p)
+            stack.push(math.floor(p / 0x100000000))
+        WHEN CORE_MAX DO
+            LET n2: Number := signed32(stack.pop())
+            LET n1: Number := signed32(stack.pop())
+            stack.push(math.max(n1, n2))
+        WHEN CORE_MIN DO
+            LET n2: Number := signed32(stack.pop())
+            LET n1: Number := signed32(stack.pop())
+            stack.push(math.min(n1, n2))
+        WHEN CORE_MOD DO
+            LET n2: Number := signed32(stack.pop())
+            LET n1: Number := signed32(stack.pop())
+            stack.push(n1 MOD n2)
+        WHEN CORE_MOVE DO
+            VAR u: Number := stack.pop()
+            VAR addr2: Number := stack.pop()
+            VAR addr1: Number := stack.pop()
+            IF addr2 < addr1 THEN
+                WHILE u > 0 DO
+                    storage[addr2] := storage[addr1]
+                    INC addr1
+                    INC addr2
+                    DEC u
+                END WHILE
+            ELSIF addr1 < addr2 THEN
+                addr1 := addr1 + u
+                addr2 := addr2 + u
+                WHILE u > 0 DO
+                    DEC addr1
+                    DEC addr2
+                    storage[addr2] := storage[addr1]
+                    DEC u
+                END WHILE
+            END IF
+        WHEN CORE_NEGATE DO
+            LET n1: Number := signed32(stack.pop())
+            stack.push(-n1)
+        WHEN CORE_NOT DO
+            LET n: Number := stack.pop()
+            stack.push((IF n <> 0 THEN 0 ELSE -1))
+        WHEN CORE_OR DO
+            LET x2: Number := stack.pop()
+            LET x1: Number := stack.pop()
+            stack.push(binary.or32(x1, x2))
+        WHEN CORE_OVER DO
+            stack.push(stack.peek(1))
+        WHEN CORE_PAD DO
+            stack.push(cell_pad)
+        WHEN CORE_R_FROM DO
+            stack.push(return[LAST].ip)
+            return.resize(return.size()-1)
+        WHEN CORE_R_FETCH DO
+            stack.push(return[LAST].ip)
+        WHEN CORE_ROT DO
+            LET x3: Number := stack.pop()
+            LET x2: Number := stack.pop()
+            LET x1: Number := stack.pop()
+            stack.push(x2)
+            stack.push(x3)
+            stack.push(x1)
+        WHEN CORE_RSHIFT DO
+            LET u: Number := stack.pop()
+            LET x1: Number := stack.pop()
+            stack.push(binary.shiftRight32(x1, u))
+        WHEN CORE_S_TO_D DO
+            LET n: Number := signed32(stack.pop())
+            stack.push(n)
+            stack.push((IF n < 0 THEN -1 ELSE 0))
+        WHEN CORE_SIGN DO
+            LET n: Number := signed32(stack.pop())
+            IF n < 0 THEN
+                INC number_buffer_size
+                storage[cell_number_buffer + NUMBER_BUFFER_MAX - number_buffer_size] := string.toCodePoint("-")
+            END IF
+        WHEN CORE_SM_REM DO
+            LET n1: Number := signed32(stack.pop())
+            LET d1h: Number := signed32(stack.pop())
+            LET d1l: Number := stack.pop()
+            LET d1: Number := d1h * 0x100000000 + d1l
+            stack.push(d1 MOD n1)
+            stack.push(math.floor(d1 / n1))
+        WHEN CORE_SOURCE DO
+            stack.push(cell_input)
+            stack.push(storage[cell_input_length])
+        WHEN CORE_SPACE DO
+            io.write(io.stdout, " ")
+        WHEN CORE_SPACES DO
+            VAR n: Number := signed32(stack.pop())
+            WHILE n > 0 DO
+                io.write(io.stdout, " ")
+                DEC n
+            END WHILE
+        WHEN CORE_STATE DO
+            stack.push(cell_state)
+        WHEN CORE_SWAP DO
+            LET x2: Number := stack.pop()
+            LET x1: Number := stack.pop()
+            stack.push(x2)
+            stack.push(x1)
+        WHEN CORE_TRUE DO
+            stack.push(-1)
+        WHEN CORE_TUCK DO
+            LET x2: Number := stack.pop()
+            LET x1: Number := stack.pop()
+            stack.push(x2)
+            stack.push(x1)
+            stack.push(x2)
+        WHEN CORE_TYPE DO
+            LET u: Number := stack.pop()
+            LET addr: Number := stack.pop()
+            LET s: String := get_string_len(addr, u)
+            io.write(io.stdout, s)
+        WHEN CORE_U_PRINT DO
+            LET n: Number := stack.pop()
+            io.write(io.stdout, "\(n) ")
+        WHEN CORE_U_LESS DO
+            LET u2: Number := stack.pop()
+            LET u1: Number := stack.pop()
+            stack.push((IF u1 < u2 THEN -1 ELSE 0))
+        WHEN CORE_UM_MOD DO
+            LET u1: Number := stack.pop()
+            LET udh: Number := stack.pop()
+            LET udl: Number := stack.pop()
+            LET ud: Number := udh * 0x100000000 + udl
+            stack.push(ud MOD u1)
+            stack.push(math.floor(ud / u1))
+        WHEN CORE_UM_MUL DO
+            LET u2: Number := stack.pop()
+            LET u1: Number := stack.pop()
+            LET p: Number := u1 * u2
+            stack.push(p)
+            stack.push(math.floor(p / 0x100000000))
+        WHEN CORE_VARIABLE DO
+            LET s: String := next_word()
+            words[s] := Word(xt WITH code.size())
+            code.append(INT_LITERAL)
+            code.append(storage.size())
+            code.append(0)
+            storage.append(0)
+        WHEN CORE_WORD DO
+            LET char: Number := stack.pop()
+            LET s: String := parse(string.fromCodePoint(char))
+            -- TODO: use a real scratch area that is discarded
+            stack.push(storage.size())
+            storage.append(s.length())
+            FOR i := 0 TO s.length()-1 DO
+                storage.append(string.toCodePoint(s[i]))
+            END FOR
+            storage.append(string.toCodePoint(" "))
+        WHEN CORE_XOR DO
+            LET x2: Number := stack.pop()
+            LET x1: Number := stack.pop()
+            stack.push(binary.xor32(x1, x2))
+        WHEN TOOLS_QUESTION DO
+            LET addr: Number := stack.pop()
+            print("\(storage[addr])")
+        WHEN TOOLS_PRINT_S DO
+            FOR i := 0 TO stack.size()-1 DO
+                print("\(stack.peek(i))")
+            END FOR
+        WHEN TOOLS_DUMP DO
+            LET u: Number := stack.pop()
+            LET addr: Number := stack.pop()
+            FOR i := 0 TO u-1 DO
+                print("\(addr+i): \(storage[addr+i])")
+            END FOR
+        WHEN TOOLS_SEE DO
+            LET s: String := next_word()
+            IF s IN words THEN
+                IF words[s].immediate THEN
+                    print("(immediate)")
+                END IF
+                VAR a: Number := words[s].xt
+                IF a > 0 THEN
+                    LOOP
+                        print("\(a): \(code[a])")
+                        IF code[a] = 0 THEN
+                            EXIT LOOP
+                        END IF
+                        INC a
+                    END LOOP
+                ELSE
+                    print("built-in")
+                END IF
+            ELSE
+                print("word not found")
+            END IF
+        WHEN TOOLS_WORDS DO
+            LET a: Array<String> := words.keys()
+            FOREACH w IN a DO
+                print(w)
+            END FOREACH
+        WHEN TOOLS_EXT_BYE DO
+            sys.exit(0)
+        WHEN INT_BRANCH DO
+            ip := code[ip+1]
+        WHEN INT_DO DO
+            LET u2: Number := stack.pop()
+            LET u1: Number := stack.pop()
+            return.append(ReturnEntry(ip WITH ip+2, limit WITH u1, index WITH u2, leave WITH code[ip+1]))
+            ip := ip + 2
+        WHEN INT_DOES DO
+            ASSERT code[LAST] = 0
+            code[code.size()-3] := INT_BRANCH
+            code[code.size()-2] := code[ip+1]
+            ip := ip + 2
+        WHEN INT_EXIT DO
+            ip := return[LAST].ip
+            return.resize(return.size()-1)
+        WHEN INT_LEAVE DO
+            ip := return[LAST].leave
+            return.resize(return.size()-1)
+        WHEN INT_LITERAL DO
+            stack.push(code[ip+1])
+            ip := ip + 2
+        WHEN INT_LOOP DO
+            LET last: Number := return.size() - 1
+            return[last].index := (return[last].index + 1) MOD 0x100000000
+            IF return[last].index = return[last].limit THEN
+                return.resize(return.size()-1)
+            ELSE
+                ip := return[last].ip
+            END IF
+        WHEN INT_PLUS_LOOP DO
+            LET n: Number := signed32(stack.pop())
+            LET last: Number := return.size() - 1
+            LET prev: Number := return[last].index
+            LET limit: Number := return[last].limit
+            return[last].index := (return[last].index + n) MOD 0x100000000
+            -- print("prev=\(prev) new=\(return[last].index) limit=\(limit) n=\(n)")
+            IF (n > 0 AND (IF limit <> 0 THEN prev < limit AND (return[last].index >= limit OR return[last].index < prev)
+                                        ELSE return[last].index < prev))
+            OR (n < 0 AND (IF limit <> 0 THEN prev >= limit AND (return[last].index < limit OR return[last].index > prev)
+                                        ELSE return[last].index > prev)) THEN
+                return.resize(return.size()-1)
+            ELSE
+                ip := return[last].ip
+            END IF
+        WHEN INT_POSTPONE DO
+            run(code[ip+1], FALSE)
+            ip := ip + 2
+        WHEN INT_POSTPONE_IMM DO
+            run(code[ip+1], TRUE)
+            ip := ip + 2
+        WHEN INT_PRINT_QUOTE DO
+            io.write(io.stdout, get_string(code[ip+1]))
+            ip := ip + 2
+        WHEN INT_Q_BRANCH DO
+            LET x: Number := stack.pop()
+            IF x = 0 THEN
+                ip := code[ip+1]
+            ELSE
+                ip := ip + 2
+            END IF
+        WHEN INT_S_QUOTE DO
+            stack.push(code[ip+1]+1)
+            stack.push(storage[code[ip+1]])
+            ip := ip + 2
+        WHEN INT_UNLOOP DO
+            return.resize(return.size()-1)
+        WHEN OTHERS DO
+            print("Unknown instruction: \(instr)")
+            sys.exit(1)
+    END CASE
+END FUNCTION
+
+FUNCTION run_compiled(start_ip: Number)
+    VAR ip: Number := start_ip
+    return.append(ReturnEntry(ip WITH -1))
+    WHILE ip > 0 DO
+        -- print("ip=\(ip) instr=\(code[ip]) size=\(stack.stack.size()) ret=\(return.size()))")
+        LET prev_ip: Number := ip
+        run_instruction(code[ip], INOUT ip)
+        IF ip = prev_ip THEN
+            INC ip
+        END IF
+    END WHILE
+END FUNCTION
+
+FUNCTION run(instr: Number, interpreting: Boolean)
+    CASE instr
+        WHEN CORE_TICK DO
+            IF interpreting THEN
+                LET s: String := next_word()
+                stack.push(words[s].xt)
+            ELSE
+                LET s: String := next_word()
+                code.append(INT_LITERAL)
+                code.append(words[s].xt)
+            END IF
+        WHEN CORE_COMMENT DO
+            _ := parse(")")
+        WHEN CORE_PLUS_LOOP DO
+            ASSERT NOT interpreting
+            code.append(INT_PLUS_LOOP)
+            code[compilation.pop()] := code.size()
+        WHEN CORE_PRINT_QUOTE DO
+            LET s: String := parse("\"")
+            IF interpreting THEN
+                io.write(io.stdout, s)
+            ELSE
+                code.append(INT_PRINT_QUOTE)
+                code.append(storage.size())
+                storage.append(s.length())
+                FOR i := 0 TO s.length()-1 DO
+                    storage.append(string.toCodePoint(s[i]))
+                END FOR
+            END IF
+        WHEN CORE_SEMICOLON DO
+            ASSERT NOT interpreting
+            code.append(0)
+            words[defining] := Word(xt WITH define_start)
+            storage[cell_state] := 0
+        WHEN CORE_BACKSLASH DO
+            storage[cell_in] := storage[cell_input_length]
+        WHEN CORE_BEGIN DO
+            ASSERT NOT interpreting
+            compilation.push(code.size())
+        WHEN CORE_DO DO
+            ASSERT NOT interpreting
+            code.append(INT_DO)
+            compilation.push(code.size())
+            code.append(0)
+        WHEN CORE_DOES DO
+            ASSERT NOT interpreting
+            code.append(INT_DOES)
+            code.append(code.size()+2)
+            code.append(0)
+        WHEN CORE_ELSE DO
+            ASSERT NOT interpreting
+            code.append(INT_BRANCH)
+            LET dest: Number := code.size()
+            code.append(0)
+            code[compilation.pop()] := code.size()
+            compilation.push(dest)
+        WHEN CORE_EXIT DO
+            ASSERT NOT interpreting
+            code.append(INT_EXIT)
+        WHEN CORE_IF DO
+            ASSERT NOT interpreting
+            code.append(INT_Q_BRANCH)
+            compilation.push(code.size())
+            code.append(0)
+        WHEN CORE_LEAVE DO
+            ASSERT NOT interpreting
+            code.append(INT_LEAVE)
+        WHEN CORE_LITERAL DO
+            ASSERT NOT interpreting
+            LET x: Number := stack.pop()
+            code.append(INT_LITERAL)
+            code.append(x)
+        WHEN CORE_LOOP DO
+            ASSERT NOT interpreting
+            code.append(INT_LOOP)
+            code[compilation.pop()] := code.size()
+        WHEN CORE_POSTPONE DO
+            ASSERT NOT interpreting
+            LET s: String := next_word()
+            code.append((IF words[s].immediate THEN INT_POSTPONE_IMM ELSE INT_POSTPONE))
+            code.append(words[s].xt)
+        WHEN CORE_RECURSE DO
+            ASSERT NOT interpreting
+            code.append(define_start)
+        WHEN CORE_REPEAT DO
+            ASSERT NOT interpreting
+            LET dest: Number := compilation.pop()
+            LET orig: Number := compilation.pop()
+            code.append(INT_BRANCH)
+            code.append(dest)
+            code[orig] := code.size()
+        WHEN CORE_S_QUOTE DO
+            ASSERT NOT interpreting
+            LET s: String := parse("\"")
+            code.append(INT_S_QUOTE)
+            code.append(storage.size())
+            storage.append(s.length())
+            FOR i := 0 TO s.length()-1 DO
+                storage.append(string.toCodePoint(s[i]))
+            END FOR
+        WHEN CORE_THEN DO
+            ASSERT NOT interpreting
+            code[compilation.pop()] := code.size()
+        WHEN CORE_UNLOOP DO
+            ASSERT NOT interpreting
+            code.append(INT_UNLOOP)
+        WHEN CORE_UNTIL DO
+            ASSERT NOT interpreting
+            code.append(INT_Q_BRANCH)
+            code.append(compilation.pop())
+        WHEN CORE_WHILE DO
+            ASSERT NOT interpreting
+            LET dest: Number := compilation.pop()
+            code.append(INT_Q_BRANCH)
+            compilation.push(code.size())
+            code.append(0)
+            compilation.push(dest)
+        WHEN CORE_INTERPRET DO
+            storage[cell_state] := 0
+        WHEN CORE_IMM_TICK DO
+            ASSERT NOT interpreting
+            LET s: String := next_word()
+            code.append(INT_LITERAL)
+            code.append(words[s].xt)
+        WHEN CORE_IMM_CHAR DO
+            ASSERT NOT interpreting
+            LET s: String := next_word()
+            code.append(INT_LITERAL)
+            code.append(string.toCodePoint(s[FIRST]))
+        WHEN CORE_COMPILE DO
+            storage[cell_state] := -1
+        WHEN TOOLS_EXT_ELSE DO
+            VAR depth: Number := 0
+            LOOP
+                LET s: String := next_word()
+                IF s = "[IF]" THEN
+                    INC depth
+                ELSIF s = "[THEN]" THEN
+                    IF depth = 0 THEN
+                        EXIT LOOP
+                    END IF
+                    DEC depth
+                END IF
+            END LOOP
+        WHEN TOOLS_EXT_IF DO
+            LET flag: Number := stack.pop()
+            IF flag = 0 THEN
+                VAR depth: Number := 0
+                LOOP
+                    LET s: String := next_word()
+                    IF s = "[IF]" THEN
+                        INC depth
+                    ELSIF s = "[ELSE]" THEN
+                        IF depth = 0 THEN
+                            EXIT LOOP
+                        END IF
+                    ELSIF s = "[THEN]" THEN
+                        IF depth = 0 THEN
+                            EXIT LOOP
+                        END IF
+                        DEC depth
+                    END IF
+                END LOOP
+            END IF
+        WHEN TOOLS_EXT_THEN DO
+            -- nothing
+        WHEN OTHERS DO
+            IF interpreting THEN
+                IF instr > 0 THEN
+                    run_compiled(instr)
+                ELSE
+                    VAR ip: Number := 0
+                    run_instruction(instr, INOUT ip)
+                END IF
+            ELSE
+                code.append(instr)
+            END IF
+    END CASE
+END FUNCTION
+
+FUNCTION skip()
+    WHILE storage[cell_in] < storage[cell_input_length] AND string.fromCodePoint(storage[cell_input+storage[cell_in]]) <= " " DO
+        INC storage[cell_in]
+    END WHILE
+END FUNCTION
+
+FUNCTION digit(char: String): Number
+    IF "0" <= char <= "9" THEN
+        RETURN string.toCodePoint(char) - string.toCodePoint("0")
+    ELSIF "A" <= char <= "Z" THEN
+        RETURN string.toCodePoint(char) - string.toCodePoint("A") + 10
+    ELSE
+        ASSERT FALSE -- invalid char
+    END IF
+    RETURN 0
+END FUNCTION
+
+FUNCTION convert(word: String, base: Number): Number
+    VAR n: Number := 0
+    LET negative: Boolean := word[0] = "-"
+    VAR i: Number := 0
+    IF negative THEN
+        INC i
+    END IF
+    WHILE i < word.length() DO
+        n := n * base + digit(word[i])
+        INC i
+    END WHILE
+    IF negative THEN
+        n := -n
+    END IF
+    RETURN n
+END FUNCTION
+
+FUNCTION execute(word: String)
+    LET interpreting: Boolean := storage[cell_state] = 0
+    IF word IN words THEN
+        run(words[word].xt, interpreting OR words[word].immediate)
+    ELSE
+        VAR n: Number := 0
+        LET base: Number := storage[cell_base]
+        IF regex.search("^-?[\(Digits[0 TO base-1])]+$", word, OUT _) THEN
+            n := convert(word, base)
+        ELSIF regex.search(@"^#-?[0-9]+$", word, OUT _) THEN
+            n := convert(word[1 TO LAST], 10)
+        ELSIF regex.search(@"^\$-?[0-9A-F]+$", word, OUT _) THEN
+            n := convert(word[1 TO LAST], 0x10)
+        ELSIF regex.search(@"^%-?[01]+$", word, OUT _) THEN
+            n := convert(word[1 TO LAST], 0b10)
+        ELSIF regex.search(@"'.'?$", word, OUT _) THEN
+            n := string.toCodePoint(word[1])
+        ELSE
+            print("Unknown word: \(word)")
+            sys.exit(1)
+        END IF
+        IF interpreting THEN
+            stack.push(n)
+        ELSE
+            code.append(INT_LITERAL)
+            code.append(n)
+        END IF
+    END IF
+END FUNCTION
+
+VAR current_file: io.File
+
+FUNCTION readLine(f: io.File, OUT s: String): Boolean
+    s := ""
+    VAR b: Bytes := HEXBYTES ""
+    LOOP
+        LET c: Bytes := io.readBytes(f, 1)
+        IF c.size() = 0 THEN
+            RETURN FALSE
+        END IF
+        IF c = HEXBYTES "0a" THEN
+            EXIT LOOP
+        END IF
+        b := b & c
+    END LOOP
+    s := b.decodeToString()
+    RETURN TRUE
+END FUNCTION
+
+FUNCTION refill(): Boolean
+    IF cell_input <> cell_normal_input THEN
+        cell_input := cell_normal_input
+        cell_input_length := cell_normal_input_length
+        cell_in := cell_normal_in
+        RETURN FALSE
+    END IF
+    VAR s: String
+    IF NOT readLine(current_file, OUT s) THEN
+        RETURN FALSE
+    END IF
+    FOR i := 0 TO s.length()-1 DO
+        storage[cell_input+i] := string.toCodePoint(s[i])
+    END FOR
+    storage[cell_input_length] := s.length()
+    storage[cell_in] := 0
+    RETURN TRUE
+END FUNCTION
+
+FUNCTION parse(delimiter: String): String
+    VAR r: String := ""
+    WHILE storage[cell_in] < storage[cell_input_length] DO
+        LET c: String := string.fromCodePoint(storage[cell_input+storage[cell_in]])
+        INC storage[cell_in]
+        IF c = delimiter OR (delimiter = " " AND c <= delimiter) THEN
+            EXIT WHILE
+        END IF
+        r.append(c)
+    END WHILE
+    RETURN r
+END FUNCTION
+
+FUNCTION next_word(): String
+    LOOP
+        skip()
+        IF storage[cell_in] >= storage[cell_input_length] THEN
+            IF NOT refill() THEN
+                RETURN ""
+            END IF
+            NEXT LOOP
+        END IF
+        RETURN string.upper(parse(" "))
+    END LOOP
+END FUNCTION
+
+FUNCTION interpret()
+    LOOP
+        LET word: String := next_word()
+        IF word = "" THEN
+            EXIT LOOP
+        END IF
+        execute(word)
+    END LOOP
+END FUNCTION
+
+LET files: Array<String> := sys.args[1 TO LAST]
+FOREACH fn IN files DO
+    current_file := io.open(fn, io.Mode.read)
+    interpret()
+    io.close(current_file)
+END FOREACH
+
+current_file := io.stdin
+interpret()

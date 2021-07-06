@@ -1,7 +1,0 @@
-% TODO
-
-CONST a: number := 5
-
-print(a)
-
-%= 5

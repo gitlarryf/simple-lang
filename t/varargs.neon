@@ -1,0 +1,13 @@
+FUNCTION f(a: Number...): Number
+    VAR r: Number := 0
+    FOREACH x IN a DO
+        r := r + x
+    END FOREACH
+    RETURN r
+END FUNCTION
+
+TESTCASE f(1, 2, 3) = 6
+TESTCASE f() = 0
+
+LET values: Array<Number> := [1, 2, 3, 4]
+TESTCASE f(values...) = 10

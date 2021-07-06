@@ -1,0 +1,132 @@
+/*  File: net
+ *
+ *  Functions for working with network sockets.
+ */
+
+EXPORT Socket
+EXPORT SocketException
+
+EXPORT select
+EXPORT tcpSocket
+EXPORT udpSocket
+
+/*  Exception: SocketException
+ *
+ *  Indicates some kind of socket error.
+ */
+EXCEPTION SocketException
+
+/*  Type: Socket
+ *
+ *  Opaque type representing a network socket.
+ */
+-- TODO: This should be just
+--   TYPE Socket IS Object
+-- but there is a conflict with the new generic object method call
+-- support. The fact that this is a new Socket type should allow us
+-- to add methods to the Socket type without interfering with Object.
+TYPE Socket IS RECORD
+    s: Object
+END RECORD
+
+DECLARE NATIVE FUNCTION socket_accept(socket: Object): Object
+DECLARE NATIVE FUNCTION socket_bind(socket: Object, address: String, port: Number)
+DECLARE NATIVE FUNCTION socket_close(socket: Object)
+DECLARE NATIVE FUNCTION socket_connect(socket: Object, host: String, port: Number)
+DECLARE NATIVE FUNCTION socket_listen(socket: Object, port: Number)
+DECLARE NATIVE FUNCTION socket_recv(socket: Object, count: Number, OUT buffer: Bytes): Boolean
+DECLARE NATIVE FUNCTION socket_recvfrom(socket: Object, count: Number, OUT remote_address: String, OUT remote_port: Number, OUT buffer: Bytes): Boolean
+DECLARE NATIVE FUNCTION socket_send(socket: Object, data: Bytes)
+DECLARE NATIVE FUNCTION socket_select(INOUT read, write, error: Array<Socket>, timeout_seconds: Number): Boolean
+DECLARE NATIVE FUNCTION socket_tcpSocket(): Object
+DECLARE NATIVE FUNCTION socket_udpSocket(): Object
+
+/*  Function: tcpSocket
+ *
+ *  Create a new TCP/IP (stream) socket.
+ */
+FUNCTION tcpSocket(): Socket
+    RETURN Socket(s WITH socket_tcpSocket())
+END FUNCTION
+
+/*  Function: udpSocket
+ *
+ *  Create a new UDP/IP (datagram) socket.
+ */
+FUNCTION udpSocket(): Socket
+    RETURN Socket(s WITH socket_udpSocket())
+END FUNCTION
+
+/*  Function: select
+ *
+ *  Select sockets with pending activity subject to an optional timeout.
+ */
+FUNCTION select(INOUT read, write, error: Array<Socket>, timeout_seconds: Number): Boolean
+    -- TODO: This function works around some problem with calling a predefined
+    -- function with an Array<Socket> parameter.
+    RETURN socket_select(INOUT read, INOUT write, INOUT error, timeout_seconds)
+END FUNCTION
+
+/*  Function: Socket.accept
+ *
+ *  Accept an incoming connection request on a socket and returns a new socket.
+ */
+FUNCTION Socket.accept(self: Socket): Socket
+    RETURN Socket(s WITH socket_accept(self.s))
+END FUNCTION
+
+/*  Function: Socket.bind
+ *
+ *  Bind a socket to an address and port number.
+ */
+FUNCTION Socket.bind(self: Socket, address: String, port: Number)
+    socket_bind(self.s, address, port)
+END FUNCTION
+
+/*  Function: Socket.close
+ *
+ *  Close a socket.
+ */
+FUNCTION Socket.close(self: Socket)
+    socket_close(self.s)
+END FUNCTION
+
+/*  Function: Socket.connect
+ *
+ *  Connect a socket to a given host and port.
+ */
+FUNCTION Socket.connect(self: Socket, host: String, port: Number)
+    socket_connect(self.s, host, port)
+END FUNCTION
+
+/*  Function: Socket.listen
+ *
+ *  Listen for incoming connections on a specific port.
+ */
+FUNCTION Socket.listen(self: Socket, port: Number)
+    socket_listen(self.s, port)
+END FUNCTION
+
+/*  Function: Socket.recv
+ *
+ *  Receive (read) bytes from a socket.
+ */
+FUNCTION Socket.recv(self: Socket, count: Number, OUT buffer: Bytes): Boolean
+    RETURN socket_recv(self.s, count, OUT buffer)
+END FUNCTION
+
+/*  Function: Socket.recvfrom
+ *
+ *  Receive (read) bytes from a socket, also returning the remote address where they came from.
+ */
+FUNCTION Socket.recvfrom(self: Socket, count: Number, OUT remote_address: String, OUT remote_port: Number, OUT buffer: Bytes): Boolean
+    RETURN socket_recvfrom(self.s, count, OUT remote_address, OUT remote_port, OUT buffer)
+END FUNCTION
+
+/*  Function: Socket.send
+ *
+ *  Send (write) bytes to a socket.
+ */
+FUNCTION Socket.send(self: Socket, data: Bytes)
+    socket_send(self.s, data)
+END FUNCTION

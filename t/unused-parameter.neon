@@ -1,0 +1,7 @@
+FUNCTION foo(x, y: Number): Number
+    RETURN x
+END FUNCTION
+
+print(str(foo(5, 6)))
+
+--= 5

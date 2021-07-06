@@ -1,0 +1,9 @@
+EXCEPTION PrinterOnFireException
+
+TRY
+    RAISE PrinterOnFireException
+TRAP PrinterOnFireException DO
+    print("conflagration")
+END TRY
+
+--= conflagration

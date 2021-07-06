@@ -1,0 +1,17 @@
+TYPE Node IS CLASS
+    value: Number
+END CLASS
+
+VAR a, b: POINTER TO Node := NIL
+
+a := NEW Node
+IF VALID a AS p1, b AS q1 THEN
+    print("one")
+END IF
+
+b := NEW Node
+IF VALID a AS p2, b AS q2 THEN
+    print("two")
+END IF
+
+--= two

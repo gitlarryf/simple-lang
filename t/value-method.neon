@@ -1,0 +1,8 @@
+TYPE NumberArray IS Array<Number>
+
+FUNCTION foo(): NumberArray
+    RETURN [1, 2, 3]
+END FUNCTION
+
+print(str(foo().size()))
+--= 3

@@ -1,0 +1,13 @@
+EXCEPTION PrinterOnFireException
+
+FUNCTION doit()
+    RAISE PrinterOnFireException
+END FUNCTION
+
+TRY
+    doit()
+TRAP PrinterOnFireException DO
+    print("conflagration")
+END TRY
+
+--= conflagration

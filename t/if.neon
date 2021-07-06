@@ -1,0 +1,25 @@
+VAR a: Number
+
+a := 1
+IF a <> 0 THEN
+    print("one")
+END IF
+--= one
+
+a := 0
+IF a <> 0 THEN
+    print("nonzero")
+ELSE
+    print("zero")
+END IF
+--= zero
+
+a := 1
+IF a = 0 THEN
+    print("zero")
+ELSIF a = 1 THEN
+    print("one")
+ELSE
+    print("many")
+END IF
+--= one
